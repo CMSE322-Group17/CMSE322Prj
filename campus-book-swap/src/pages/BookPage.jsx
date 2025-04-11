@@ -1,6 +1,10 @@
 import { useState, useEffect } from 'react';
-import { Link, useParams } from 'react-router-dom';
+import { Link, useParams, useNavigate } from 'react-router-dom';
 import { bookAPI } from '../services/api';
+import { useState, useEffect } from 'react';
+import { useAuth } from '../contexts/AuthContext';
+import { useCart } from '../contexts/CartContext';
+
 
 const BooksPage = () => {
   const { categoryName } = useParams();
@@ -8,6 +12,7 @@ const BooksPage = () => {
   const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const navigate = useNavigate();
   const [filters, setFilters] = useState({
     sort: 'newest',
     condition: 'all',
@@ -1273,6 +1278,9 @@ const BooksPage = () => {
       </div>
     </div>
   );
+  {selectedBook && (
+    <BookDetails book={selectedBook} onClose={() => setSelectedBook(null)} />
+  )}
 };
 
 export default BooksPage;
