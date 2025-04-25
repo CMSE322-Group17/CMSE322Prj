@@ -60,9 +60,6 @@ const BooksPage = () => {
       'For Borrowing': 'bg-purple-100 text-purple-800'
     };
     
-    // Generate random price (for demo purposes)
-    const price = book.bookType === 'For Sale' ? book.price : null;
-    
     // Generate a course code (for demo purposes)
     const courseCode = `${['CS', 'MATH', 'BIO', 'CHEM', 'ENG'][book.id % 5]}${101 + (book.id % 400)}`;
     
@@ -131,17 +128,35 @@ const BooksPage = () => {
       }
     };
     
+    // Prevent background scrolling when modal is open
+    useEffect(() => {
+      // Save original body style
+      const originalStyle = window.getComputedStyle(document.body).overflow;
+      // Prevent scrolling on body
+      document.body.style.overflow = 'hidden';
+      
+      // Cleanup: restore original body style when component unmounts
+      return () => {
+        document.body.style.overflow = originalStyle;
+      };
+    }, []);
+    
+    // Stop propagation of touch and mouse events to prevent background scrolling
+    const handleContentClick = (e) => {
+      e.stopPropagation();
+    };
+    
     return (
       <div 
-        className="fixed inset-0 bg-transparent backdrop-blur-sm flex items-center justify-center z-50 p-4 transition-all duration-300"
+        className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4 overscroll-contain"
         onClick={onClose} // Close when clicking the backdrop
       >
         <div 
-          className="bg-white rounded-2xl max-w-4xl w-full p-0 max-h-[90vh] overflow-hidden shadow-2xl animate-fadeIn"
-          onClick={(e) => e.stopPropagation()} // Prevent closing when clicking the card
+          className="bg-white rounded-2xl max-w-4xl w-full p-0 max-h-[90vh] overflow-hidden shadow-2xl animate-fadeIn overscroll-contain"
+          onClick={handleContentClick} // Stop propagation to prevent closing when clicking the card
         >
           {/* Header with book title and close button */}
-          <div className="p-6 border-b border-gray-100">
+          <div className="p-6 border-b border-gray-100 sticky top-0 z-10 bg-white">
             <div className="flex justify-between items-center">
               <div className="flex items-center">
                 <h2 className="text-xl font-bold text-gray-800">{book.title}</h2>
@@ -162,7 +177,7 @@ const BooksPage = () => {
           </div>
           
           {/* Navigation tabs */}
-          <div className="border-b border-gray-200">
+          <div className="border-b border-gray-200 sticky top-[72px] z-10 bg-white">
             <nav className="flex">
               <button
                 className={`py-3 px-6 focus:outline-none ${
@@ -187,9 +202,9 @@ const BooksPage = () => {
             </nav>
           </div>
           
-          <div className="flex flex-col md:flex-row">
+          <div className="flex flex-col md:flex-row overflow-hidden">
             {/* Left column - consistent across tabs */}
-            <div className="w-full md:w-1/3 border-r border-gray-200 p-6">
+            <div className="w-full md:w-1/3 border-r border-gray-200 p-6 overflow-y-auto overscroll-contain touch-pan-y">
               <div className="flex justify-center">
                 <div className="relative">
                   {book.cover ? (
@@ -210,7 +225,9 @@ const BooksPage = () => {
                   
                   {/* Rating badge */}
                   {book.rating && (
-                    <span className="text-gray-500 text-xs ml-2">{typeof book.rating === 'number' ? book.rating.toFixed(1) : book.rating} ({book.voters} voters)</span>
+                    <span className="absolute -bottom-3 -right-3 bg-yellow-400 rounded-full h-10 w-10 flex items-center justify-center text-gray-800 font-bold text-sm shadow-md">
+                      {typeof book.rating === 'number' ? book.rating.toFixed(1) : book.rating}
+                    </span>
                   )}
                 </div>
               </div>
@@ -262,7 +279,7 @@ const BooksPage = () => {
             </div>
             
             {/* Right column - tab content */}
-            <div className="w-full md:w-2/3 p-6 max-h-[calc(90vh-120px)] overflow-y-auto">
+            <div className="w-full md:w-2/3 p-6 overflow-y-auto overscroll-contain touch-pan-y">
               {/* Book Details Tab */}
               {activeTab === 'details' && (
                 <div>
@@ -285,7 +302,7 @@ const BooksPage = () => {
                         {book.bookType === 'For Swap' && (
                           <p className="flex justify-between">
                             <span className="font-medium text-gray-700">Exchange For:</span> 
-                            <span className="text-gray-600">Literature or History books</span>
+                            <span className="text-gray-600">{book.exchange || "Literature or History books"}</span>
                           </p>
                         )}
                         {book.bookType === 'For Borrowing' && (
