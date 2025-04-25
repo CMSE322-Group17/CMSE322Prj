@@ -10,8 +10,10 @@ const NavBar = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
+  const [isSearchOpen, setIsSearchOpen] = useState(false);
   const cartRef = useRef(null);
   const profileRef = useRef(null);
+  const mobileMenuRef = useRef(null);
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -20,6 +22,7 @@ const NavBar = () => {
     setIsCartOpen(false);
     setIsProfileOpen(false);
     setIsMenuOpen(false);
+    setIsSearchOpen(false);
   }, [location.pathname]);
 
   // Close dropdown menus when clicking outside
@@ -30,6 +33,9 @@ const NavBar = () => {
       }
       if (profileRef.current && !profileRef.current.contains(event.target)) {
         setIsProfileOpen(false);
+      }
+      if (mobileMenuRef.current && !mobileMenuRef.current.contains(event.target) && !event.target.closest('button[aria-label="Main menu"]')) {
+        setIsMenuOpen(false);
       }
     };
 
@@ -43,6 +49,7 @@ const NavBar = () => {
     logout();
     navigate('/');
     setIsProfileOpen(false);
+    setIsMenuOpen(false);
   };
 
   // Toggle cart dropdown
@@ -57,21 +64,27 @@ const NavBar = () => {
     if (isCartOpen) setIsCartOpen(false);
   };
 
+  // Toggle search bar on mobile
+  const toggleSearch = () => {
+    setIsSearchOpen(!isSearchOpen);
+  };
+
   return (
     <nav className="bg-white shadow-md sticky top-0 z-50">
       <div className="max-w-6xl mx-auto px-4">
         <div className="flex justify-between items-center h-16">
-          {/* Logo and main navigation */}
+          {/* Logo */}
           <div className="flex items-center">
             <Link to="/" className="flex-shrink-0">
               <div className="flex items-center">
                 <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
                 </svg>
-                <span className="ml-2 text-lg font-bold text-gray-800">CampusBookSwap</span>
+                <span className="ml-2 text-lg font-bold text-gray-800 hidden sm:inline">CampusBookSwap</span>
               </div>
             </Link>
             
+            {/* Desktop Navigation Links */}
             <div className="hidden md:ml-6 md:flex md:space-x-4">
               <Link 
                 to="/books" 
@@ -106,9 +119,10 @@ const NavBar = () => {
             </div>
           </div>
           
-          {/* Search bar - can be toggled in responsive design */}
-          <div className="hidden md:flex flex-1 justify-center max-w-xs mx-4">
-            <div className="relative w-full">
+          {/* Desktop Search & User Navigation - hide on mobile */}
+          <div className="hidden md:flex md:items-center">
+            {/* Search bar */}
+            <div className="relative w-full max-w-xs mx-4">
               <input 
                 type="text" 
                 placeholder="Search books, courses..." 
@@ -120,11 +134,8 @@ const NavBar = () => {
                 </svg>
               </div>
             </div>
-          </div>
-          
-          {/* User Navigation */}
-          <div className="flex items-center">
-            {/* Cart Icon with Counter */}
+            
+            {/* Cart Icon - Visible on desktop */}
             {isAuthenticated && (
               <div className="relative ml-4" ref={cartRef}>
                 <button 
@@ -152,23 +163,16 @@ const NavBar = () => {
               </div>
             )}
             
-            {/* Messages Icon with Counter - Only for authenticated users */}
+            {/* Messages Icon - Only for authenticated users */}
             {isAuthenticated && (
               <Link to="/messages" className="relative ml-4 p-2 text-gray-600 hover:text-blue-600">
                 <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" />
                 </svg>
-                
-                {/* Show badge if there are unread messages - replace 0 with actual count */}
-                {(0 > 0) && (
-                  <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center">
-                    {0 > 99 ? '99+' : 0}
-                  </span>
-                )}
               </Link>
             )}
             
-            {/* User Profile / Login */}
+            {/* User Profile / Login - Desktop */}
             {isAuthenticated ? (
               <div className="relative ml-4" ref={profileRef}>
                 <button 
@@ -226,51 +230,65 @@ const NavBar = () => {
                 </Link>
               </div>
             )}
+          </div>
+          
+          {/* Mobile navigation controls */}
+          <div className="flex items-center md:hidden">
+            {/* Mobile search button */}
+            <button 
+              onClick={toggleSearch}
+              className="p-2 mr-2 text-gray-600 hover:text-blue-600 focus:outline-none"
+              aria-label="Search"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+              </svg>
+            </button>
             
             {/* Mobile menu button */}
-            <div className="flex md:hidden ml-4">
-              <button 
-                onClick={() => setIsMenuOpen(!isMenuOpen)}
-                className="text-gray-600 hover:text-blue-600 focus:outline-none"
-                aria-expanded={isMenuOpen}
-                aria-label="Main menu"
-              >
-                {isMenuOpen ? (
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                  </svg>
-                ) : (
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
-                  </svg>
-                )}
-              </button>
-            </div>
+            <button 
+              onClick={() => setIsMenuOpen(!isMenuOpen)}
+              className="text-gray-600 hover:text-blue-600 focus:outline-none"
+              aria-expanded={isMenuOpen}
+              aria-label="Main menu"
+            >
+              {isMenuOpen ? (
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              ) : (
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+                </svg>
+              )}
+            </button>
           </div>
         </div>
       </div>
       
-      {/* Mobile menu */}
-      {isMenuOpen && (
-        <div className="md:hidden">
-          {/* Mobile search */}
-          <div className="px-4 py-2 border-t border-gray-200">
-            <div className="relative">
-              <input 
-                type="text" 
-                placeholder="Search books, courses..." 
-                className="w-full px-4 py-2 pl-10 pr-4 rounded-lg bg-gray-100 border border-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
-              />
-              <div className="absolute left-3 top-3 text-gray-400">
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                </svg>
-              </div>
+      {/* Mobile search - slide down when active */}
+      {isSearchOpen && (
+        <div className="md:hidden border-t border-gray-200 py-2 px-4 animate-slideInDown">
+          <div className="relative">
+            <input 
+              type="text" 
+              placeholder="Search books, courses..." 
+              className="w-full px-4 py-2 pl-10 pr-4 rounded-lg bg-gray-100 border border-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
+              autoFocus
+            />
+            <div className="absolute left-3 top-3 text-gray-400">
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+              </svg>
             </div>
           </div>
-          
-          {/* Mobile navigation links */}
-          <div className="px-2 pt-2 pb-3 space-y-1 border-t border-gray-200">
+        </div>
+      )}
+      
+      {/* Mobile menu */}
+      {isMenuOpen && (
+        <div className="md:hidden border-t border-gray-200 animate-slideInDown" ref={mobileMenuRef}>
+          <div className="px-2 pt-2 pb-3 space-y-1">
             <Link 
               to="/books" 
               className={`block px-3 py-2 text-base font-medium rounded-md ${
@@ -278,6 +296,7 @@ const NavBar = () => {
                   ? 'bg-blue-50 text-blue-600' 
                   : 'text-gray-700 hover:bg-gray-100'
               }`}
+              onClick={() => setIsMenuOpen(false)}
             >
               All Books
             </Link>
@@ -288,6 +307,7 @@ const NavBar = () => {
                   ? 'bg-blue-50 text-blue-600' 
                   : 'text-gray-700 hover:bg-gray-100'
               }`}
+              onClick={() => setIsMenuOpen(false)}
             >
               Textbooks
             </Link>
@@ -298,6 +318,7 @@ const NavBar = () => {
                   ? 'bg-blue-50 text-blue-600' 
                   : 'text-gray-700 hover:bg-gray-100'
               }`}
+              onClick={() => setIsMenuOpen(false)}
             >
               About
             </Link>
@@ -305,55 +326,102 @@ const NavBar = () => {
             {/* Authenticated user mobile links */}
             {isAuthenticated ? (
               <>
-                <Link 
-                  to="/dashboard" 
-                  className={`block px-3 py-2 text-base font-medium rounded-md ${
-                    location.pathname === '/dashboard' 
-                      ? 'bg-blue-50 text-blue-600' 
-                      : 'text-gray-700 hover:bg-gray-100'
-                  }`}
-                >
-                  Dashboard
-                </Link>
-                <Link 
-                  to="/profile" 
-                  className={`block px-3 py-2 text-base font-medium rounded-md ${
-                    location.pathname === '/profile' 
-                      ? 'bg-blue-50 text-blue-600' 
-                      : 'text-gray-700 hover:bg-gray-100'
-                  }`}
-                >
-                  Profile
-                </Link>
+                <div className="border-t border-gray-200 pt-2 mt-2"></div>
+                
+                {/* User info in mobile menu */}
+                <div className="px-3 py-2">
+                  <div className="flex items-center">
+                    <div className="h-8 w-8 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 font-bold">
+                      {user.username ? user.username.charAt(0).toUpperCase() : 'U'}
+                    </div>
+                    <div className="ml-3">
+                      <p className="text-sm font-medium text-gray-700">{user.username || user.email}</p>
+                      <p className="text-xs text-gray-500 truncate">{user.email}</p>
+                    </div>
+                  </div>
+                </div>
+                
+                {/* Shopping cart link with count - Added to mobile menu */}
                 <Link 
                   to="/cart" 
-                  className={`block px-3 py-2 text-base font-medium rounded-md ${
+                  className={`flex items-center justify-between px-3 py-2 text-base font-medium rounded-md ${
                     location.pathname === '/cart' 
                       ? 'bg-blue-50 text-blue-600' 
                       : 'text-gray-700 hover:bg-gray-100'
                   }`}
+                  onClick={() => setIsMenuOpen(false)}
                 >
-                  Cart {cartCount > 0 && `(${cartCount})`}
+                  <div className="flex items-center">
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
+                    </svg>
+                    Shopping Cart
+                  </div>
+                  {cartCount > 0 && (
+                    <span className="bg-red-500 text-white text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center">
+                      {cartCount > 99 ? '99+' : cartCount}
+                    </span>
+                  )}
                 </Link>
+                
+                <Link 
+                  to="/dashboard" 
+                  className={`flex items-center px-3 py-2 text-base font-medium rounded-md ${
+                    location.pathname === '/dashboard' 
+                      ? 'bg-blue-50 text-blue-600' 
+                      : 'text-gray-700 hover:bg-gray-100'
+                  }`}
+                  onClick={() => setIsMenuOpen(false)}
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
+                  </svg>
+                  Dashboard
+                </Link>
+                
+                <Link 
+                  to="/profile" 
+                  className={`flex items-center px-3 py-2 text-base font-medium rounded-md ${
+                    location.pathname === '/profile' 
+                      ? 'bg-blue-50 text-blue-600' 
+                      : 'text-gray-700 hover:bg-gray-100'
+                  }`}
+                  onClick={() => setIsMenuOpen(false)}
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                  </svg>
+                  Profile
+                </Link>
+                
                 <Link 
                   to="/messages" 
-                  className={`block px-3 py-2 text-base font-medium rounded-md ${
+                  className={`flex items-center px-3 py-2 text-base font-medium rounded-md ${
                     location.pathname === '/messages' 
                       ? 'bg-blue-50 text-blue-600' 
                       : 'text-gray-700 hover:bg-gray-100'
                   }`}
+                  onClick={() => setIsMenuOpen(false)}
                 >
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" />
+                  </svg>
                   Messages
                 </Link>
+                
                 <button 
                   onClick={handleLogout}
-                  className="block w-full text-left px-3 py-2 text-base font-medium text-red-600 hover:bg-gray-100 rounded-md"
+                  className="flex items-center w-full text-left px-3 py-2 text-base font-medium text-red-600 hover:bg-gray-100 rounded-md"
                 >
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                  </svg>
                   Sign Out
                 </button>
               </>
             ) : (
               <>
+                <div className="border-t border-gray-200 pt-2 mt-2"></div>
                 <Link 
                   to="/signin" 
                   className={`block px-3 py-2 text-base font-medium rounded-md ${
@@ -361,12 +429,14 @@ const NavBar = () => {
                       ? 'bg-blue-50 text-blue-600' 
                       : 'text-gray-700 hover:bg-gray-100'
                   }`}
+                  onClick={() => setIsMenuOpen(false)}
                 >
                   Sign In
                 </Link>
                 <Link 
                   to="/signup" 
                   className="block px-3 py-2 text-base font-medium bg-blue-600 text-white rounded-md hover:bg-blue-700"
+                  onClick={() => setIsMenuOpen(false)}
                 >
                   Sign Up
                 </Link>

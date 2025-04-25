@@ -995,140 +995,156 @@ const BookDetails = ({ book, onClose }) => {
                 <h2 className="font-bold mb-2">Error</h2>
                 <p>{error}</p>
               </div>
-            ) : filteredBooks.length === 0 ? (
-              <div className="bg-white rounded-lg shadow-sm p-8 text-center">
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-16 w-16 text-gray-400 mx-auto mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
-                </svg>
-                <h3 className="text-lg font-medium text-gray-800 mb-2">No books found</h3>
-                <p className="text-gray-600 mb-4">
-                  We couldn't find any books matching your filters.
-                </p>
-                <button 
-                  onClick={() => setFilters({
-                    sort: 'newest',
-                    condition: 'all',
-                    priceRange: 'all',
-                    bookType: 'all'
-                  })}
-                  className="px-4 py-2 bg-blue-600 text-white rounded font-medium hover:bg-blue-700 transition-colors"
-                >
-                  Clear Filters
-                </button>
-              </div>
-            ) : (
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-                {filteredBooks.map(book => (
-                  <div 
-                    key={book.id}
-                    onClick={() => setSelectedBook(book)} 
-                    className="group cursor-pointer"
+              ) : filteredBooks.length === 0 ? (
+                <div className="bg-white rounded-lg shadow-sm p-8 text-center">
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-16 w-16 text-gray-400 mx-auto mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+                  </svg>
+                  <h3 className="text-lg font-medium text-gray-800 mb-2">No books found</h3>
+                  <p className="text-gray-600 mb-4">
+                    We couldn't find any books matching your filters.
+                  </p>
+                  <button 
+                    onClick={() => setFilters({
+                      sort: 'newest',
+                      condition: 'all',
+                      priceRange: 'all',
+                      bookType: 'all'
+                    })}
+                    className="px-4 py-2 bg-blue-600 text-white rounded font-medium hover:bg-blue-700 transition-colors"
                   >
-                    <div className="bg-white rounded-lg shadow-sm overflow-hidden transition-all duration-300 hover:shadow-md h-full flex flex-col relative">
-                      {/* Book Type Badge */}
-                      <div className={`absolute top-3 left-3 z-10 px-2 py-1 rounded-full text-xs font-semibold flex items-center gap-1 ${typeStyles[book.bookType]} border`}>
-                        {typeIcons[book.bookType]}
-                        {book.bookType}
-                      </div>
-                      
-                      <div className="relative aspect-w-2 aspect-h-3 bg-gray-100">
-                        {book.isNew && (
-                          <div className="absolute top-0 right-0 bg-blue-600 text-white text-xs font-bold px-2 py-1 m-2 rounded-sm z-10">
-                            NEW
-                          </div>
-                        )}
+                    Clear Filters
+                  </button>
+                </div>
+              ) : (
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {filteredBooks.map(book => (
+                    <div 
+                      key={book.id}
+                      className="group cursor-pointer"
+                    >
+                      {/* Mobile-optimized card with enhanced layout */}
+                      <div className="bg-white rounded-lg shadow-sm overflow-hidden transition-all duration-300 hover:shadow-md h-full flex flex-col relative">
+                        {/* Book Type Badge - moved to better position for mobile */}
+                        <div className={`absolute top-3 left-3 z-10 px-2 py-1 rounded-full text-xs font-semibold flex items-center gap-1 ${typeStyles[book.bookType]} border`}>
+                          {typeIcons[book.bookType]}
+                          {book.bookType}
+                        </div>
                         
-                        {book.cover ? (
-                          <img 
-                            src={book.cover} 
-                            alt={book.title} 
-                            className="w-full h-64 object-cover object-center transition-transform duration-300 group-hover:scale-105" 
-                            onError={(e) => {
-                              e.target.onerror = null;
-                              e.target.src = 'https://via.placeholder.com/300x450?text=No+Cover';
-                            }}
-                          />
-                        ) : (
-                          <div className="bg-gradient-to-br from-blue-500 to-indigo-600 w-full h-64 flex items-center justify-center transition-transform duration-300 group-hover:scale-105">
-                            <div className="text-white text-center font-serif px-4">
-                              <div className="text-lg font-medium">{book.title}</div>
+                        <div className="flex flex-col sm:flex-row sm:h-64 border-b border-gray-100">
+                          {/* Book cover - adjusted for better mobile view */}
+                          <div className="relative aspect-w-2 aspect-h-3 bg-gray-100 h-56 sm:w-1/2 md:w-2/5 flex-shrink-0">
+                            {book.isNew && (
+                              <div className="absolute top-0 right-0 bg-blue-600 text-white text-xs font-bold px-2 py-1 m-2 rounded-sm z-10">
+                                NEW
+                              </div>
+                            )}
+                            
+                            {book.cover ? (
+                              <img 
+                                src={book.cover} 
+                                alt={book.title} 
+                                className="w-full h-full object-cover object-center transition-transform duration-300 group-hover:scale-105" 
+                                onError={(e) => {
+                                  e.target.onerror = null;
+                                  e.target.src = 'https://via.placeholder.com/300x450?text=No+Cover';
+                                }}
+                              />
+                            ) : (
+                              <div className="bg-gradient-to-br from-blue-500 to-indigo-600 w-full h-full flex items-center justify-center transition-transform duration-300 group-hover:scale-105">
+                                <div className="text-white text-center font-serif px-4">
+                                  <div className="text-lg font-medium">{book.title}</div>
+                                </div>
+                              </div>
+                            )}
+                            
+                            {/* Condition indicator - moved to visible position */}
+                            <div className="absolute bottom-3 right-3 bg-white rounded-lg px-2 py-1 text-xs font-semibold text-gray-700 shadow-sm">
+                              {book.condition || 'Good'}
                             </div>
                           </div>
-                        )}
-                      </div>
-                      
-                      <div className="p-4 flex-grow flex flex-col">
-                        <h3 className="font-medium text-gray-800 mb-1 group-hover:text-blue-600 transition-colors line-clamp-2">
-                          {book.title}
-                        </h3>
-                        <p className="text-sm text-gray-500 mb-2">{book.author}</p>
-                        
-                        <div className="flex items-center mb-2">
-                          <div className="flex text-yellow-400 mr-1">
-                            {[1, 2, 3, 4, 5].map(star => (
-                              <span key={star} className={star <= Math.floor(book.rating) ? "text-yellow-400" : "text-gray-300"}>★</span>
-                            ))}
+                          
+                          {/* Book details - enhanced for mobile */}
+                          <div className="p-4 flex-grow flex flex-col justify-between sm:w-1/2 md:w-3/5">
+                            <div>
+                              <h3 className="font-medium text-gray-800 mb-1 group-hover:text-blue-600 transition-colors sm:line-clamp-2 text-lg">
+                                {book.title}
+                              </h3>
+                              <p className="text-sm text-gray-600 mb-2">{book.author}</p>
+                              
+                              <div className="flex items-center mb-2">
+                                <div className="flex text-yellow-400 mr-1">
+                                  {[1, 2, 3, 4, 5].map(star => (
+                                    <span key={star} className={star <= Math.floor(book.rating) ? "text-yellow-400" : "text-gray-300"}>★</span>
+                                  ))}
+                                </div>
+                                <span className="text-xs text-gray-500">({book.voters})</span>
+                              </div>
+                            </div>
+                            
+                            <div className="mt-auto">
+                              {/* Display price or swap/borrow info with larger, more mobile-friendly text */}
+                              {book.bookType === 'For Sale' && book.price !== null && (
+                                <p className="text-blue-600 font-bold text-lg">${book.price.toFixed(2)}</p>
+                              )}
+                              
+                              {book.bookType === 'For Swap' && (
+                                <p className="text-blue-600 font-medium">Available for Swap</p>
+                              )}
+                              
+                              {book.bookType === 'For Borrowing' && (
+                                <p className="text-blue-600 font-medium">Available to Borrow</p>
+                              )}
+                              
+                              <p className="text-xs text-gray-500 mt-1">
+                                {book.inStock > 0 ? `${book.inStock} in stock` : 'Out of stock'}
+                              </p>
+                            </div>
                           </div>
-                          <span className="text-xs text-gray-500">({book.voters})</span>
                         </div>
                         
-                        <div className="mt-auto">
-                          {/* Only show price for "For Sale" books */}
-                          {book.bookType === 'For Sale' && book.price !== null && (
-                            <p className="text-blue-600 font-medium">${book.price.toFixed(2)}</p>
-                          )}
-                          
-                          {/* For Swap books */}
-                          {book.bookType === 'For Swap' && (
-                            <p className="text-blue-600 font-medium">Swap</p>
-                          )}
-                          
-                          {/* For Borrowing books */}
-                          {book.bookType === 'For Borrowing' && (
-                            <p className="text-blue-600 font-medium">Borrow</p>
-                          )}
-                          
-                          <p className="text-xs text-gray-500 mt-1">
-                            {book.condition} • {book.inStock > 0 ? `${book.inStock} in stock` : 'Out of stock'}
-                          </p>
+                        {/* Action button - full width for better touch target on mobile */}
+                        <div onClick={(e) => {
+                          e.stopPropagation();
+                          setSelectedBook(book);
+                        }} className="p-3 bg-gray-50 hover:bg-gray-100 transition-colors">
+                          <button className="w-full py-2.5 px-4 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 transition-colors text-sm flex items-center justify-center gap-1">
+                            {book.bookType === 'For Sale' && (
+                              <>
+                                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                                </svg>
+                                View Details
+                              </>
+                            )}
+                            
+                            {book.bookType === 'For Swap' && (
+                              <>
+                                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                                </svg>
+                                View Details
+                              </>
+                            )}
+                            
+                            {book.bookType === 'For Borrowing' && (
+                              <>
+                                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                                </svg>
+                                View Details
+                              </>
+                            )}
+                          </button>
                         </div>
-                      </div>
-                      
-                      <div className="p-4 bg-gray-50 border-t border-gray-100">
-                        <button className="w-full py-2 px-4 bg-blue-600 text-white rounded font-medium hover:bg-blue-700 transition-colors text-sm flex items-center justify-center gap-1">
-                          {book.bookType === 'For Sale' && (
-                            <>
-                              <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
-                              </svg>
-                              Add to Cart
-                            </>
-                          )}
-                          
-                          {book.bookType === 'For Swap' && (
-                            <>
-                              <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
-                              </svg>
-                              Propose Swap
-                            </>
-                          )}
-                          
-                          {book.bookType === 'For Borrowing' && (
-                            <>
-                              <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                              </svg>
-                              Borrow Now
-                            </>
-                          )}
-                        </button>
                       </div>
                     </div>
-                  </div>
-                ))}
-              </div>
-            )}
+                  ))}
+                </div>
+              )}
             
             {/* Pagination */}
             {filteredBooks.length > 0 && (
