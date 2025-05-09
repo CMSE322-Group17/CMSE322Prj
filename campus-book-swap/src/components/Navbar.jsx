@@ -81,17 +81,7 @@ const NavBar = () => {
                     : 'text-gray-700 hover:text-blue-600'
                 }`}
               >
-                All Books
-              </Link>
-              <Link 
-                to="/textbooks" 
-                className={`px-3 py-2 text-sm font-medium ${
-                  location.pathname === '/textbooks' 
-                    ? 'text-blue-600' 
-                    : 'text-gray-700 hover:text-blue-600'
-                }`}
-              >
-                Textbooks
+                Books
               </Link>
               <Link 
                 to="/about" 
@@ -279,17 +269,7 @@ const NavBar = () => {
                   : 'text-gray-700 hover:bg-gray-100'
               }`}
             >
-              All Books
-            </Link>
-            <Link 
-              to="/textbooks" 
-              className={`block px-3 py-2 text-base font-medium rounded-md ${
-                location.pathname === '/textbooks' 
-                  ? 'bg-blue-50 text-blue-600' 
-                  : 'text-gray-700 hover:bg-gray-100'
-              }`}
-            >
-              Textbooks
+              Books
             </Link>
             <Link 
               to="/about" 
