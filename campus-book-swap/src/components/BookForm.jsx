@@ -7,6 +7,7 @@ const BookForm = ({ onSuccess, bookToEdit = null }) => {
     title: '',
     author: '',
     description: '',
+    price: '',
     condition: 'New',
     exchange: '',
     subject: '',
@@ -16,7 +17,9 @@ const BookForm = ({ onSuccess, bookToEdit = null }) => {
     bookOfWeek: false,
     bookOfYear: false,
     displayTitle: '',
-    category: ''
+    category: '',
+    bookType: 'For Sale',
+    depositAmount: ''
   };
 
   const [book, setBook] = useState(initialState);
@@ -45,7 +48,7 @@ const BookForm = ({ onSuccess, bookToEdit = null }) => {
             return {
               id: cat.id,
               // Try different possible property names for the category name
-              name: cat.attributes?.Type || cat.attributes?.type || cat.attributes?.name || cat.Type || cat.type || cat.name || `Category ${cat.id}`
+              name: cat.attributes?.Type || cat.attributes?.name || cat.Type || cat.type || cat.name || `Category ${cat.id}`
             };
           });
           
@@ -66,6 +69,7 @@ const BookForm = ({ onSuccess, bookToEdit = null }) => {
         title: bookToEdit.title || '',
         author: bookToEdit.author || '',
         description: bookToEdit.description || '',
+        price: bookToEdit.price || '',
         condition: bookToEdit.condition || 'New',
         exchange: bookToEdit.exchange || '',
         subject: bookToEdit.subject || '',
@@ -75,7 +79,9 @@ const BookForm = ({ onSuccess, bookToEdit = null }) => {
         bookOfWeek: bookToEdit.bookOfWeek || false,
         bookOfYear: bookToEdit.bookOfYear || false,
         displayTitle: bookToEdit.displayTitle || '',
-        category: bookToEdit.category?.id || ''
+        category: bookToEdit.category?.id || '',
+        bookType: bookToEdit.bookType || 'For Sale',
+        depositAmount: bookToEdit.depositAmount || ''
       });
       
       if (bookToEdit.cover) {
@@ -121,6 +127,7 @@ const BookForm = ({ onSuccess, bookToEdit = null }) => {
           title: book.title,
           author: book.author,
           description: book.description,
+          price: book.bookType === 'For Sale' ? parseFloat(book.price) || 0 : null,
           condition: book.condition,
           exchange: book.exchange,
           subject: book.subject,
@@ -131,6 +138,8 @@ const BookForm = ({ onSuccess, bookToEdit = null }) => {
           bookOfYear: book.bookOfYear,
           displayTitle: book.displayTitle,
           category: book.category || null,
+          bookType: book.bookType,
+          depositAmount: book.bookType === 'For Borrowing' ? parseFloat(book.depositAmount) || 0 : null,
           users_permissions_user: user?.id || null
         }
       };
@@ -191,9 +200,14 @@ const BookForm = ({ onSuccess, bookToEdit = null }) => {
     }
   };
 
+  // Show/hide fields based on book type
+  const showPriceField = book.bookType === 'For Sale';
+  const showExchangeField = book.bookType === 'For Swap';
+  const showDepositField = book.bookType === 'For Borrowing';
+
   return (
     <div className="bg-white p-6 rounded-lg shadow-md">
-      <h2 className="text-xl font-bold mb-4">{bookToEdit ? 'Edit Book' : 'List a Book for Sale'}</h2>
+      <h2 className="text-xl font-bold mb-4">{bookToEdit ? 'Edit Book' : 'List a Book'}</h2>
       
       {error && (
         <div className="bg-red-100 text-red-700 p-3 rounded mb-4">
@@ -210,7 +224,7 @@ const BookForm = ({ onSuccess, bookToEdit = null }) => {
       <form onSubmit={handleSubmit} className="space-y-4">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
-            <label htmlFor="title" className="block mb-1 font-medium">Title</label>
+            <label htmlFor="title" className="block mb-1 font-medium">Title <span className="text-red-500">*</span></label>
             <input
               type="text"
               id="title"
@@ -223,7 +237,7 @@ const BookForm = ({ onSuccess, bookToEdit = null }) => {
           </div>
           
           <div>
-            <label htmlFor="author" className="block mb-1 font-medium">Author</label>
+            <label htmlFor="author" className="block mb-1 font-medium">Author <span className="text-red-500">*</span></label>
             <input
               type="text"
               id="author"
@@ -244,8 +258,23 @@ const BookForm = ({ onSuccess, bookToEdit = null }) => {
               onChange={handleChange}
               rows="3"
               className="w-full p-2 border border-gray-300 rounded"
-              required
             ></textarea>
+          </div>
+          
+          <div>
+            <label htmlFor="bookType" className="block mb-1 font-medium">Listing Type <span className="text-red-500">*</span></label>
+            <select
+              id="bookType"
+              name="bookType"
+              value={book.bookType}
+              onChange={handleChange}
+              className="w-full p-2 border border-gray-300 rounded"
+              required
+            >
+              <option value="For Sale">For Sale</option>
+              <option value="For Swap">For Swap</option>
+              <option value="For Borrowing">For Borrowing</option>
+            </select>
           </div>
           
           <div>
@@ -256,7 +285,6 @@ const BookForm = ({ onSuccess, bookToEdit = null }) => {
               value={book.category}
               onChange={handleChange}
               className="w-full p-2 border border-gray-300 rounded"
-              required
             >
               <option value="">Select a category</option>
               {categories.length > 0 ? (
@@ -271,8 +299,43 @@ const BookForm = ({ onSuccess, bookToEdit = null }) => {
             </select>
           </div>
           
+          {showPriceField && (
+            <div>
+              <label htmlFor="price" className="block mb-1 font-medium">Price ($) <span className="text-red-500">*</span></label>
+              <input
+                type="number"
+                id="price"
+                name="price"
+                value={book.price}
+                onChange={handleChange}
+                step="0.01"
+                min="0"
+                className="w-full p-2 border border-gray-300 rounded"
+                required={showPriceField}
+              />
+            </div>
+          )}
+          
+          {showDepositField && (
+            <div>
+              <label htmlFor="depositAmount" className="block mb-1 font-medium">Deposit Amount ($) <span className="text-red-500">*</span></label>
+              <input
+                type="number"
+                id="depositAmount"
+                name="depositAmount"
+                value={book.depositAmount}
+                onChange={handleChange}
+                step="0.01"
+                min="0"
+                className="w-full p-2 border border-gray-300 rounded"
+                required={showDepositField}
+                placeholder="Refundable deposit amount"
+              />
+            </div>
+          )}
+          
           <div>
-            <label htmlFor="condition" className="block mb-1 font-medium">Condition</label>
+            <label htmlFor="condition" className="block mb-1 font-medium">Condition <span className="text-red-500">*</span></label>
             <select
               id="condition"
               name="condition"
@@ -290,18 +353,21 @@ const BookForm = ({ onSuccess, bookToEdit = null }) => {
             </select>
           </div>
           
-          <div>
-            <label htmlFor="exchange" className="block mb-1 font-medium">Exchange Options</label>
-            <input
-              type="text"
-              id="exchange"
-              name="exchange"
-              value={book.exchange}
-              onChange={handleChange}
-              placeholder="e.g. Cash, Trade for another book"
-              className="w-full p-2 border border-gray-300 rounded"
-            />
-          </div>
+          {showExchangeField && (
+            <div>
+              <label htmlFor="exchange" className="block mb-1 font-medium">Exchange For <span className="text-red-500">*</span></label>
+              <input
+                type="text"
+                id="exchange"
+                name="exchange"
+                value={book.exchange}
+                onChange={handleChange}
+                placeholder="e.g. Science books, Fiction novels"
+                className="w-full p-2 border border-gray-300 rounded"
+                required={showExchangeField}
+              />
+            </div>
+          )}
           
           <div>
             <label htmlFor="subject" className="block mb-1 font-medium">Subject</label>
@@ -311,7 +377,7 @@ const BookForm = ({ onSuccess, bookToEdit = null }) => {
               name="subject"
               value={book.subject}
               onChange={handleChange}
-              placeholder="e.g. Mathematics, Programming"
+              placeholder="e.g. Mathematics, Computer Science"
               className="w-full p-2 border border-gray-300 rounded"
             />
           </div>
@@ -330,7 +396,7 @@ const BookForm = ({ onSuccess, bookToEdit = null }) => {
           </div>
           
           <div>
-            <label htmlFor="seller" className="block mb-1 font-medium">Seller Name</label>
+            <label htmlFor="seller" className="block mb-1 font-medium">Seller Name <span className="text-red-500">*</span></label>
             <input
               type="text"
               id="seller"
@@ -339,6 +405,7 @@ const BookForm = ({ onSuccess, bookToEdit = null }) => {
               onChange={handleChange}
               className="w-full p-2 border border-gray-300 rounded"
               required
+              readOnly
             />
           </div>
           
@@ -350,13 +417,13 @@ const BookForm = ({ onSuccess, bookToEdit = null }) => {
               name="displayTitle"
               value={book.displayTitle}
               onChange={handleChange}
-              placeholder="Alternative display title"
+              placeholder="Alternative title for display purposes"
               className="w-full p-2 border border-gray-300 rounded"
             />
           </div>
           
           <div className="md:col-span-2">
-            <label htmlFor="cover" className="block mb-1 font-medium">Cover Image</label>
+            <label htmlFor="cover" className="block mb-1 font-medium">Cover Image <span className="text-red-500">*</span></label>
             <input
               type="file"
               id="cover"
@@ -364,6 +431,7 @@ const BookForm = ({ onSuccess, bookToEdit = null }) => {
               onChange={handleImageChange}
               accept="image/*"
               className="w-full p-2 border border-gray-300 rounded"
+              required={!bookToEdit}
             />
             {coverPreview && (
               <div className="mt-2">
@@ -372,41 +440,43 @@ const BookForm = ({ onSuccess, bookToEdit = null }) => {
             )}
           </div>
           
-          <div className="flex space-x-4">
-            <div className="flex items-center">
-              <input
-                type="checkbox"
-                id="featured"
-                name="featured"
-                checked={book.featured}
-                onChange={handleChange}
-                className="h-4 w-4 text-blue-600"
-              />
-              <label htmlFor="featured" className="ml-2">Featured</label>
-            </div>
-            
-            <div className="flex items-center">
-              <input
-                type="checkbox"
-                id="bookOfWeek"
-                name="bookOfWeek"
-                checked={book.bookOfWeek}
-                onChange={handleChange}
-                className="h-4 w-4 text-blue-600"
-              />
-              <label htmlFor="bookOfWeek" className="ml-2">Book of the Week</label>
-            </div>
-            
-            <div className="flex items-center">
-              <input
-                type="checkbox"
-                id="bookOfYear"
-                name="bookOfYear"
-                checked={book.bookOfYear}
-                onChange={handleChange}
-                className="h-4 w-4 text-blue-600"
-              />
-              <label htmlFor="bookOfYear" className="ml-2">Book of the Year</label>
+          <div className="md:col-span-2">
+            <div className="flex space-x-4 flex-wrap">
+              <div className="flex items-center mb-2">
+                <input
+                  type="checkbox"
+                  id="featured"
+                  name="featured"
+                  checked={book.featured}
+                  onChange={handleChange}
+                  className="h-4 w-4 text-blue-600"
+                />
+                <label htmlFor="featured" className="ml-2 text-sm">Feature on homepage</label>
+              </div>
+              
+              <div className="flex items-center mb-2">
+                <input
+                  type="checkbox"
+                  id="bookOfWeek"
+                  name="bookOfWeek"
+                  checked={book.bookOfWeek}
+                  onChange={handleChange}
+                  className="h-4 w-4 text-blue-600"
+                />
+                <label htmlFor="bookOfWeek" className="ml-2 text-sm">Book of the Week</label>
+              </div>
+              
+              <div className="flex items-center mb-2">
+                <input
+                  type="checkbox"
+                  id="bookOfYear"
+                  name="bookOfYear"
+                  checked={book.bookOfYear}
+                  onChange={handleChange}
+                  className="h-4 w-4 text-blue-600"
+                />
+                <label htmlFor="bookOfYear" className="ml-2 text-sm">Book of the Year</label>
+              </div>
             </div>
           </div>
         </div>
