@@ -96,6 +96,21 @@
       "relation": "oneToMany",
       "target": "api::transaction.transaction",
       "mappedBy": "book"
+    },
+    "bookType": {
+      "type": "enumeration",
+      "enum": [
+        "For Sale",
+        "For Swap",
+        "For Borrowing"
+      ],
+      "default": "For Sale",
+      "required": true
+    },
+    "PriceField": {
+      "type": "decimal",
+      "required": true,
+      "default": 1
     }
   }
 }

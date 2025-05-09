@@ -4,16 +4,18 @@ module.exports = ({ env }) => [
   {
     name: "strapi::cors",
     config: {
-      origin: ["http://localhost:5173"], // Allow Vite frontend
-      methods: ["GET", "POST", "PUT", "DELETE"],
-      headers: ["Content-Type", "Authorization"],
+      enabled: true,
+      origin: ["http://localhost:5173"], // Vite default port
+      methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+      headers: ["Content-Type", "Authorization", "Origin", "Accept"],
+      keepHeaderOnError: true,
     },
   },
-  'strapi::logger',
-  'strapi::poweredBy',
-  'strapi::query',
-  'strapi::body',
-  'strapi::session',
-  'strapi::favicon',
-  'strapi::public',
+  "strapi::logger",
+  "strapi::poweredBy",
+  "strapi::query",
+  "strapi::body",
+  "strapi::session",
+  "strapi::favicon",
+  "strapi::public",
 ];

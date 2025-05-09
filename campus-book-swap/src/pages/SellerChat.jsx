@@ -220,13 +220,6 @@ const SellerChat = () => {
 
 Would any of these interest you for a swap? I can provide more details or photos if needed.`;
         break;
-      case 'borrow':
-        templateText = `Hi, I'm interested in borrowing "${book.attributes?.title || 'your book'}". 
-        
-I can pick it up on [date] and would return it by [date]. I'm happy to leave a deposit if required.
-
-Is this book still available for borrowing?`;
-        break;
       case 'purchase':
         templateText = `Hi, I'm interested in purchasing "${book.attributes?.title || 'your book'}".
         
@@ -444,10 +437,6 @@ Thanks!`;
                     <span className="inline-block px-2 py-1 bg-blue-100 text-blue-800 text-xs rounded-full">
                       For Swap
                     </span>
-                  ) : book.attributes?.bookType === 'For Borrowing' ? (
-                    <span className="inline-block px-2 py-1 bg-purple-100 text-purple-800 text-xs rounded-full">
-                      For Borrowing
-                    </span>
                   ) : (
                     <span className="inline-block px-2 py-1 bg-green-100 text-green-800 text-xs rounded-full">
                       For Sale
@@ -497,18 +486,6 @@ Thanks!`;
                 Add to Swap Cart
               </button>
             </>
-          )}
-          
-          {book && book.attributes?.bookType === 'For Borrowing' && (
-            <button 
-              onClick={() => generateTemplate('borrow')}
-              className="px-3 py-1.5 bg-purple-600 text-white rounded text-sm hover:bg-purple-700 flex items-center"
-            >
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-              </svg>
-              Ask About Borrowing
-            </button>
           )}
           
           {book && (!book.attributes?.bookType || book.attributes?.bookType === 'For Sale') && (
@@ -588,12 +565,6 @@ Thanks!`;
                   Swap Template
                 </button>
                 <button 
-                  onClick={() => generateTemplate('borrow')}
-                  className="px-3 py-1 text-purple-600 text-sm border border-purple-200 rounded hover:bg-purple-50"
-                >
-                  Borrow Template
-                </button>
-                <button 
                   onClick={() => generateTemplate('purchase')}
                   className="px-3 py-1 text-green-600 text-sm border border-green-200 rounded hover:bg-green-50"
                 >
@@ -631,12 +602,6 @@ Thanks!`;
               className="text-blue-600 text-xs hover:underline"
             >
               Swap Template
-            </button>
-            <button 
-              onClick={() => generateTemplate('borrow')}
-              className="text-purple-600 text-xs hover:underline"
-            >
-              Borrow Template
             </button>
             <button 
               onClick={() => generateTemplate('purchase')}

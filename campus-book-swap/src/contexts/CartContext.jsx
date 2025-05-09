@@ -67,7 +67,7 @@ export const CartProvider = ({ children }) => {
     }
   };
 
-  const addToCart = async (book) => {
+  const addToCart = async (book, transactionType = 'buy') => {
     if (!isAuthenticated) {
       // Return an error if user is not logged in
       return { success: false, error: 'Please sign in to add items to your cart' };
@@ -79,11 +79,18 @@ export const CartProvider = ({ children }) => {
       return { success: false, error: 'Invalid book data' };
     }
     
+    // Only allow buy or swap transaction types
+    if (transactionType !== 'buy' && transactionType !== 'swap') {
+      transactionType = 'buy';
+    }
+    
     setLoading(true);
     try {
       console.log('Adding book to cart:', book);
       // Check if the item already exists in cart
-      const existingItem = cartItems.find(item => item.bookId === book.id);
+      const existingItem = cartItems.find(item => 
+        item.bookId === book.id && item.transactionType === transactionType
+      );
       
       if (existingItem) {
         // Update quantity if item exists
@@ -113,7 +120,8 @@ export const CartProvider = ({ children }) => {
           price: typeof book.price === 'number' ? book.price : 19.99,
           title: book.title || 'Unknown Book',
           author: book.author || 'Unknown Author',
-          cover: book.cover || null
+          cover: book.cover || null,
+          transactionType: transactionType
         };
         
         console.log('Creating new cart item:', newItem);

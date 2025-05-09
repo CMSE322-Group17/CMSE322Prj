@@ -81,7 +81,7 @@ const NavBar = () => {
                     : 'text-gray-700 hover:text-blue-600'
                 }`}
               >
-                Books
+                All Books
               </Link>
               <Link 
                 to="/about" 
@@ -269,7 +269,7 @@ const NavBar = () => {
                   : 'text-gray-700 hover:bg-gray-100'
               }`}
             >
-              Books
+              All Books
             </Link>
             <Link 
               to="/about" 

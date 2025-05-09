@@ -1,5 +1,3 @@
-// This is a fixed version of BookDetail.jsx with proper rating handling
-
 import { useState, useEffect } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
@@ -66,8 +64,7 @@ const BookDetail = () => {
   // Status styles
   const statusStyles = {
     'For Sale': 'bg-green-100 text-green-800',
-    'For Swap': 'bg-blue-100 text-blue-800',
-    'For Borrowing': 'bg-purple-100 text-purple-800'
+    'For Swap': 'bg-blue-100 text-blue-800'
   };
   
   // Generate a course code (for demo purposes)
@@ -84,13 +81,6 @@ const BookDetail = () => {
     location: 'North Campus Library'
   } : {};
   
-  // Borrowing details (for demo)
-  const borrowingDetails = {
-    durationOptions: ['1 week', '2 weeks', '1 month'],
-    deposit: '$20.00',
-    availableFrom: 'May 15, 2023'
-  };
-  
   // Actions based on book type
   const actions = {
     'For Sale': {
@@ -100,10 +90,6 @@ const BookDetail = () => {
     'For Swap': {
       primary: 'Propose Swap',
       secondary: 'View Wishlist'
-    },
-    'For Borrowing': {
-      primary: 'Borrow Now',
-      secondary: 'Reserve'
     }
   };
 
@@ -132,9 +118,6 @@ const BookDetail = () => {
     } else if (book.bookType === 'For Swap' && actionType === 'primary') {
       // Redirect to chat with seller for swap
       navigate(`/chat/${seller.id}/${book.id}`);
-    } else if (book.bookType === 'For Borrowing' && actionType === 'primary') {
-      // Handle borrowing process
-      alert("Borrowing request sent to seller!");
     } else {
       // Handle secondary actions
       alert("Feature coming soon!");
@@ -205,7 +188,7 @@ const BookDetail = () => {
           <div className="flex justify-between items-center">
             <div className="flex items-center">
               <h1 className="text-2xl font-bold text-gray-800">{book.title}</h1>
-              <div className={`ml-3 px-3 py-1 rounded-full text-xs font-medium ${statusStyles[book.bookType]}`}>
+              <div className={`ml-3 px-3 py-1 rounded-full text-xs font-medium ${statusStyles[book.bookType] || 'bg-gray-100 text-gray-800'}`}>
                 {book.bookType}
               </div>
             </div>
@@ -262,12 +245,12 @@ const BookDetail = () => {
                   </div>
                 )}
                 
-{/* Rating badge */}
-{book.rating && (
-  <div className="absolute top-0 right-0 bg-yellow-400 text-xs font-bold px-1.5 py-0.5 rounded-bl text-gray-800">
-  {typeof book.rating === 'number' ? book.rating.toFixed(1) : book.rating}
-</div>
-)}
+                {/* Rating badge */}
+                {book.rating && (
+                  <div className="absolute top-0 right-0 bg-yellow-400 text-xs font-bold px-1.5 py-0.5 rounded-bl text-gray-800">
+                    {typeof book.rating === 'number' ? book.rating.toFixed(1) : book.rating}
+                  </div>
+                )}
               </div>
             </div>
             
@@ -292,18 +275,22 @@ const BookDetail = () => {
               )}
               
               <div className="space-y-2">
-                <button 
-                  onClick={() => handleActionClick('primary')}
-                  className="w-full py-2 px-4 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
-                >
-                  {actions[book.bookType].primary}
-                </button>
-                <button 
-                  onClick={() => handleActionClick('secondary')}
-                  className="w-full py-2 px-4 bg-gray-100 text-gray-800 rounded-lg hover:bg-gray-200 transition-colors"
-                >
-                  {actions[book.bookType].secondary}
-                </button>
+                {book.bookType && actions[book.bookType] && (
+                  <>
+                    <button 
+                      onClick={() => handleActionClick('primary')}
+                      className="w-full py-2 px-4 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                    >
+                      {actions[book.bookType].primary}
+                    </button>
+                    <button 
+                      onClick={() => handleActionClick('secondary')}
+                      className="w-full py-2 px-4 bg-gray-100 text-gray-800 rounded-lg hover:bg-gray-200 transition-colors"
+                    >
+                      {actions[book.bookType].secondary}
+                    </button>
+                  </>
+                )}
                 <button 
                   onClick={() => navigate(`/chat/${seller.id}/${book.id}`)}
                   className="w-full py-2 px-4 border border-gray-300 text-gray-600 rounded-lg hover:bg-gray-50 transition-colors flex items-center justify-center gap-2"
@@ -343,22 +330,6 @@ const BookDetail = () => {
                           <span className="font-medium text-gray-700">Exchange For:</span> 
                           <span className="text-gray-600">{book.exchange || "Literature or History books"}</span>
                         </p>
-                      )}
-                      {book.bookType === 'For Borrowing' && (
-                        <>
-                          <p className="flex justify-between">
-                            <span className="font-medium text-gray-700">Duration:</span> 
-                            <span className="text-gray-600">{borrowingDetails.durationOptions.join(' / ')}</span>
-                          </p>
-                          <p className="flex justify-between">
-                            <span className="font-medium text-gray-700">Deposit:</span> 
-                            <span className="text-gray-600">{borrowingDetails.deposit}</span>
-                          </p>
-                          <p className="flex justify-between">
-                            <span className="font-medium text-gray-700">Available From:</span> 
-                            <span className="text-gray-600">{borrowingDetails.availableFrom}</span>
-                          </p>
-                        </>
                       )}
                     </div>
                   </div>
