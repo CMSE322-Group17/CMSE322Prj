@@ -134,11 +134,15 @@ const ConversationItem = ({
         <div className="flex items-center space-x-3">
           {/* User avatar */}
           <div className="flex-shrink-0">
-            {otherUser?.avatar ? (
+            {otherUser?.avatar && otherUser.avatar !== '' ? (
               <img 
                 src={otherUser.avatar} 
                 alt={otherUser.username}
                 className="w-10 h-10 rounded-full object-cover" 
+                onError={(e) => {
+                  e.target.onerror = null;
+                  e.target.src = null;
+                }}
               />
             ) : (
               <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center text-blue-600 font-semibold">
