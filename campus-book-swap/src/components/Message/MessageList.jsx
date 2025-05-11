@@ -61,7 +61,9 @@ const MessageList = ({ messages, loading }) => {
     }
     
     // Special styling for different message types
-    if (isSwapOffer) {
+    if (isPurchaseRequest) {
+      messageBubbleClasses = "bg-green-100 border border-green-300 text-green-800";
+    } else if (isSwapOffer) {
       messageBubbleClasses = "bg-blue-100 border border-blue-300 text-blue-800";
     } else if (isBorrowRequest) {
       messageBubbleClasses = "bg-purple-100 border border-purple-300 text-purple-800";
