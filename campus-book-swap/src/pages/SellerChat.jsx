@@ -116,9 +116,9 @@ const SellerChat = () => {
         {book && (
           <div className="flex mb-4 md:mb-0 md:mr-6">
             <div className="w-24 h-32 bg-gray-200 rounded overflow-hidden flex-shrink-0">
-              {book.cover ? (
+              {getBookCoverUrl(book) ? (
                 <img 
-                  src={book.cover} 
+                  src={getBookCoverUrl(book)}
                   alt={book.attributes?.title || 'Book'}
                   className="w-full h-full object-cover" 
                 />
