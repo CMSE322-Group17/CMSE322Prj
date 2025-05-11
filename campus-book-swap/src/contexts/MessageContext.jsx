@@ -470,6 +470,52 @@ export const MessageProvider = ({ children }) => {
     }
   }, [isAuthenticated, user]);
 
+  // Update request status
+  const updateRequestStatus = useCallback(async (messageId, newStatus) => {
+    if (!isAuthenticated || !user?.id) return false;
+    
+    try {
+      await messageAPI.updateRequestStatus(messageId, newStatus);
+      
+      // Find the message and update it in the messages array
+      setMessages(prevMessages => {
+        // Get the updated message first for notification purposes
+        const updatedMessage = prevMessages.find(msg => msg.id === messageId);
+        
+        // If message found, queue a notification outside the state update
+        if (updatedMessage && updatedMessage.senderId !== user.id) {
+          // Run notification in next tick to avoid render issues
+          setTimeout(() => {
+            showRequestStatusNotification(
+              updatedMessage,
+              newStatus,
+              { title: updatedMessage.bookTitle || "Book" }
+            );
+          }, 0);
+        }
+        
+        // Return updated messages array
+        return prevMessages.map(msg => 
+          msg.id === messageId 
+            ? { ...msg, requestStatus: newStatus } 
+            : msg
+        );
+      });
+      
+      // Update the affected conversation as well, but with a small delay
+      // to prevent the infinite loop
+      setTimeout(() => {
+        fetchConversations();
+      }, 100);
+      
+      return true;
+    } catch (err) {
+      console.error('Error updating request status:', err);
+      setError('Failed to update request status');
+      return false;
+    }
+  }, [isAuthenticated, user, fetchConversations]);
+
   // Clear context errors
   const clearError = useCallback(() => {
     setError(null);
