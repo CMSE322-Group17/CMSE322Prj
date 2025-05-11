@@ -631,7 +631,7 @@ const Dashboard = () => {
                   : 'text-gray-500 hover:text-gray-700 hover:border-gray-300'
               }`}
             >
-              Books I'm Borrowing
+{/*              Books I'm Borrowing
             </button>
             <button
               onClick={() => setActiveTab('history')}
@@ -640,7 +640,7 @@ const Dashboard = () => {
                   ? 'border-b-2 border-blue-500 text-blue-600'
                   : 'text-gray-500 hover:text-gray-700 hover:border-gray-300'
               }`}
-            >
+            >*/}
               Transaction History
             </button>
           </nav>
@@ -672,7 +672,7 @@ const Dashboard = () => {
                 <div className="bg-purple-50 p-4 rounded-lg">
                   <p className="text-purple-800 text-sm font-medium uppercase">Saved</p>
                   <p className="text-2xl font-bold text-gray-800">${stats.savedBySwapping.toFixed(2)}</p>
-                  <p className="text-gray-500 text-sm">By swapping & borrowing</p>
+                  <p className="text-gray-500 text-sm">By swapping</p>
                 </div>
                 
                 <div className="bg-yellow-50 p-4 rounded-lg">
@@ -683,7 +683,7 @@ const Dashboard = () => {
               </div>
               
               {/* Quick Actions */}
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
+{/*              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
                 <button 
                   onClick={() => {
                     setSelectedBook(null);
@@ -716,7 +716,7 @@ const Dashboard = () => {
                   </svg>
                   Messages
                 </Link>
-              </div>
+              </div>*/}
               
               {/* Recent Activity and Pending Actions */}
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -1212,7 +1212,7 @@ const Dashboard = () => {
         )}
         
         {/* Books I'm Borrowing Tab */}
-        {activeTab === 'borrowed' && (
+{/*        {activeTab === 'borrowed' && (
           <div>
             <h2 className="text-lg font-medium mb-4">Books I'm Borrowing</h2>
             
@@ -1302,7 +1302,7 @@ const Dashboard = () => {
               </div>
             )}
           </div>
-        )}
+        )}*/}
         
         {/* Transaction History Tab */}
         {activeTab === 'history' && (

@@ -203,7 +203,7 @@ const BookForm = ({ onSuccess, bookToEdit = null }) => {
   // Show/hide fields based on book type
   const showPriceField = book.bookType === 'For Sale';
   const showExchangeField = book.bookType === 'For Swap';
-  const showDepositField = book.bookType === 'For Borrowing';
+  // const showDepositField = book.bookType === 'For Borrowing';
 
   return (
     <div className="bg-white p-6 rounded-lg shadow-md">
@@ -273,7 +273,7 @@ const BookForm = ({ onSuccess, bookToEdit = null }) => {
             >
               <option value="For Sale">For Sale</option>
               <option value="For Swap">For Swap</option>
-              <option value="For Borrowing">For Borrowing</option>
+              {/*<option value="For Borrowing">For Borrowing</option>*/}
             </select>
           </div>
           
@@ -316,7 +316,7 @@ const BookForm = ({ onSuccess, bookToEdit = null }) => {
             </div>
           )}
           
-          {showDepositField && (
+{/*          {showDepositField && (
             <div>
               <label htmlFor="depositAmount" className="block mb-1 font-medium">Deposit Amount ($) <span className="text-red-500">*</span></label>
               <input
@@ -332,7 +332,7 @@ const BookForm = ({ onSuccess, bookToEdit = null }) => {
                 placeholder="Refundable deposit amount"
               />
             </div>
-          )}
+          )}*/}
           
           <div>
             <label htmlFor="condition" className="block mb-1 font-medium">Condition <span className="text-red-500">*</span></label>
@@ -440,7 +440,7 @@ const BookForm = ({ onSuccess, bookToEdit = null }) => {
             )}
           </div>
           
-          <div className="md:col-span-2">
+{/*          <div className="md:col-span-2">
             <div className="flex space-x-4 flex-wrap">
               <div className="flex items-center mb-2">
                 <input
@@ -478,7 +478,7 @@ const BookForm = ({ onSuccess, bookToEdit = null }) => {
                 <label htmlFor="bookOfYear" className="ml-2 text-sm">Book of the Year</label>
               </div>
             </div>
-          </div>
+          </div>*/}
         </div>
         
         <div className="flex justify-end">
