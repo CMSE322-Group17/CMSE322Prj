@@ -124,11 +124,29 @@ const Messages = () => {
     return conversations.filter(convo => {
       // Check message type for special messages
       const messageType = convo.lastMessage?.messageType;
-      if (activeTab === 'swap' && messageType === 'swap_offer') return true;
-      if (activeTab === 'borrow' && messageType === 'borrow_request') return true;
+      
+      // Handle purchase requests
+      if (activeTab === 'buy' && 
+          (messageType === 'purchase_request' || 
+           messageType === 'purchase')) {
+        return true;
+      }
+      
+      // Handle swap offers
+      if (activeTab === 'swap' && messageType === 'swap_offer') {
+        return true;
+      }
+      
+      // Handle borrow requests
+      if (activeTab === 'borrow' && messageType === 'borrow_request') {
+        return true;
+      }
       
       // Check transaction type field if it exists
-      return convo.transactionType === activeTab;
+      return convo.transactionType === activeTab || 
+             (activeTab === 'buy' && 
+              (convo.transactionType === 'purchase' || 
+               convo.transactionType === 'buy'));
     });
   };
 
