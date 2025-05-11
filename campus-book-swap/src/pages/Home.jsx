@@ -726,47 +726,15 @@ const Home = () => {
 
   // Book Card for Popular Books
   const BookCard = ({ book }) => {
-    // Determine the book's status (random for demo purposes)
-    const statuses = ['For Sale', 'For Swap', 'For Borrowing'];
-    const statusIndex = book.id % 3; // Just for demo
-    const status = statuses[statusIndex];
-    
-    // Set status styles
+    const status = book.exchange ? 'swap' : 'buy';
     const statusStyles = {
-      'For Sale': 'bg-green-100 text-green-800 border-green-200',
-      'For Swap': 'bg-blue-100 text-blue-800 border-blue-200',
-      'For Borrowing': 'bg-purple-100 text-purple-800 border-purple-200'
+      swap: 'bg-blue-100 text-blue-800 border-blue-200',
+      buy: 'bg-green-100 text-green-800 border-green-200'
     };
-    
-    // Set icon based on status
     const statusIcons = {
-      'For Sale': (
-        <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-        </svg>
-      ),
-      'For Swap': (
-        <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
-        </svg>
-      ),
-      'For Borrowing': (
-        <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 14v3m4-3v3m4-3v3M3 21h18M3 10h18M3 7l9-4 9 4M4 10h16v11H4V10z" />
-        </svg>
-      )
+      swap: '🔄',
+      buy: '💰'
     };
-    
-    // Generate random price (for demo purposes)
-    const price = status === 'For Sale' ? `$${(10 + book.id % 30).toFixed(2)}` : null;
-    
-    // Generate a course code (for demo purposes)
-    const courseCode = `${['CS', 'MATH', 'BIO', 'CHEM', 'ENG'][book.id % 5]}${101 + (book.id % 400)}`;
-    
-    // Add a timestamp (for demo purposes)
-    const postedDate = new Date();
-    postedDate.setDate(postedDate.getDate() - (book.id % 30));
-    const timeAgo = getTimeAgo(postedDate);
     
     return (
       <div 
