@@ -403,6 +403,11 @@ export interface ApiBookBook extends Schema.CollectionType {
       'manyToMany',
       'plugin::users-permissions.user'
     >;
+    messages: Attribute.Relation<
+      'api::book.book',
+      'oneToMany',
+      'api::message.message'
+    >;
     PriceField: Attribute.Decimal & Attribute.Required & Attribute.DefaultTo<1>;
     publishedAt: Attribute.DateTime;
     rating: Attribute.Integer &
