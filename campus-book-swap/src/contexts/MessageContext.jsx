@@ -19,6 +19,28 @@ export const MessageProvider = ({ children }) => {
   });
   const [error, setError] = useState(null);
   const [pollingInterval, setPollingInterval] = useState(null);
+  const [notificationsEnabled, setNotificationsEnabled] = useState(false);
+  
+  // Create refs to store previous versions of state to avoid dependency cycles
+  const conversationsRef = useRef(conversations);
+  const messagesRef = useRef(messages);
+  
+  // Keep refs updated with current state
+  useEffect(() => {
+    conversationsRef.current = conversations;
+    messagesRef.current = messages;
+  }, [conversations, messages]);
+
+  // Request notification permission when component mounts
+  useEffect(() => {
+    if (isAuthenticated) {
+      const checkNotificationPermission = async () => {
+        const permissionGranted = await requestNotificationPermission();
+        setNotificationsEnabled(permissionGranted);
+      };
+      checkNotificationPermission();
+    }
+  }, [isAuthenticated]);
 
   // Reset state when user logs out
   useEffect(() => {
