@@ -4,7 +4,7 @@ import { useMessages } from '../../contexts/MessageContext';
 const MessageInput = ({ chatId, receiverId, bookId, onMessageSent }) => {
   const [message, setMessage] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const { sendMessage, loading } = useMessages();
+  const { loading } = useMessages();
   const textareaRef = useRef(null);
 
   // Auto-resize textarea as content grows
