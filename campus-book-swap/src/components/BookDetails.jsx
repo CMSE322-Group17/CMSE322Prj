@@ -3,6 +3,7 @@ import { useParams, Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { useCart } from '../contexts/CartContext';
 import { bookAPI } from '../services/api';
+import { processBookData, getBookTypeStyles } from '../utils/bookFormatters';
 
 const BookDetail = () => {
   const { id } = useParams();
