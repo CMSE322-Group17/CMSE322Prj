@@ -96,12 +96,6 @@ const Home = () => {
           const path = firstImage.url.startsWith('/') ? firstImage.url : `/${firstImage.url}`;
           return `${baseUrl}${path}`;
         }
-        
-        // If it has a hash or provider property (newer Strapi versions)
-        if (firstImage.hash && firstImage.provider) {
-          // Construct URL from hash
-          return `${baseUrl}/uploads/${firstImage.hash}${firstImage.ext}`;
-        }
       }
       
       // Case 3: Strapi v4 format with data.attributes
@@ -377,9 +371,6 @@ const Home = () => {
                 <Link to="/books" className="px-8 py-3 bg-blue-600 text-white rounded-full font-medium hover:bg-blue-700 transition-colors shadow-lg text-center">
                   Browse Books
                 </Link>
-{/*                <Link to="/textbooks" className="px-8 py-3 bg-white text-blue-900 rounded-full font-medium hover:bg-blue-50 transition-colors shadow-lg text-center">
-                  Find Textbooks
-                </Link>*/}
               </div>
               
               {/* Key Stats */}
@@ -409,12 +400,19 @@ const Home = () => {
                 <div className="absolute bottom-0 right-0 w-40 h-56 bg-blue-400 rounded-lg shadow-2xl z-40 overflow-hidden">
                   {featuredBooks && featuredBooks.length > 0 && featuredBooks[0].cover ? (
                     <img 
-                      src={featuredBooks[0].cover || null}
+                      src={featuredBooks[0].cover} 
                       alt={featuredBooks[0].title || "Featured Book"} 
                       className="w-full h-full object-cover"
                       onError={(e) => {
                         e.target.onerror = null;
                         e.target.src = null;
+                        e.target.parentElement.classList.add('bg-gradient-to-br', 'from-blue-400', 'to-blue-600');
+                        e.target.parentElement.innerHTML = `
+                          <div class="font-serif text-white text-center">
+                            <div class="text-lg font-bold">Featured</div>
+                            <div class="text-sm mt-2">Book</div>
+                          </div>
+                        `;
                       }}
                     />
                   ) : (
@@ -470,17 +468,6 @@ const Home = () => {
                 </div>
               </div>
               
-{/*              <div className="action-card p-4 bg-purple-50 rounded-lg flex items-center w-full sm:w-40 transition-all hover:bg-purple-100">
-                <div className="rounded-full bg-purple-100 p-3 mr-3">
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-purple-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 14v3m4-3v3m4-3v3M3 21h18M3 10h18M3 7l9-4 9 4M4 10h16v11H4V10z" />
-                  </svg>
-                </div>
-                <div>
-                  <h3 className="font-semibold text-gray-800">Borrow</h3>
-                  <p className="text-xs text-gray-500">Borrow books</p>
-                </div>
-              </div>*/}
             </div>
           </div>
         </div>
@@ -585,7 +572,7 @@ const Home = () => {
         major: "Computer Science",
         year: "Junior",
         text: "I saved over $300 last semester by swapping and borrowing textbooks on BookSwap. The platform is super easy to use and I've met some great people from my major!",
-        avatar: ""
+        avatar: null
       },
       {
         id: 2,
@@ -593,7 +580,7 @@ const Home = () => {
         major: "Business Administration",
         year: "Senior",
         text: "As a senior, I had a lot of books collecting dust. I've sold 12 books so far and made enough to cover my coffee budget for the entire semester!",
-        avatar: ""
+        avatar: null
       },
       {
         id: 3,
@@ -601,7 +588,7 @@ const Home = () => {
         major: "Biology",
         year: "Sophomore",
         text: "The borrowing feature is perfect for those one-time courses. I borrowed three lab manuals last term and saved a ton of money on books I would have only used once.",
-        avatar: ""
+        avatar: null
       }
     ];
     
@@ -624,15 +611,26 @@ const Home = () => {
                 </p>
                 
                 <div className="flex items-center">
-                  <img 
-                    src={testimonial.avatar} 
-                    alt={testimonial.name}
-                    className="w-12 h-12 rounded-full mr-4 object-cover border-2 border-white shadow-sm"
-                    onError={(e) => {
-                      e.target.onerror = null;
-                      e.target.src = null;
-                    }}
-                  />
+                  {testimonial.avatar ? (
+                    <img 
+                      src={testimonial.avatar} 
+                      alt={testimonial.name}
+                      className="w-12 h-12 rounded-full mr-4 object-cover border-2 border-white shadow-sm"
+                      onError={(e) => {
+                        e.target.onerror = null;
+                        e.target.src = null;
+                        e.target.parentElement.innerHTML = `
+                          <div class="w-12 h-12 rounded-full mr-4 bg-blue-100 flex items-center justify-center text-blue-600 font-semibold text-lg border-2 border-white shadow-sm">
+                            ${testimonial.name.charAt(0)}
+                          </div>
+                        `;
+                      }}
+                    />
+                  ) : (
+                    <div className="w-12 h-12 rounded-full mr-4 bg-blue-100 flex items-center justify-center text-blue-600 font-semibold text-lg border-2 border-white shadow-sm">
+                      {testimonial.name.charAt(0)}
+                    </div>
+                  )}
                   <div>
                     <h4 className="font-medium text-gray-800">{testimonial.name}</h4>
                     <p className="text-sm text-gray-500">{testimonial.major}, {testimonial.year}</p>
@@ -692,11 +690,16 @@ const Home = () => {
             onError={(e) => {
               e.target.onerror = null;
               e.target.src = null;
+              e.target.parentElement.innerHTML = `
+                <div class="bg-gradient-to-br from-blue-500 to-cyan-400 w-full h-40 flex items-center justify-center transition duration-300 group-hover:scale-105">
+                  <span class="text-white font-bold text-xl">${book.name?.substring(0, 1) || '?'}</span>
+                </div>
+              `;
             }}
           />
         ) : (
           <div className="bg-gradient-to-br from-blue-500 to-cyan-400 w-full h-40 flex items-center justify-center transition duration-300 group-hover:scale-105">
-            <span className="text-white font-bold text-xl">{book.name?.substring(0, 1)}</span>
+            <span className="text-white font-bold text-xl">{book.name?.substring(0, 1) || '?'}</span>
           </div>
         )}
         
@@ -709,8 +712,8 @@ const Home = () => {
         {/* Rating badge */}
         {book.rating && (
           <div className="absolute top-0 right-0 bg-yellow-400 text-xs font-bold px-1.5 py-0.5 rounded-bl text-gray-800">
-  {typeof book.rating === 'number' ? book.rating.toFixed(1) : book.rating}
-</div>
+            {typeof book.rating === 'number' ? book.rating.toFixed(1) : book.rating}
+          </div>
         )}
       </div>
       
@@ -723,47 +726,15 @@ const Home = () => {
 
   // Book Card for Popular Books
   const BookCard = ({ book }) => {
-    // Determine the book's status (random for demo purposes)
-    const statuses = ['For Sale', 'For Swap', 'For Borrowing'];
-    const statusIndex = book.id % 3; // Just for demo
-    const status = statuses[statusIndex];
-    
-    // Set status styles
+    const status = book.exchange ? 'swap' : 'buy';
     const statusStyles = {
-      'For Sale': 'bg-green-100 text-green-800 border-green-200',
-      'For Swap': 'bg-blue-100 text-blue-800 border-blue-200',
-      'For Borrowing': 'bg-purple-100 text-purple-800 border-purple-200'
+      swap: 'bg-blue-100 text-blue-800 border-blue-200',
+      buy: 'bg-green-100 text-green-800 border-green-200'
     };
-    
-    // Set icon based on status
     const statusIcons = {
-      'For Sale': (
-        <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-        </svg>
-      ),
-      'For Swap': (
-        <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
-        </svg>
-      ),
-      'For Borrowing': (
-        <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 14v3m4-3v3m4-3v3M3 21h18M3 10h18M3 7l9-4 9 4M4 10h16v11H4V10z" />
-        </svg>
-      )
+      swap: '🔄',
+      buy: '💰'
     };
-    
-    // Generate random price (for demo purposes)
-    const price = status === 'For Sale' ? `$${(10 + book.id % 30).toFixed(2)}` : null;
-    
-    // Generate a course code (for demo purposes)
-    const courseCode = `${['CS', 'MATH', 'BIO', 'CHEM', 'ENG'][book.id % 5]}${101 + (book.id % 400)}`;
-    
-    // Add a timestamp (for demo purposes)
-    const postedDate = new Date();
-    postedDate.setDate(postedDate.getDate() - (book.id % 30));
-    const timeAgo = getTimeAgo(postedDate);
     
     return (
       <div 
@@ -803,75 +774,73 @@ const Home = () => {
             {/* Rating badge */}
             {book.rating && (
               <div className="absolute top-0 right-0 bg-yellow-400 text-xs font-bold px-1.5 py-0.5 rounded-bl text-gray-800">
-                {book.rating.toFixed(1)}
+                {typeof book.rating === 'number' ? book.rating.toFixed(1) : book.rating}
               </div>
             )}
           </div>
           
-          <div className="card-content ml-5 flex-grow overflow-hidden">
-            <h3 className="book-name font-medium text-gray-800 mb-1 truncate group-hover:text-blue-600 transition-colors">{book.title}</h3>
-            <p className="book-by text-gray-500 text-sm mb-2">by {book.author}</p>
+          {/* Book details */}
+          <div className="ml-4 flex-grow">
+            <h3 className="font-medium text-gray-800 line-clamp-2 group-hover:text-blue-600 transition-colors">
+              {book.title}
+            </h3>
+            <p className="text-sm text-gray-500 mt-1">{book.author}</p>
             
-            {/* Rating stars with better spacing */}
-            <div className="flex items-center mb-2">
-              <div className="flex">
-                {[1, 2, 3, 4, 5].map(star => (
-                  <span key={star} className={`text-sm ${star <= Math.floor(book.rating || 0) ? "text-yellow-400" : "text-gray-300"}`}>★</span>
-                ))}
-              </div>
-              <span className="text-gray-400 text-xs ml-2">{book.voters || 0} voters</span>
+            {/* Price or exchange info */}
+            <div className="mt-2">
+              {book.exchange ? (
+                <div className="text-sm text-blue-600 font-medium">
+                  Available for Swap
+                </div>
+              ) : (
+                <div className="text-sm font-medium text-green-600">
+                  ${book.price || 'Contact for price'}
+                </div>
+              )}
             </div>
             
-            {/* Book details with improved visual separation */}
-            <div className="book-details space-y-1 mb-2">
-              {status === 'For Sale' && (
-                <p className="text-sm font-semibold text-green-700">{price}</p>
+            {/* Subject and course */}
+            <div className="mt-2 flex flex-wrap gap-2">
+              {book.subject && (
+                <span className="text-xs bg-gray-100 text-gray-600 px-2 py-1 rounded">
+                  {book.subject}
+                </span>
               )}
-              <p className="text-sm"><span className="font-medium text-gray-700">Course:</span> <span className="text-gray-600">{courseCode}</span></p>
-              <p className="text-sm"><span className="font-medium text-gray-700">Subject:</span> <span className="text-gray-600">{book.subject || "General"}</span></p>
-              <p className="text-xs text-gray-400 mt-2">Posted {timeAgo}</p>
+              {book.course && (
+                <span className="text-xs bg-gray-100 text-gray-600 px-2 py-1 rounded">
+                  {book.course}
+                </span>
+              )}
             </div>
           </div>
         </div>
         
-        {/* Action buttons */}
-        <div className="flex border-t border-gray-100 divide-x divide-gray-100">
-          <button className="flex-1 py-2 text-sm text-gray-600 hover:bg-gray-50 transition-colors flex items-center justify-center gap-1">
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
-            </svg>
-            Contact
-          </button>
-          <button className="flex-1 py-2 text-sm text-gray-600 hover:bg-gray-50 transition-colors flex items-center justify-center gap-1">
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
-            </svg>
-            Save
-          </button>
-          <button className="flex-1 py-2 text-sm font-medium text-blue-600 hover:bg-blue-50 transition-colors flex items-center justify-center gap-1">
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-            </svg>
-            View
-          </button>
-        </div>
-        
-        {/* Likes section with improved appearance */}
+        {/* Likes section */}
         {book.likes?.length > 0 && (
           <div className="likes flex items-center p-3 bg-gray-50 group-hover:bg-blue-50 transition-colors">
             <div className="flex -space-x-2">
               {book.likes.slice(0, 3).map(like => (
                 <div key={like.id} className="like-profile">
-                  <img 
-                    src={like.img} 
-                    alt={like.name} 
-                    className="like-img w-7 h-7 rounded-full border-2 border-white object-cover shadow-sm"
-                    onError={(e) => {
-                      e.target.onerror = null;
-                      e.target.src = null;
-                    }}
-                  />
+                  {like.img ? (
+                    <img 
+                      src={like.img} 
+                      alt={like.name} 
+                      className="like-img w-7 h-7 rounded-full border-2 border-white object-cover shadow-sm"
+                      onError={(e) => {
+                        e.target.onerror = null;
+                        e.target.src = null;
+                        e.target.parentElement.innerHTML = `
+                          <div class="w-7 h-7 rounded-full border-2 border-white bg-blue-100 flex items-center justify-center text-blue-600 font-semibold text-xs shadow-sm">
+                            ${like.name?.charAt(0) || '?'}
+                          </div>
+                        `;
+                      }}
+                    />
+                  ) : (
+                    <div className="w-7 h-7 rounded-full border-2 border-white bg-blue-100 flex items-center justify-center text-blue-600 font-semibold text-xs shadow-sm">
+                      {like.name?.charAt(0) || '?'}
+                    </div>
+                  )}
                 </div>
               ))}
             </div>
@@ -943,11 +912,11 @@ const Home = () => {
     return (
       <div 
         className="fixed inset-0 bg-transparent backdrop-blur-sm flex items-center justify-center z-50 p-4 transition-all duration-300"
-        onClick={onClose} // Close when clicking the backdrop
+        onClick={onClose}
       >
         <div 
           className="bg-white rounded-2xl max-w-4xl w-full p-0 max-h-[90vh] overflow-hidden shadow-2xl animate-fadeIn"
-          onClick={(e) => e.stopPropagation()} // Prevent closing when clicking the card
+          onClick={(e) => e.stopPropagation()}
         >
           {/* Header with book title and close button */}
           <div className="p-6 border-b border-gray-100">
@@ -1021,16 +990,27 @@ const Home = () => {
                       onError={(e) => {
                         e.target.onerror = null;
                         e.target.src = null;
+                        e.target.parentElement.innerHTML = `
+                          <div class="bg-gradient-to-br from-blue-500 to-cyan-400 rounded-xl shadow-md w-40 h-56 flex items-center justify-center">
+                            <div class="text-white text-center font-serif px-2">
+                              <div class="text-xs tracking-wide">A COURT OF</div>
+                              <div class="text-lg font-bold my-1">${book.displayTitle?.[0] || book.title?.split(' ')[0] || ''}</div>
+                              <div class="text-xs tracking-wide">AND</div>
+                              <div class="text-lg font-bold my-1">${book.displayTitle?.[1] || book.title?.split(' ').slice(1).join(' ') || ''}</div>
+                              <div class="text-xs mt-2">${book.author?.toUpperCase() || ''}</div>
+                            </div>
+                          </div>
+                        `;
                       }}
                     />
                   ) : (
                     <div className="bg-gradient-to-br from-blue-500 to-cyan-400 rounded-xl shadow-md w-40 h-56 flex items-center justify-center">
                       <div className="text-white text-center font-serif px-2">
                         <div className="text-xs tracking-wide">A COURT OF</div>
-                        <div className="text-lg font-bold my-1">{book.displayTitle?.[0]}</div>
+                        <div className="text-lg font-bold my-1">{book.displayTitle?.[0] || book.title?.split(' ')[0] || ''}</div>
                         <div className="text-xs tracking-wide">AND</div>
-                        <div className="text-lg font-bold my-1">{book.displayTitle?.[1]}</div>
-                        <div className="text-xs mt-2">{book.author?.toUpperCase()}</div>
+                        <div className="text-lg font-bold my-1">{book.displayTitle?.[1] || book.title?.split(' ').slice(1).join(' ') || ''}</div>
+                        <div className="text-xs mt-2">{book.author?.toUpperCase() || ''}</div>
                       </div>
                     </div>
                   )}
@@ -1038,7 +1018,7 @@ const Home = () => {
                   {/* Rating badge */}
                   {book.rating && (
                     <div className="absolute -bottom-3 -right-3 bg-yellow-400 rounded-full h-10 w-10 flex items-center justify-center text-gray-800 font-bold text-sm shadow-md">
-                      {book.rating.toFixed(1)}
+                      {typeof book.rating === 'number' ? book.rating.toFixed(1) : book.rating}
                     </div>
                   )}
                 </div>
@@ -1067,9 +1047,6 @@ const Home = () => {
                 <div className="space-y-2">
                   <button className="w-full py-2 px-4 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
                     {actions[status].primary}
-                  </button>
-                  <button className="w-full py-2 px-4 bg-gray-100 text-gray-800 rounded-lg hover:bg-gray-200 transition-colors">
-                    {actions[status].secondary}
                   </button>
                   <button className="w-full py-2 px-4 border border-gray-300 text-gray-600 rounded-lg hover:bg-gray-50 transition-colors flex items-center justify-center gap-2">
                     <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -1235,15 +1212,26 @@ const Home = () => {
                         {book.likes.map(like => (
                           <div key={like.id} className="border-b border-gray-100 pb-4">
                             <div className="flex items-center mb-2">
-                              <img 
-                                src={like.img} 
-                                alt={like.name} 
-                                className="w-8 h-8 rounded-full border-2 border-white object-cover shadow-sm"
-                                onError={(e) => {
-                                  e.target.onerror = null;
-                                  e.target.src = null;
-                                }}
-                              />
+                              {like.img ? (
+                                <img 
+                                  src={like.img} 
+                                  alt={like.name} 
+                                  className="w-8 h-8 rounded-full border-2 border-white object-cover shadow-sm"
+                                  onError={(e) => {
+                                    e.target.onerror = null;
+                                    e.target.src = null;
+                                    e.target.parentElement.innerHTML = `
+                                      <div class="w-8 h-8 rounded-full border-2 border-white bg-blue-100 flex items-center justify-center text-blue-600 font-semibold text-xs shadow-sm">
+                                        ${like.name?.charAt(0) || '?'}
+                                      </div>
+                                    `;
+                                  }}
+                                />
+                              ) : (
+                                <div className="w-8 h-8 rounded-full border-2 border-white bg-blue-100 flex items-center justify-center text-blue-600 font-semibold text-xs shadow-sm">
+                                  {like.name?.charAt(0) || '?'}
+                                </div>
+                              )}
                               <div className="ml-3">
                                 <h5 className="font-medium text-gray-700">{like.name}</h5>
                                 <div className="flex items-center">

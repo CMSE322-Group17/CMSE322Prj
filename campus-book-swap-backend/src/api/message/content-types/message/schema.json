@@ -12,19 +12,26 @@
   "attributes": {
     "ChatId": {
       "type": "string",
-      "required": true
+      "required": true,
+      "unique": true
     },
-    "senderId": {
-      "type": "string",
-      "required": true
+    "sender": {
+      "type": "relation",
+      "relation": "manyToOne",
+      "target": "plugin::users-permissions.user",
+      "inversedBy": "sentMessages"
     },
-    "receiverId": {
-      "type": "string",
-      "required": true
+    "receiver": {
+      "type": "relation",
+      "relation": "manyToOne",
+      "target": "plugin::users-permissions.user",
+      "inversedBy": "receivedMessages"
     },
-    "bookId": {
-      "type": "string",
-      "required": true
+    "book": {
+      "type": "relation",
+      "relation": "manyToOne",
+      "target": "api::book.book",
+      "inversedBy": "messages"
     },
     "text": {
       "type": "text",
@@ -41,7 +48,47 @@
         "swap_offer",
         "swap_accepted",
         "swap_declined",
-        "borrow_request"
+        "borrow_request",
+        "purchase_request",
+        "request_accepted",
+        "request_declined"
+      ],
+      "default": "general"
+    },
+    "requestStatus": {
+      "type": "enumeration",
+      "enum": [
+        "pending",
+        "accepted",
+        "declined",
+        "completed",
+        "cancelled"
+      ],
+      "default": "pending"
+    },
+    "read": {
+      "type": "boolean",
+      "default": false
+    },
+    "readBy": {
+      "type": "json",
+      "default": {}
+    },
+    "reactions": {
+      "type": "json",
+      "default": {}
+    },
+    "deleted": {
+      "type": "boolean",
+      "default": false
+    },
+    "attachments": {
+      "type": "media",
+      "multiple": true,
+      "allowedTypes": [
+        "images",
+        "files",
+        "videos"
       ]
     }
   }

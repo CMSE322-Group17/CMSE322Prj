@@ -97,6 +97,12 @@
       "target": "api::transaction.transaction",
       "mappedBy": "book"
     },
+    "messages": {
+      "type": "relation",
+      "relation": "oneToMany",
+      "target": "api::message.message",
+      "mappedBy": "book"
+    },
     "bookType": {
       "type": "enumeration",
       "enum": [

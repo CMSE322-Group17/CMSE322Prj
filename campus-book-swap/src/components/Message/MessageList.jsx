@@ -1,17 +1,24 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
 import { formatTimestamp } from '../../utils/messageFormatters';
+import RequestActions from './RequestActions';
 
 const MessageList = ({ messages, loading }) => {
   const { user } = useAuth();
   const messagesEndRef = useRef(null);
+  const [localMessages, setLocalMessages] = useState(messages);
+
+  // Update local messages when props change
+  useEffect(() => {
+    setLocalMessages(messages);
+  }, [messages]);
 
   // Scroll to bottom when messages change
   useEffect(() => {
     if (messagesEndRef.current) {
       messagesEndRef.current.scrollIntoView({ behavior: 'smooth' });
     }
-  }, [messages]);
+  }, [localMessages]);
 
   if (loading) {
     return (
@@ -39,6 +46,7 @@ const MessageList = ({ messages, loading }) => {
 
   const renderMessage = (message, index) => {
     const isCurrentUser = message.senderId === user?.id;
+    const isPurchaseRequest = message.messageType === 'purchase_request';
     const isSwapOffer = message.messageType === 'swap_offer';
     const isBorrowRequest = message.messageType === 'borrow_request';
     const isSystem = message.messageType === 'system';
@@ -58,7 +66,9 @@ const MessageList = ({ messages, loading }) => {
     }
     
     // Special styling for different message types
-    if (isSwapOffer) {
+    if (isPurchaseRequest) {
+      messageBubbleClasses = "bg-green-100 border border-green-300 text-green-800";
+    } else if (isSwapOffer) {
       messageBubbleClasses = "bg-blue-100 border border-blue-300 text-blue-800";
     } else if (isBorrowRequest) {
       messageBubbleClasses = "bg-purple-100 border border-purple-300 text-purple-800";
@@ -68,15 +78,52 @@ const MessageList = ({ messages, loading }) => {
       <div key={message.id || index} className={messageContainerClasses}>
         <div className={`${messageBubbleClasses} p-3 rounded-lg shadow-sm`}>
           {/* Message type header */}
+          {isPurchaseRequest && (
+            <div className="mb-2 pb-1 border-b border-green-200">
+              <span className="font-semibold text-green-700">🛒 Purchase Request</span>
+              {message.requestStatus && (
+                <span className={`ml-2 px-2 py-1 rounded-full text-xs ${
+                  message.requestStatus === 'pending' ? 'bg-yellow-200 text-yellow-800' : 
+                  message.requestStatus === 'accepted' ? 'bg-green-200 text-green-800' :
+                  message.requestStatus === 'declined' ? 'bg-red-200 text-red-800' :
+                  message.requestStatus === 'completed' ? 'bg-blue-200 text-blue-800' :
+                  'bg-gray-200 text-gray-800'
+                }`}>
+                  {message.requestStatus.charAt(0).toUpperCase() + message.requestStatus.slice(1)}
+                </span>
+              )}
+            </div>
+          )}
+          
           {isSwapOffer && (
             <div className="mb-2 pb-1 border-b border-blue-200">
               <span className="font-semibold text-blue-700">📚 Swap Offer</span>
+              {message.requestStatus && (
+                <span className={`ml-2 px-2 py-1 rounded-full text-xs ${
+                  message.requestStatus === 'pending' ? 'bg-yellow-200 text-yellow-800' : 
+                  message.requestStatus === 'accepted' ? 'bg-green-200 text-green-800' :
+                  message.requestStatus === 'declined' ? 'bg-red-200 text-red-800' :
+                  'bg-gray-200 text-gray-800'
+                }`}>
+                  {message.requestStatus.charAt(0).toUpperCase() + message.requestStatus.slice(1)}
+                </span>
+              )}
             </div>
           )}
           
           {isBorrowRequest && (
             <div className="mb-2 pb-1 border-b border-purple-200">
               <span className="font-semibold text-purple-700">📅 Borrow Request</span>
+              {message.requestStatus && (
+                <span className={`ml-2 px-2 py-1 rounded-full text-xs ${
+                  message.requestStatus === 'pending' ? 'bg-yellow-200 text-yellow-800' : 
+                  message.requestStatus === 'accepted' ? 'bg-green-200 text-green-800' :
+                  message.requestStatus === 'declined' ? 'bg-red-200 text-red-800' :
+                  'bg-gray-200 text-gray-800'
+                }`}>
+                  {message.requestStatus.charAt(0).toUpperCase() + message.requestStatus.slice(1)}
+                </span>
+              )}
             </div>
           )}
           

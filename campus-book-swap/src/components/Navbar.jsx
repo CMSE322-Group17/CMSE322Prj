@@ -100,16 +100,6 @@ const NavBar = () => {
                 All Books
               </Link>
               <Link
-                to="/textbooks"
-                className={`px-3 py-2 text-sm font-medium ${
-                  location.pathname === "/textbooks"
-                    ? "text-blue-600"
-                    : "text-gray-700 hover:text-blue-600"
-                }`}
-              >
-                Textbooks
-              </Link>
-              <Link
                 to="/about"
                 className={`px-3 py-2 text-sm font-medium ${
                   location.pathname === "/about"
@@ -273,20 +263,6 @@ const NavBar = () => {
                       >
                         Profile
                       </Link>
-                      <Link
-                        to="/cart"
-                        className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-                        onClick={() => setIsProfileOpen(false)}
-                      >
-                        My Cart
-                      </Link>
-                      <Link
-                        to="/messages"
-                        className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-                        onClick={() => setIsProfileOpen(false)}
-                      >
-                        Messages {unreadCount > 0 && `(${unreadCount})`}
-                      </Link>
                       <div className="border-t border-gray-200 mt-1 pt-1">
                         <button
                           onClick={handleLogout}
@@ -402,16 +378,6 @@ const NavBar = () => {
               }`}
             >
               All Books
-            </Link>
-            <Link
-              to="/textbooks"
-              className={`block px-3 py-2 text-base font-medium rounded-md ${
-                location.pathname === "/textbooks"
-                  ? "bg-blue-50 text-blue-600"
-                  : "text-gray-700 hover:bg-gray-100"
-              }`}
-            >
-              Textbooks
             </Link>
             <Link
               to="/about"

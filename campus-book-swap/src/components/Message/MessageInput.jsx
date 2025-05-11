@@ -4,7 +4,7 @@ import { useMessages } from '../../contexts/MessageContext';
 const MessageInput = ({ chatId, receiverId, bookId, onMessageSent }) => {
   const [message, setMessage] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const { sendMessage, loading } = useMessages();
+  const { loading } = useMessages();
   const textareaRef = useRef(null);
 
   // Auto-resize textarea as content grows
@@ -23,23 +23,13 @@ const MessageInput = ({ chatId, receiverId, bookId, onMessageSent }) => {
     setIsSubmitting(true);
     
     try {
-      const messageData = {
-        chatId,
-        receiverId,
-        bookId,
-        text: message.trim(),
-        messageType: 'text'
-      };
-      
-      await sendMessage(messageData);
+      // Call the parent's onMessageSent with the message text
+      if (onMessageSent) {
+        await onMessageSent(message.trim());
+      }
       
       // Clear input after sending
       setMessage('');
-      
-      // Call callback if provided
-      if (onMessageSent) {
-        onMessageSent();
-      }
     } catch (err) {
       console.error('Error sending message:', err);
     } finally {

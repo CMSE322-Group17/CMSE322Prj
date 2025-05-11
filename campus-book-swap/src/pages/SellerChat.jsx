@@ -48,31 +48,21 @@ const SellerChat = () => {
       if (!isAuthenticated || !sellerId || !bookId) return;
       
       try {
-        // Fetch seller info using our mock API
-        const sellerResponse = await messageAPI.getUser(sellerId);
+        // Fetch seller info
+        const sellerResponse = await authAxios.get(
+          `${import.meta.env.VITE_API_URL}/api/users/${sellerId}`
+        );
         setSeller(sellerResponse.data);
         
-        // Fetch book info using our mock API
-        const bookResponse = await messageAPI.getBook(bookId);
-        setBook({
-          ...bookResponse.data,
-          id: bookId,
-          cover: null // For mock implementation
-        });
+        // Fetch book info
+        const bookResponse = await authAxios.get(
+          `${import.meta.env.VITE_API_URL}/api/books/${bookId}?populate=*`
+        );
+        setBook(bookResponse.data.data);
         
         // Fetch chat messages
         if (chatId) {
           fetchMessages(chatId);
-        }
-        
-        // Store the current user in our mock system
-        if (user) {
-          messageAPI.saveUser({
-            id: user.id.toString(),
-            username: user.username || 'Current User',
-            email: user.email || 'user@example.com',
-            avatar: null
-          });
         }
         
         clearError();
@@ -91,23 +81,31 @@ const SellerChat = () => {
     }, 15000); // Poll every 15 seconds
     
     return () => clearInterval(intervalId);
-  }, [isAuthenticated, sellerId, bookId, user, chatId, fetchMessages, clearError]);
+  }, [isAuthenticated, sellerId, bookId, user, chatId, fetchMessages, clearError, authAxios]);
 
   // Send a new message
   const handleSendMessage = async (text) => {
-    if (!chatId || !text.trim() || !isAuthenticated) return;
+    if (!chatId || !text || !isAuthenticated) return;
     
     try {
       await sendMessage({
         chatId,
         receiverId: sellerId,
         bookId,
-        text: text.trim(),
-        messageType: 'text'
+        text,
+        messageType: 'general'
       });
     } catch (err) {
       console.error('Error sending message:', err);
     }
+  };
+
+  // Get book cover URL safely
+  const getBookCoverUrl = (book) => {
+    if (!book?.attributes?.cover?.data?.attributes?.url) {
+      return null;
+    }
+    return `${import.meta.env.VITE_API_URL}${book.attributes.cover.data.attributes.url}`;
   };
 
   // Updated BookUserDisplay component to show seller info
@@ -118,9 +116,9 @@ const SellerChat = () => {
         {book && (
           <div className="flex mb-4 md:mb-0 md:mr-6">
             <div className="w-24 h-32 bg-gray-200 rounded overflow-hidden flex-shrink-0">
-              {book.cover ? (
+              {getBookCoverUrl(book) ? (
                 <img 
-                  src={book.cover} 
+                  src={getBookCoverUrl(book)}
                   alt={book.attributes?.title || 'Book'}
                   className="w-full h-full object-cover" 
                 />
@@ -150,7 +148,7 @@ const SellerChat = () => {
               {seller.username ? seller.username.charAt(0).toUpperCase() : 'S'}
             </div>
             <div className="ml-3">
-              <h3 className="font-medium">{seller.username || 'Unknown Seller'}</h3>
+              <h3 className="font-medium">{seller.username}</h3>
               <p className="text-sm text-gray-500">Seller</p>
             </div>
           </div>

@@ -37,7 +37,7 @@ export const MessageProvider = ({ children }) => {
 
   // Fetch conversations when user is authenticated
   useEffect(() => {
-    if (isAuthenticated && user) {
+    if (isAuthenticated && user?.id) {
       fetchConversations();
       fetchUnreadCount();
       
@@ -56,14 +56,25 @@ export const MessageProvider = ({ children }) => {
 
   // Fetch conversations
   const fetchConversations = useCallback(async () => {
-    if (!isAuthenticated || !user) return;
+    if (!isAuthenticated || !user?.id) return;
     
     setLoading(prev => ({ ...prev, conversations: true }));
     try {
       const response = await messageAPI.getUserChats(user.id);
       
-      // Process conversations
-      const processedConversations = response.data || [];
+      // Process conversations and ensure all images have valid sources
+      const processedConversations = (response.data || []).map(conv => ({
+        ...conv,
+        lastMessage: {
+          ...conv.lastMessage,
+          // Ensure image sources are valid
+          attachments: conv.lastMessage?.attachments?.map(attachment => ({
+            ...attachment,
+            url: attachment.url || null // Use null instead of empty string
+          }))
+        }
+      }));
+      
       setConversations(processedConversations);
       setError(null);
     } catch (err) {
@@ -76,36 +87,77 @@ export const MessageProvider = ({ children }) => {
 
   // Fetch unread message count
   const fetchUnreadCount = useCallback(async () => {
-    if (!isAuthenticated || !user) return;
+    if (!isAuthenticated || !user?.id) return;
     
     try {
       const count = await messageAPI.getUnreadMessageCount(user.id);
       setUnreadCount(count);
     } catch (err) {
       console.error('Error fetching unread count:', err);
+      // Don't update the count if there's an error
+      // This prevents displaying incorrect information
     }
   }, [isAuthenticated, user]);
 
   // Fetch messages for a conversation
   const fetchMessages = useCallback(async (chatId) => {
-    if (!isAuthenticated || !chatId) return;
+    if (!isAuthenticated || !chatId || !user?.id) return;
     
     setLoading(prev => ({ ...prev, messages: true }));
     try {
       const response = await messageAPI.getChatMessages(chatId);
       
-      // Process messages
-      const processedMessages = response.data || [];
+      // Process messages and ensure all images have valid sources
+      const processedMessages = (response.data || []).map(msg => {
+        // Handle attachments properly
+        let attachments = [];
+        if (msg.attachments) {
+          // If attachments is an array, use it directly
+          if (Array.isArray(msg.attachments)) {
+            attachments = msg.attachments.map(attachment => ({
+              ...attachment,
+              url: attachment.url || null
+            }));
+          } 
+          // If attachments is an object with data property (Strapi format)
+          else if (msg.attachments.data) {
+            attachments = Array.isArray(msg.attachments.data) 
+              ? msg.attachments.data.map(attachment => ({
+                  id: attachment.id,
+                  url: attachment.attributes?.url || null,
+                  ...attachment.attributes
+                }))
+              : [{
+                  id: msg.attachments.data.id,
+                  url: msg.attachments.data.attributes?.url || null,
+                  ...msg.attachments.data.attributes
+                }];
+          }
+        }
+
+        return {
+          ...msg,
+          attachments
+        };
+      });
+      
       setMessages(processedMessages);
       
       // Update active conversation
       setActiveConversation(chatId);
       
       // Mark messages as read
-      if (user && processedMessages.length > 0) {
-        await messageAPI.markAllMessagesAsRead(chatId, user.id);
-        // Update unread count
-        fetchUnreadCount();
+      if (processedMessages.length > 0) {
+        try {
+          await messageAPI.markAllMessagesAsRead(chatId, user.id);
+          // Update unread count
+          fetchUnreadCount();
+        } catch (markReadError) {
+          console.warn('Error marking messages as read:', markReadError);
+          // Continue execution even if marking as read fails
+          // Still attempt to update unread count
+          fetchUnreadCount();
+        }
       }
       
       setError(null);
@@ -119,7 +171,7 @@ export const MessageProvider = ({ children }) => {
 
   // Send a message
   const sendMessage = useCallback(async (messageData) => {
-    if (!isAuthenticated || !user) return null;
+    if (!isAuthenticated || !user?.id) return null;
     
     setLoading(prev => ({ ...prev, sending: true }));
     try {
@@ -131,7 +183,36 @@ export const MessageProvider = ({ children }) => {
       // Add the new message to the messages list
       const newMessage = response.data;
       if (newMessage) {
-        setMessages(prev => [...prev, newMessage]);
+        // Handle attachments properly
+        let attachments = [];
+        if (newMessage.attachments) {
+          // If attachments is an array, use it directly
+          if (Array.isArray(newMessage.attachments)) {
+            attachments = newMessage.attachments.map(attachment => ({
+              ...attachment,
+              url: attachment.url || null
+            }));
+          } 
+          // If attachments is an object with data property (Strapi format)
+          else if (newMessage.attachments.data) {
+            attachments = Array.isArray(newMessage.attachments.data) 
+              ? newMessage.attachments.data.map(attachment => ({
+                  id: attachment.id,
+                  url: attachment.attributes?.url || null,
+                  ...attachment.attributes
+                }))
+              : [{
+                  id: newMessage.attachments.data.id,
+                  url: newMessage.attachments.data.attributes?.url || null,
+                  ...newMessage.attachments.data.attributes
+                }];
+          }
+        }
+
+        setMessages(prev => [...prev, {
+          ...newMessage,
+          attachments
+        }]);
       }
       
       setError(null);
@@ -147,19 +228,20 @@ export const MessageProvider = ({ children }) => {
 
   // Start a new conversation
   const startConversation = useCallback(async (receiverId, bookId, initialMessage) => {
-    if (!isAuthenticated || !user) return null;
+    if (!isAuthenticated || !user?.id) return null;
     
     try {
       // Create chat ID using user IDs and book ID
       const chatId = messageAPI.createChatId(user.id, receiverId, bookId);
       
-      // Send initial message
+      // Send initial message as a purchase request
       const messageData = {
         chatId,
         receiverId,
         bookId,
         text: initialMessage || "Hi, I'm interested in this book.",
-        messageType: 'text'
+        messageType: 'purchase_request',
+        requestStatus: 'pending'
       };
       
       const response = await sendMessage(messageData);
@@ -180,7 +262,7 @@ export const MessageProvider = ({ children }) => {
 
   // Delete a message
   const deleteMessageById = useCallback(async (messageId) => {
-    if (!isAuthenticated) return false;
+    if (!isAuthenticated || !user?.id) return false;
     
     try {
       await messageAPI.deleteMessage(messageId);
@@ -194,7 +276,7 @@ export const MessageProvider = ({ children }) => {
       setError('Failed to delete message');
       return false;
     }
-  }, [isAuthenticated]);
+  }, [isAuthenticated, user]);
 
   // Clear context errors
   const clearError = useCallback(() => {
