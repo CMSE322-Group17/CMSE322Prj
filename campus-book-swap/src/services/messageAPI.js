@@ -876,15 +876,15 @@ const messageAPI = {
       const response = await api.post('/api/messages', {
         data: {
           ChatId: chatId,
-          senderId: messageData.senderId.toString(),
-          receiverId: messageData.receiverId.toString(),
-          bookId: messageData.bookId.toString(),
+          sender: { id: messageData.senderId.toString() },
+          receiver: { id: messageData.receiverId.toString() },
+          book: { id: messageData.bookId.toString() },
           text: encryptedText,
           messageType: messageData.messageType || 'general',
           timestamp: new Date().toISOString(),
           read: false,
           deleted: false,
-          requestStatus: messageData.messageType === 'purchase_request' || messageData.messageType === 'swap_offer' ? 'pending' : undefined
+          requestStatus: messageData.requestStatus || (messageData.messageType === 'purchase_request' || messageData.messageType === 'swap_offer' ? 'pending' : undefined)
         }
       }, { 
         cancelToken: cancelToken.token,
