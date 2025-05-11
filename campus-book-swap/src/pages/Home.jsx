@@ -712,8 +712,8 @@ const Home = () => {
         {/* Rating badge */}
         {book.rating && (
           <div className="absolute top-0 right-0 bg-yellow-400 text-xs font-bold px-1.5 py-0.5 rounded-bl text-gray-800">
-  {typeof book.rating === 'number' ? book.rating.toFixed(1) : book.rating}
-</div>
+            {typeof book.rating === 'number' ? book.rating.toFixed(1) : book.rating}
+          </div>
         )}
       </div>
       
