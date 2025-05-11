@@ -68,6 +68,15 @@ const MessageList = ({ messages, loading }) => {
     // Special styling for different message types
     if (isPurchaseRequest) {
       messageBubbleClasses = "bg-green-100 border border-green-300 text-green-800";
+      
+      // Additional styling based on request status
+      if (message.requestStatus === 'accepted') {
+        messageBubbleClasses = "bg-green-100 border border-green-400 text-green-800";
+      } else if (message.requestStatus === 'declined') {
+        messageBubbleClasses = "bg-red-50 border border-red-300 text-red-800";
+      } else if (message.requestStatus === 'completed') {
+        messageBubbleClasses = "bg-blue-100 border border-blue-400 text-blue-800";
+      }
     } else if (isSwapOffer) {
       messageBubbleClasses = "bg-blue-100 border border-blue-300 text-blue-800";
     } else if (isBorrowRequest) {
