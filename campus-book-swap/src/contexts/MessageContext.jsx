@@ -261,7 +261,7 @@ export const MessageProvider = ({ children }) => {
 
   // Delete a message
   const deleteMessageById = useCallback(async (messageId) => {
-    if (!isAuthenticated) return false;
+    if (!isAuthenticated || !user?.id) return false;
     
     try {
       await messageAPI.deleteMessage(messageId);
