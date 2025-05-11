@@ -171,7 +171,7 @@ export const MessageProvider = ({ children }) => {
 
   // Send a message
   const sendMessage = useCallback(async (messageData) => {
-    if (!isAuthenticated || !user) return null;
+    if (!isAuthenticated || !user?.id) return null;
     
     setLoading(prev => ({ ...prev, sending: true }));
     try {
