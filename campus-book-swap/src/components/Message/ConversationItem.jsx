@@ -132,7 +132,10 @@ const ConversationItem = ({
   return (
     <div 
       className={`border-b border-gray-200 cursor-pointer transition-colors ${
-        active ? 'bg-blue-50' : hasUnread ? 'bg-blue-50/30' : 'hover:bg-gray-50'
+        active ? 'bg-blue-50' : 
+        hasPendingRequest ? 'bg-yellow-50' :
+        hasUnread ? 'bg-blue-50/30' : 
+        'hover:bg-gray-50'
       }`}
       onClick={handleClick}
     >
