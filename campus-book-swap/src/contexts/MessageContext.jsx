@@ -1,6 +1,6 @@
 import { createContext, useState, useEffect, useContext, useCallback } from 'react';
 import { useAuth } from './AuthContext';
-import * as messageAPI from '../services/messageAPI';
+import messageAPI from '../services/messageAPI';
 
 // Create context
 const MessageContext = createContext();
@@ -60,10 +60,10 @@ export const MessageProvider = ({ children }) => {
     
     setLoading(prev => ({ ...prev, conversations: true }));
     try {
-      const response = await messageAPI.getConversations();
+      const response = await messageAPI.getUserChats(user.id);
       
       // Process conversations
-      const processedConversations = response.data?.data || [];
+      const processedConversations = response.data || [];
       setConversations(processedConversations);
       setError(null);
     } catch (err) {
@@ -79,7 +79,7 @@ export const MessageProvider = ({ children }) => {
     if (!isAuthenticated || !user) return;
     
     try {
-      const count = await messageAPI.getUnreadCount(user.id);
+      const count = await messageAPI.getUnreadMessageCount(user.id);
       setUnreadCount(count);
     } catch (err) {
       console.error('Error fetching unread count:', err);
@@ -92,10 +92,10 @@ export const MessageProvider = ({ children }) => {
     
     setLoading(prev => ({ ...prev, messages: true }));
     try {
-      const response = await messageAPI.getMessages(chatId);
+      const response = await messageAPI.getChatMessages(chatId);
       
       // Process messages
-      const processedMessages = response.data?.data || [];
+      const processedMessages = response.data || [];
       setMessages(processedMessages);
       
       // Update active conversation
@@ -129,13 +129,13 @@ export const MessageProvider = ({ children }) => {
       });
       
       // Add the new message to the messages list
-      const newMessage = response.data?.data;
+      const newMessage = response.data;
       if (newMessage) {
         setMessages(prev => [...prev, newMessage]);
       }
       
       setError(null);
-      return response.data;
+      return response;
     } catch (err) {
       console.error('Error sending message:', err);
       setError('Failed to send message');
@@ -151,7 +151,7 @@ export const MessageProvider = ({ children }) => {
     
     try {
       // Create chat ID using user IDs and book ID
-      const chatId = `${user.id}_${receiverId}_${bookId}`;
+      const chatId = messageAPI.createChatId(user.id, receiverId, bookId);
       
       // Send initial message
       const messageData = {
