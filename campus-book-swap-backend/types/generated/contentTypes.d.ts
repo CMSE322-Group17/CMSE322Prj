@@ -519,8 +519,13 @@ export interface ApiMessageMessage extends Schema.CollectionType {
     draftAndPublish: true;
   };
   attributes: {
-    bookId: Attribute.String & Attribute.Required;
-    ChatId: Attribute.String & Attribute.Required;
+    attachments: Attribute.Media<'images' | 'files' | 'videos', true>;
+    book: Attribute.Relation<
+      'api::message.message',
+      'manyToOne',
+      'api::book.book'
+    >;
+    ChatId: Attribute.String & Attribute.Required & Attribute.Unique;
     createdAt: Attribute.DateTime;
     createdBy: Attribute.Relation<
       'api::message.message',
