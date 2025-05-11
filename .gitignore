@@ -14,7 +14,7 @@ CMSE322:Diagrams
 .env.development.local
 .env.test.local
 .env.production.local
-
+GitAutoHunksCommit.sh
 # logs
 npm-debug.log*
 yarn-debug.log*
