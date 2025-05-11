@@ -533,18 +533,38 @@ export interface ApiMessageMessage extends Schema.CollectionType {
       'admin::user'
     > &
       Attribute.Private;
+    deleted: Attribute.Boolean & Attribute.DefaultTo<false>;
     messageType: Attribute.Enumeration<
       [
         'general',
         'swap_offer',
         'swap_accepted',
         'swap_declined',
-        'borrow_request'
+        'borrow_request',
+        'purchase_request',
+        'request_accepted',
+        'request_declined'
       ]
-    >;
+    > &
+      Attribute.DefaultTo<'general'>;
     publishedAt: Attribute.DateTime;
-    receiverId: Attribute.String & Attribute.Required;
-    senderId: Attribute.String & Attribute.Required;
+    reactions: Attribute.JSON & Attribute.DefaultTo<{}>;
+    read: Attribute.Boolean & Attribute.DefaultTo<false>;
+    readBy: Attribute.JSON & Attribute.DefaultTo<{}>;
+    receiver: Attribute.Relation<
+      'api::message.message',
+      'manyToOne',
+      'plugin::users-permissions.user'
+    >;
+    requestStatus: Attribute.Enumeration<
+      ['pending', 'accepted', 'declined', 'completed', 'cancelled']
+    > &
+      Attribute.DefaultTo<'pending'>;
+    sender: Attribute.Relation<
+      'api::message.message',
+      'manyToOne',
+      'plugin::users-permissions.user'
+    >;
     text: Attribute.Text & Attribute.Required;
     timestamp: Attribute.DateTime & Attribute.Required;
     updatedAt: Attribute.DateTime;
