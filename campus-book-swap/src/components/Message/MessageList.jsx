@@ -143,6 +143,22 @@ const MessageList = ({ messages, loading }) => {
           <div className="text-xs mt-1 opacity-70 text-right">
             {formatTimestamp(message.timestamp)}
           </div>
+          
+          {/* Add request actions for purchase requests or swap offers */}
+          {(message.messageType === 'purchase_request' || message.messageType === 'swap_offer') && (
+            <RequestActions 
+              message={message} 
+              onStatusChange={(messageId, newStatus) => {
+                setLocalMessages(prev => 
+                  prev.map(msg => 
+                    msg.id === messageId 
+                      ? { ...msg, requestStatus: newStatus } 
+                      : msg
+                  )
+                );
+              }} 
+            />
+          )}
         </div>
       </div>
     );
