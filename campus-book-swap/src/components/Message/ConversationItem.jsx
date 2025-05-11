@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
-import { formatTimestamp } from '../../utils/messageFormatters';
+import { formatTimestamp, truncateText } from '../../utils/messageFormatters';
 
 const ConversationItem = ({ 
   conversation, 
@@ -10,7 +10,7 @@ const ConversationItem = ({
   bookData = null,
   otherUserData = null
 }) => {
-  const { user } = useAuth();
+  const { user, authAxios } = useAuth();
   const [book, setBook] = useState(bookData);
   const [otherUser, setOtherUser] = useState(otherUserData);
   const [loading, setLoading] = useState(!bookData || !otherUserData);
@@ -18,7 +18,7 @@ const ConversationItem = ({
   // Extract data from conversation
   const chatId = conversation.chatId || conversation.id;
   const [userId1, userId2, bookId] = chatId ? chatId.split('_') : [null, null, null];
-  const otherUserId = user?.id === userId1 ? userId2 : userId1;
+  const otherUserId = user?.id === parseInt(userId1) ? userId2 : userId1;
   const lastMessage = conversation.lastMessage || conversation;
   const hasUnread = conversation.unreadCount > 0;
   
@@ -44,28 +44,51 @@ const ConversationItem = ({
   // Fetch book and user data if not provided
   useEffect(() => {
     const fetchData = async () => {
-      if (!loading) return;
+      if (!loading || !chatId) return;
       
       try {
         setLoading(true);
         
-        // These fetch calls would normally use your API services
-        // For now, we're just setting placeholders
+        // Fetch book data if not provided
         if (!book && bookId) {
-          // Placeholder until you implement the actual API call
-          setBook({
-            title: "Book Title",
-            author: "Author Name",
-            cover: null
-          });
+          try {
+            const bookResponse = await authAxios.get(`${import.meta.env.VITE_API_URL}/api/books/${bookId}?populate=*`);
+            
+            setBook({
+              id: bookId,
+              title: bookResponse.data.data.attributes.title,
+              author: bookResponse.data.data.attributes.author,
+              cover: bookResponse.data.data.attributes.cover?.data ? 
+                `${import.meta.env.VITE_API_URL}${bookResponse.data.data.attributes.cover.data.attributes.url}` : 
+                null
+            });
+          } catch (err) {
+            console.error('Error fetching book:', err);
+            setBook({
+              title: "Unknown Book",
+              author: "Unknown Author",
+              cover: null
+            });
+          }
         }
         
+        // Fetch other user data if not provided
         if (!otherUser && otherUserId) {
-          // Placeholder until you implement the actual API call
-          setOtherUser({
-            username: "User",
-            avatar: null
-          });
+          try {
+            const userResponse = await authAxios.get(`${import.meta.env.VITE_API_URL}/api/users/${otherUserId}`);
+            
+            setOtherUser({
+              id: otherUserId,
+              username: userResponse.data.username,
+              avatar: userResponse.data.avatar || null
+            });
+          } catch (err) {
+            console.error('Error fetching user:', err);
+            setOtherUser({
+              username: "Unknown User",
+              avatar: null
+            });
+          }
         }
       } catch (err) {
         console.error('Error fetching conversation data:', err);
@@ -75,13 +98,29 @@ const ConversationItem = ({
     };
     
     fetchData();
-  }, [book, otherUser, bookId, otherUserId, loading]);
+  }, [book, otherUser, bookId, otherUserId, loading, chatId, authAxios]);
 
   const handleClick = () => {
     if (onClick) {
       onClick(conversation);
     }
   };
+
+  // Render loading placeholder
+  if (loading) {
+    return (
+      <div className="border-b border-gray-200 p-3">
+        <div className="animate-pulse flex space-x-3">
+          <div className="rounded-full bg-gray-200 h-10 w-10"></div>
+          <div className="flex-1 space-y-2">
+            <div className="h-4 bg-gray-200 rounded w-1/4"></div>
+            <div className="h-3 bg-gray-200 rounded w-3/4"></div>
+            <div className="h-3 bg-gray-200 rounded w-1/2"></div>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div 
@@ -110,7 +149,7 @@ const ConversationItem = ({
           {/* Conversation details */}
           <div className="flex-grow min-w-0">
             <div className="flex justify-between items-baseline">
-              <h3 className="font-medium truncate">{otherUser?.username || 'Loading...'}</h3>
+              <h3 className="font-medium truncate">{otherUser?.username || 'Unknown User'}</h3>
               <span className="text-xs text-gray-500 whitespace-nowrap ml-2">
                 {lastMessage?.timestamp ? formatTimestamp(lastMessage.timestamp) : ''}
               </span>
@@ -125,15 +164,17 @@ const ConversationItem = ({
               </span>
               
               {/* Book name */}
-              <span className="ml-2 text-xs text-gray-600 truncate">
-                {book?.title ? `Re: ${book.title}` : 'Loading...'}
-              </span>
+              {book && (
+                <span className="ml-2 text-xs text-gray-600 truncate">
+                  {book.title ? `Re: ${truncateText(book.title, 20)}` : 'Unknown Book'}
+                </span>
+              )}
             </div>
             
             {/* Last message preview */}
             <p className="text-sm text-gray-600 mt-1 truncate">
               {lastMessage?.senderId === user?.id ? 'You: ' : ''}
-              {lastMessage?.text || 'No messages yet'}
+              {truncateText(lastMessage?.text || 'No messages yet', 40)}
             </p>
           </div>
           
