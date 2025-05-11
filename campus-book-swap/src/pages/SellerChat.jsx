@@ -148,7 +148,7 @@ const SellerChat = () => {
               {seller.username ? seller.username.charAt(0).toUpperCase() : 'S'}
             </div>
             <div className="ml-3">
-              <h3 className="font-medium">{seller.username || 'Unknown Seller'}</h3>
+              <h3 className="font-medium">{seller.username}</h3>
               <p className="text-sm text-gray-500">Seller</p>
             </div>
           </div>
