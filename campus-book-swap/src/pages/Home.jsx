@@ -912,11 +912,11 @@ const Home = () => {
     return (
       <div 
         className="fixed inset-0 bg-transparent backdrop-blur-sm flex items-center justify-center z-50 p-4 transition-all duration-300"
-        onClick={onClose} // Close when clicking the backdrop
+        onClick={onClose}
       >
         <div 
           className="bg-white rounded-2xl max-w-4xl w-full p-0 max-h-[90vh] overflow-hidden shadow-2xl animate-fadeIn"
-          onClick={(e) => e.stopPropagation()} // Prevent closing when clicking the card
+          onClick={(e) => e.stopPropagation()}
         >
           {/* Header with book title and close button */}
           <div className="p-6 border-b border-gray-100">
