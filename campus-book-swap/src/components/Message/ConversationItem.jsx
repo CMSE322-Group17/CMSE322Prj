@@ -192,8 +192,14 @@ const ConversationItem = ({
             </p>
           </div>
           
-          {/* Unread indicator */}
-          {hasUnread && (
+          {/* Pending request or unread indicator */}
+          {hasPendingRequest ? (
+            <div className="flex-shrink-0">
+              <span className="bg-yellow-500 text-white text-xs px-2 py-1 rounded-full flex items-center">
+                New Request
+              </span>
+            </div>
+          ) : hasUnread && (
             <div className="flex-shrink-0">
               <span className="bg-blue-600 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
                 {conversation.unreadCount > 9 ? '9+' : conversation.unreadCount}
