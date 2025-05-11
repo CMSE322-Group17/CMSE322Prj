@@ -186,7 +186,7 @@ export const MessageProvider = ({ children }) => {
         clearInterval(interval);
       };
     }
-  }, [isAuthenticated, user]);
+  }, [isAuthenticated, user, fetchConversations, fetchUnreadCount]);
 
   // Fetch conversations
   const fetchConversations = useCallback(async () => {
