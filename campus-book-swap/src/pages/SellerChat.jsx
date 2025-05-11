@@ -81,23 +81,31 @@ const SellerChat = () => {
     }, 15000); // Poll every 15 seconds
     
     return () => clearInterval(intervalId);
-  }, [isAuthenticated, sellerId, bookId, user, chatId, fetchMessages, clearError]);
+  }, [isAuthenticated, sellerId, bookId, user, chatId, fetchMessages, clearError, authAxios]);
 
   // Send a new message
   const handleSendMessage = async (text) => {
-    if (!chatId || !text.trim() || !isAuthenticated) return;
+    if (!chatId || !text || !isAuthenticated) return;
     
     try {
       await sendMessage({
         chatId,
         receiverId: sellerId,
         bookId,
-        text: text.trim(),
-        messageType: 'text'
+        text,
+        messageType: 'general'
       });
     } catch (err) {
       console.error('Error sending message:', err);
     }
+  };
+
+  // Get book cover URL safely
+  const getBookCoverUrl = (book) => {
+    if (!book?.attributes?.cover?.data?.attributes?.url) {
+      return null;
+    }
+    return `${import.meta.env.VITE_API_URL}${book.attributes.cover.data.attributes.url}`;
   };
 
   // Updated BookUserDisplay component to show seller info
