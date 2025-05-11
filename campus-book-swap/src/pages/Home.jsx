@@ -774,75 +774,73 @@ const Home = () => {
             {/* Rating badge */}
             {book.rating && (
               <div className="absolute top-0 right-0 bg-yellow-400 text-xs font-bold px-1.5 py-0.5 rounded-bl text-gray-800">
-                {book.rating.toFixed(1)}
+                {typeof book.rating === 'number' ? book.rating.toFixed(1) : book.rating}
               </div>
             )}
           </div>
           
-          <div className="card-content ml-5 flex-grow overflow-hidden">
-            <h3 className="book-name font-medium text-gray-800 mb-1 truncate group-hover:text-blue-600 transition-colors">{book.title}</h3>
-            <p className="book-by text-gray-500 text-sm mb-2">by {book.author}</p>
+          {/* Book details */}
+          <div className="ml-4 flex-grow">
+            <h3 className="font-medium text-gray-800 line-clamp-2 group-hover:text-blue-600 transition-colors">
+              {book.title}
+            </h3>
+            <p className="text-sm text-gray-500 mt-1">{book.author}</p>
             
-            {/* Rating stars with better spacing */}
-            <div className="flex items-center mb-2">
-              <div className="flex">
-                {[1, 2, 3, 4, 5].map(star => (
-                  <span key={star} className={`text-sm ${star <= Math.floor(book.rating || 0) ? "text-yellow-400" : "text-gray-300"}`}>★</span>
-                ))}
-              </div>
-              <span className="text-gray-400 text-xs ml-2">{book.voters || 0} voters</span>
+            {/* Price or exchange info */}
+            <div className="mt-2">
+              {book.exchange ? (
+                <div className="text-sm text-blue-600 font-medium">
+                  Available for Swap
+                </div>
+              ) : (
+                <div className="text-sm font-medium text-green-600">
+                  ${book.price || 'Contact for price'}
+                </div>
+              )}
             </div>
             
-            {/* Book details with improved visual separation */}
-            <div className="book-details space-y-1 mb-2">
-              {status === 'For Sale' && (
-                <p className="text-sm font-semibold text-green-700">{price}</p>
+            {/* Subject and course */}
+            <div className="mt-2 flex flex-wrap gap-2">
+              {book.subject && (
+                <span className="text-xs bg-gray-100 text-gray-600 px-2 py-1 rounded">
+                  {book.subject}
+                </span>
               )}
-              <p className="text-sm"><span className="font-medium text-gray-700">Course:</span> <span className="text-gray-600">{courseCode}</span></p>
-              <p className="text-sm"><span className="font-medium text-gray-700">Subject:</span> <span className="text-gray-600">{book.subject || "General"}</span></p>
-              <p className="text-xs text-gray-400 mt-2">Posted {timeAgo}</p>
+              {book.course && (
+                <span className="text-xs bg-gray-100 text-gray-600 px-2 py-1 rounded">
+                  {book.course}
+                </span>
+              )}
             </div>
           </div>
         </div>
         
-        {/* Action buttons */}
-        <div className="flex border-t border-gray-100 divide-x divide-gray-100">
-          <button className="flex-1 py-2 text-sm text-gray-600 hover:bg-gray-50 transition-colors flex items-center justify-center gap-1">
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
-            </svg>
-            Contact
-          </button>
-          <button className="flex-1 py-2 text-sm text-gray-600 hover:bg-gray-50 transition-colors flex items-center justify-center gap-1">
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
-            </svg>
-            Save
-          </button>
-          <button className="flex-1 py-2 text-sm font-medium text-blue-600 hover:bg-blue-50 transition-colors flex items-center justify-center gap-1">
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-            </svg>
-            View
-          </button>
-        </div>
-        
-        {/* Likes section with improved appearance */}
+        {/* Likes section */}
         {book.likes?.length > 0 && (
           <div className="likes flex items-center p-3 bg-gray-50 group-hover:bg-blue-50 transition-colors">
             <div className="flex -space-x-2">
               {book.likes.slice(0, 3).map(like => (
                 <div key={like.id} className="like-profile">
-                  <img 
-                    src={like.img} 
-                    alt={like.name} 
-                    className="like-img w-7 h-7 rounded-full border-2 border-white object-cover shadow-sm"
-                    onError={(e) => {
-                      e.target.onerror = null;
-                      e.target.src = null;
-                    }}
-                  />
+                  {like.img ? (
+                    <img 
+                      src={like.img} 
+                      alt={like.name} 
+                      className="like-img w-7 h-7 rounded-full border-2 border-white object-cover shadow-sm"
+                      onError={(e) => {
+                        e.target.onerror = null;
+                        e.target.src = null;
+                        e.target.parentElement.innerHTML = `
+                          <div class="w-7 h-7 rounded-full border-2 border-white bg-blue-100 flex items-center justify-center text-blue-600 font-semibold text-xs shadow-sm">
+                            ${like.name?.charAt(0) || '?'}
+                          </div>
+                        `;
+                      }}
+                    />
+                  ) : (
+                    <div className="w-7 h-7 rounded-full border-2 border-white bg-blue-100 flex items-center justify-center text-blue-600 font-semibold text-xs shadow-sm">
+                      {like.name?.charAt(0) || '?'}
+                    </div>
+                  )}
                 </div>
               ))}
             </div>
