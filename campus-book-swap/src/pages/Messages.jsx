@@ -5,7 +5,7 @@ import { useMessages } from '../contexts/MessageContext';
 import ConversationItem from '../components/Message/ConversationItem';
 import MessageList from '../components/Message/MessageList';
 import MessageInput from '../components/Message/MessageInput';
-import ChatHeader from '../components/messaging/ChatHeader';
+import ChatHeader from '../components/Message/ChatHeader';
 
 const Messages = () => {
   const { user, authAxios, isAuthenticated } = useAuth();
