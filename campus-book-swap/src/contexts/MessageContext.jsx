@@ -58,6 +58,117 @@ export const MessageProvider = ({ children }) => {
     }
   }, [isAuthenticated, pollingInterval]);
 
+  // Define fetch functions first, then use them in effects
+  const fetchConversationsRef = useCallback(async () => {
+    if (!isAuthenticated || !user?.id) return;
+    
+    setLoading(prev => ({ ...prev, conversations: true }));
+    try {
+      const response = await messageAPI.getUserChats(user.id);
+      
+      // Process conversations and ensure all images have valid sources
+      const processedConversations = (response.data || []).map(conv => {
+        // Handle possibly undefined attachments
+        let attachments = [];
+        
+        if (conv.lastMessage?.attachments) {
+          // If attachments is an array, use it directly
+          if (Array.isArray(conv.lastMessage.attachments)) {
+            attachments = conv.lastMessage.attachments.map(attachment => ({
+              ...attachment,
+              url: attachment.url || null
+            }));
+          } 
+          // If attachments is an object with data property (Strapi format)
+          else if (conv.lastMessage.attachments.data) {
+            attachments = Array.isArray(conv.lastMessage.attachments.data) 
+              ? conv.lastMessage.attachments.data.map(attachment => ({
+                  id: attachment.id,
+                  url: attachment.attributes?.url || null,
+                  ...attachment.attributes
+                }))
+              : [{
+                  id: conv.lastMessage.attachments.data.id,
+                  url: conv.lastMessage.attachments.data.attributes?.url || null,
+                  ...conv.lastMessage.attachments.data.attributes
+                }];
+          }
+        }
+        
+        return {
+          ...conv,
+          lastMessage: {
+            ...conv.lastMessage,
+            attachments
+          }
+        };
+      });
+      
+      // Get previous conversations from state for comparison
+      const currentConversations = conversations;
+      const previousConvs = new Map(currentConversations.map(conv => [conv.chatId, conv]));
+      
+      // Check for new purchase requests where the current user is the receiver
+      processedConversations.forEach(conv => {
+        const prevConv = previousConvs.get(conv.chatId);
+        const lastMessage = conv.lastMessage;
+        
+        if (lastMessage && 
+            lastMessage.messageType === 'purchase_request' && 
+            lastMessage.requestStatus === 'pending' && 
+            lastMessage.receiverId === user.id && 
+            (!prevConv || 
+             !prevConv.lastMessage || 
+             prevConv.lastMessage.id !== lastMessage.id)) {
+          
+          // Get book and sender info for notification
+          const chatParts = conv.chatId.split('_');
+          // Handle chat ID format safely
+          if (chatParts.length >= 3) {
+            const senderId = user.id.toString() === chatParts[0] ? chatParts[1] : chatParts[0];
+            const bookId = chatParts[2];
+            
+            // Show notification for new purchase request
+            showPurchaseRequestNotification(
+              lastMessage,
+              { id: bookId, title: conv.bookTitle || "Book" },
+              { id: senderId, username: conv.senderName || "Buyer" }
+            );
+          }
+        }
+      });
+      
+      setConversations(processedConversations);
+      setError(null);
+    } catch (err) {
+      console.error('Error fetching conversations:', err);
+      setError('Failed to load conversations');
+    } finally {
+      setLoading(prev => ({ ...prev, conversations: false }));
+    }
+  }, [isAuthenticated, user, conversations]);
+
+  // Fetch unread message count function
+  const fetchUnreadCountRef = useCallback(async () => {
+    if (!isAuthenticated || !user?.id) return;
+    
+    try {
+      const count = await messageAPI.getUnreadMessageCount(user.id);
+      setUnreadCount(count);
+    } catch (err) {
+      console.error('Error fetching unread count:', err);
+    }
+  }, [isAuthenticated, user]);
+  
+  // Save these functions to refs to avoid dependency cycles
+  const fetchConversations = useCallback(() => {
+    fetchConversationsRef();
+  }, [fetchConversationsRef]);
+  
+  const fetchUnreadCount = useCallback(() => {
+    fetchUnreadCountRef();
+  }, [fetchUnreadCountRef]);
+  
   // Fetch conversations when user is authenticated
   useEffect(() => {
     if (isAuthenticated && user?.id) {
