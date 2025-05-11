@@ -3,7 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { useMessages } from '../contexts/MessageContext';
 import ConversationItem from '../components/Message/ConversationItem';
-import MessageList from '../components/messaging/MessageList';
+import MessageList from '../components/Message/MessageList';
 import MessageInput from '../components/messaging/MessageInput';
 import ChatHeader from '../components/messaging/ChatHeader';
 
