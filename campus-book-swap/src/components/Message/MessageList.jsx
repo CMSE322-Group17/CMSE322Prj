@@ -1,10 +1,12 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
 import { formatTimestamp } from '../../utils/messageFormatters';
+import RequestActions from './RequestActions';
 
 const MessageList = ({ messages, loading }) => {
   const { user } = useAuth();
   const messagesEndRef = useRef(null);
+  const [localMessages, setLocalMessages] = useState(messages);
 
   // Scroll to bottom when messages change
   useEffect(() => {
