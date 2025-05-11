@@ -48,31 +48,21 @@ const SellerChat = () => {
       if (!isAuthenticated || !sellerId || !bookId) return;
       
       try {
-        // Fetch seller info using our mock API
-        const sellerResponse = await messageAPI.getUser(sellerId);
+        // Fetch seller info
+        const sellerResponse = await authAxios.get(
+          `${import.meta.env.VITE_API_URL}/api/users/${sellerId}`
+        );
         setSeller(sellerResponse.data);
         
-        // Fetch book info using our mock API
-        const bookResponse = await messageAPI.getBook(bookId);
-        setBook({
-          ...bookResponse.data,
-          id: bookId,
-          cover: null // For mock implementation
-        });
+        // Fetch book info
+        const bookResponse = await authAxios.get(
+          `${import.meta.env.VITE_API_URL}/api/books/${bookId}?populate=*`
+        );
+        setBook(bookResponse.data.data);
         
         // Fetch chat messages
         if (chatId) {
           fetchMessages(chatId);
-        }
-        
-        // Store the current user in our mock system
-        if (user) {
-          messageAPI.saveUser({
-            id: user.id.toString(),
-            username: user.username || 'Current User',
-            email: user.email || 'user@example.com',
-            avatar: null
-          });
         }
         
         clearError();
