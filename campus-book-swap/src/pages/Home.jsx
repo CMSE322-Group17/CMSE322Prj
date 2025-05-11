@@ -611,15 +611,26 @@ const Home = () => {
                 </p>
                 
                 <div className="flex items-center">
-                  <img 
-                    src={testimonial.avatar} 
-                    alt={testimonial.name}
-                    className="w-12 h-12 rounded-full mr-4 object-cover border-2 border-white shadow-sm"
-                    onError={(e) => {
-                      e.target.onerror = null;
-                      e.target.src = null;
-                    }}
-                  />
+                  {testimonial.avatar ? (
+                    <img 
+                      src={testimonial.avatar} 
+                      alt={testimonial.name}
+                      className="w-12 h-12 rounded-full mr-4 object-cover border-2 border-white shadow-sm"
+                      onError={(e) => {
+                        e.target.onerror = null;
+                        e.target.src = null;
+                        e.target.parentElement.innerHTML = `
+                          <div class="w-12 h-12 rounded-full mr-4 bg-blue-100 flex items-center justify-center text-blue-600 font-semibold text-lg border-2 border-white shadow-sm">
+                            ${testimonial.name.charAt(0)}
+                          </div>
+                        `;
+                      }}
+                    />
+                  ) : (
+                    <div className="w-12 h-12 rounded-full mr-4 bg-blue-100 flex items-center justify-center text-blue-600 font-semibold text-lg border-2 border-white shadow-sm">
+                      {testimonial.name.charAt(0)}
+                    </div>
+                  )}
                   <div>
                     <h4 className="font-medium text-gray-800">{testimonial.name}</h4>
                     <p className="text-sm text-gray-500">{testimonial.major}, {testimonial.year}</p>
