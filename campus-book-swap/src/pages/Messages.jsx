@@ -154,10 +154,28 @@ const Messages = () => {
   const getCounts = () => {
     const counts = {
       all: conversations.length,
-      swap: conversations.filter(c => c.lastMessage?.messageType === 'swap_offer' || c.transactionType === 'swap').length,
-      borrow: conversations.filter(c => c.lastMessage?.messageType === 'borrow_request' || c.transactionType === 'borrow').length,
-      buy: conversations.filter(c => c.transactionType === 'buy').length
+      swap: conversations.filter(c => 
+        c.lastMessage?.messageType === 'swap_offer' || 
+        c.transactionType === 'swap'
+      ).length,
+      borrow: conversations.filter(c => 
+        c.lastMessage?.messageType === 'borrow_request' || 
+        c.transactionType === 'borrow'
+      ).length,
+      buy: conversations.filter(c => 
+        c.lastMessage?.messageType === 'purchase_request' || 
+        c.lastMessage?.messageType === 'purchase' || 
+        c.transactionType === 'buy' || 
+        c.transactionType === 'purchase'
+      ).length
     };
+    
+    // Add special count for pending purchase requests where the user is the receiver (seller)
+    counts.pendingRequests = conversations.filter(c => 
+      (c.lastMessage?.messageType === 'purchase_request' || c.lastMessage?.messageType === 'purchase') && 
+      c.lastMessage?.requestStatus === 'pending' && 
+      c.lastMessage?.receiverId === user?.id
+    ).length;
     
     return counts;
   };
