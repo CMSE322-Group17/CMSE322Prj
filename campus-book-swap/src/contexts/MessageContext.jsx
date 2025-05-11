@@ -1,186 +1,234 @@
-// src/contexts/MessageContext.jsx
-import { createContext, useState, useContext, useEffect } from "react";
-import { useAuth } from "./AuthContext";
-import messageAPI from "../services/messageAPI";
+import { createContext, useState, useEffect, useContext, useCallback } from 'react';
+import { useAuth } from './AuthContext';
+import * as messageAPI from '../services/messageAPI';
 
 // Create context
 const MessageContext = createContext();
 
 export const MessageProvider = ({ children }) => {
-  const { user, authAxios, isAuthenticated } = useAuth();
+  const { user, isAuthenticated } = useAuth();
+  const [conversations, setConversations] = useState([]);
+  const [activeConversation, setActiveConversation] = useState(null);
+  const [messages, setMessages] = useState([]);
   const [unreadCount, setUnreadCount] = useState(0);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState({
+    conversations: false,
+    messages: false,
+    sending: false
+  });
   const [error, setError] = useState(null);
+  const [pollingInterval, setPollingInterval] = useState(null);
 
-  // Fetch unread message count on auth state change or periodically
+  // Reset state when user logs out
   useEffect(() => {
-    if (!isAuthenticated || !user) return;
-
-    // Function to update unread count
-    const updateUnreadCount = async () => {
-      try {
-        const count = await messageAPI.getUnreadMessageCount(
-          user.id,
-          user.token,
-        );
-        setUnreadCount(count);
-      } catch (err) {
-        console.error("Error fetching unread count:", err);
+    if (!isAuthenticated) {
+      setConversations([]);
+      setActiveConversation(null);
+      setMessages([]);
+      setUnreadCount(0);
+      
+      // Clear any polling intervals
+      if (pollingInterval) {
+        clearInterval(pollingInterval);
+        setPollingInterval(null);
       }
-    };
+    }
+  }, [isAuthenticated, pollingInterval]);
 
-    // Initial fetch
-    updateUnreadCount();
-
-    // Set up polling interval (every 30 seconds)
-    const intervalId = setInterval(updateUnreadCount, 30000);
-
-    // Clean up interval on unmount
-    return () => clearInterval(intervalId);
+  // Fetch conversations when user is authenticated
+  useEffect(() => {
+    if (isAuthenticated && user) {
+      fetchConversations();
+      fetchUnreadCount();
+      
+      // Set up polling for unread messages
+      const interval = setInterval(() => {
+        fetchUnreadCount();
+      }, 30000); // Poll every 30 seconds
+      
+      setPollingInterval(interval);
+      
+      return () => {
+        clearInterval(interval);
+      };
+    }
   }, [isAuthenticated, user]);
 
-  /**
-   * Send a message
-   * @param {Object} messageData - Message data
-   * @returns {Promise<Object>} - The sent message
-   */
-  const sendMessage = async (messageData) => {
-    if (!isAuthenticated) {
-      return { success: false, error: "User not authenticated" };
-    }
-
-    setLoading(true);
+  // Fetch conversations
+  const fetchConversations = useCallback(async () => {
+    if (!isAuthenticated || !user) return;
+    
+    setLoading(prev => ({ ...prev, conversations: true }));
     try {
-      // Format the message data for the API
-      const formattedMessage = {
+      const response = await messageAPI.getConversations();
+      
+      // Process conversations
+      const processedConversations = response.data?.data || [];
+      setConversations(processedConversations);
+      setError(null);
+    } catch (err) {
+      console.error('Error fetching conversations:', err);
+      setError('Failed to load conversations');
+    } finally {
+      setLoading(prev => ({ ...prev, conversations: false }));
+    }
+  }, [isAuthenticated, user]);
+
+  // Fetch unread message count
+  const fetchUnreadCount = useCallback(async () => {
+    if (!isAuthenticated || !user) return;
+    
+    try {
+      const count = await messageAPI.getUnreadCount(user.id);
+      setUnreadCount(count);
+    } catch (err) {
+      console.error('Error fetching unread count:', err);
+    }
+  }, [isAuthenticated, user]);
+
+  // Fetch messages for a conversation
+  const fetchMessages = useCallback(async (chatId) => {
+    if (!isAuthenticated || !chatId) return;
+    
+    setLoading(prev => ({ ...prev, messages: true }));
+    try {
+      const response = await messageAPI.getMessages(chatId);
+      
+      // Process messages
+      const processedMessages = response.data?.data || [];
+      setMessages(processedMessages);
+      
+      // Update active conversation
+      setActiveConversation(chatId);
+      
+      // Mark messages as read
+      if (user && processedMessages.length > 0) {
+        await messageAPI.markAllMessagesAsRead(chatId, user.id);
+        // Update unread count
+        fetchUnreadCount();
+      }
+      
+      setError(null);
+    } catch (err) {
+      console.error('Error fetching messages:', err);
+      setError('Failed to load messages');
+    } finally {
+      setLoading(prev => ({ ...prev, messages: false }));
+    }
+  }, [isAuthenticated, user, fetchUnreadCount]);
+
+  // Send a message
+  const sendMessage = useCallback(async (messageData) => {
+    if (!isAuthenticated || !user) return null;
+    
+    setLoading(prev => ({ ...prev, sending: true }));
+    try {
+      const response = await messageAPI.sendMessage({
         ...messageData,
-        senderId: messageData.senderId || user.id,
-        timestamp: messageData.timestamp || new Date().toISOString(),
+        senderId: user.id
+      });
+      
+      // Add the new message to the messages list
+      const newMessage = response.data?.data;
+      if (newMessage) {
+        setMessages(prev => [...prev, newMessage]);
+      }
+      
+      setError(null);
+      return response.data;
+    } catch (err) {
+      console.error('Error sending message:', err);
+      setError('Failed to send message');
+      return null;
+    } finally {
+      setLoading(prev => ({ ...prev, sending: false }));
+    }
+  }, [isAuthenticated, user]);
+
+  // Start a new conversation
+  const startConversation = useCallback(async (receiverId, bookId, initialMessage) => {
+    if (!isAuthenticated || !user) return null;
+    
+    try {
+      // Create chat ID using user IDs and book ID
+      const chatId = `${user.id}_${receiverId}_${bookId}`;
+      
+      // Send initial message
+      const messageData = {
+        chatId,
+        receiverId,
+        bookId,
+        text: initialMessage || "Hi, I'm interested in this book.",
+        messageType: 'text'
       };
-
-      // Send the message
-      const response = await messageAPI.sendMessage(
-        formattedMessage,
-        user.token,
-      );
-      setError(null);
-      return { success: true, data: response.data };
+      
+      const response = await sendMessage(messageData);
+      
+      // Set as active conversation
+      setActiveConversation(chatId);
+      
+      // Refresh conversations
+      await fetchConversations();
+      
+      return response;
     } catch (err) {
-      console.error("Error sending message:", err);
-      setError("Failed to send message. Please try again.");
-      return { success: false, error: "Failed to send message" };
-    } finally {
-      setLoading(false);
+      console.error('Error starting conversation:', err);
+      setError('Failed to start conversation');
+      return null;
     }
-  };
+  }, [isAuthenticated, user, sendMessage, fetchConversations]);
 
-  /**
-   * Get messages for a specific chat
-   * @param {string} chatId - The chat ID
-   * @returns {Promise<Array>} - List of messages
-   */
-  const getChatMessages = async (chatId) => {
-    if (!isAuthenticated) {
-      return { success: false, error: "User not authenticated" };
-    }
-
-    setLoading(true);
+  // Delete a message
+  const deleteMessageById = useCallback(async (messageId) => {
+    if (!isAuthenticated) return false;
+    
     try {
-      const response = await messageAPI.getChatMessages(chatId, user.token);
-      setError(null);
-      return { success: true, data: response.data };
+      await messageAPI.deleteMessage(messageId);
+      
+      // Update messages list
+      setMessages(prev => prev.filter(msg => msg.id !== messageId));
+      
+      return true;
     } catch (err) {
-      console.error("Error fetching chat messages:", err);
-      setError("Failed to load messages. Please try again.");
-      return { success: false, error: "Failed to load messages" };
-    } finally {
-      setLoading(false);
+      console.error('Error deleting message:', err);
+      setError('Failed to delete message');
+      return false;
     }
-  };
+  }, [isAuthenticated]);
 
-  /**
-   * Mark a message as read
-   * @param {number} messageId - The message ID
-   * @returns {Promise<Object>} - Updated message
-   */
-  const markMessageAsRead = async (messageId) => {
-    if (!isAuthenticated) {
-      return { success: false, error: "User not authenticated" };
-    }
+  // Clear context errors
+  const clearError = useCallback(() => {
+    setError(null);
+  }, []);
 
-    try {
-      const response = await messageAPI.markMessageAsRead(
-        messageId,
-        user.token,
-      );
-
-      // Update unread count
-      setUnreadCount((prev) => Math.max(0, prev - 1));
-
-      return { success: true, data: response.data };
-    } catch (err) {
-      console.error("Error marking message as read:", err);
-      return { success: false, error: "Failed to mark message as read" };
-    }
-  };
-
-  /**
-   * Get all chats for the current user
-   * @returns {Promise<Array>} - List of chats
-   */
-  const getUserChats = async () => {
-    if (!isAuthenticated) {
-      return { success: false, error: "User not authenticated" };
-    }
-
-    setLoading(true);
-    try {
-      const response = await messageAPI.getUserChats(user.id, user.token);
-      setError(null);
-      return { success: true, data: response.data };
-    } catch (err) {
-      console.error("Error fetching user chats:", err);
-      setError("Failed to load chats. Please try again.");
-      return { success: false, error: "Failed to load chats" };
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  /**
-   * Create a chat ID from user IDs and book ID
-   * @param {number} userId1 - First user's ID
-   * @param {number} userId2 - Second user's ID
-   * @param {number} bookId - Book's ID
-   * @returns {string} - The chat ID
-   */
-  const createChatId = (userId1, userId2, bookId) => {
-    return messageAPI.createChatId(userId1, userId2, bookId);
+  // Context value
+  const value = {
+    conversations,
+    messages,
+    activeConversation,
+    unreadCount,
+    loading,
+    error,
+    fetchConversations,
+    fetchMessages,
+    sendMessage,
+    startConversation,
+    deleteMessage: deleteMessageById,
+    clearError
   };
 
   return (
-    <MessageContext.Provider
-      value={{
-        unreadCount,
-        loading,
-        error,
-        sendMessage,
-        getChatMessages,
-        markMessageAsRead,
-        getUserChats,
-        createChatId,
-      }}
-    >
+    <MessageContext.Provider value={value}>
       {children}
     </MessageContext.Provider>
   );
 };
 
 // Custom hook to use the message context
-export const useMessage = () => {
+export const useMessages = () => {
   const context = useContext(MessageContext);
   if (context === undefined) {
-    throw new Error("useMessage must be used within a MessageProvider");
+    throw new Error('useMessages must be used within a MessageProvider');
   }
   return context;
 };
