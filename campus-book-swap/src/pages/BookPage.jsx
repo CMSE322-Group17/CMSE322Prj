@@ -49,10 +49,8 @@ const BooksPage = () => {
     const navigate = useNavigate();
     
     // Status styles
-    const statusStyles = {
-      'For Sale': 'bg-green-100 text-green-800',
-      'For Swap': 'bg-blue-100 text-blue-800'
-    };
+    // Use the utility function for book type styles
+    const getStatusStyle = (bookType) => getBookTypeStyles(bookType);
     
     // Generate random price (for demo purposes)
     const price = book.bookType === 'For Sale' ? book.price : null;
