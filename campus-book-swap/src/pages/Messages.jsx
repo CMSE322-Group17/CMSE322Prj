@@ -4,7 +4,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { useMessages } from '../contexts/MessageContext';
 import ConversationItem from '../components/Message/ConversationItem';
 import MessageList from '../components/Message/MessageList';
-import MessageInput from '../components/messaging/MessageInput';
+import MessageInput from '../components/Message/MessageInput';
 import ChatHeader from '../components/messaging/ChatHeader';
 
 const Messages = () => {
