@@ -1212,15 +1212,26 @@ const Home = () => {
                         {book.likes.map(like => (
                           <div key={like.id} className="border-b border-gray-100 pb-4">
                             <div className="flex items-center mb-2">
-                              <img 
-                                src={like.img} 
-                                alt={like.name} 
-                                className="w-8 h-8 rounded-full border-2 border-white object-cover shadow-sm"
-                                onError={(e) => {
-                                  e.target.onerror = null;
-                                  e.target.src = null;
-                                }}
-                              />
+                              {like.img ? (
+                                <img 
+                                  src={like.img} 
+                                  alt={like.name} 
+                                  className="w-8 h-8 rounded-full border-2 border-white object-cover shadow-sm"
+                                  onError={(e) => {
+                                    e.target.onerror = null;
+                                    e.target.src = null;
+                                    e.target.parentElement.innerHTML = `
+                                      <div class="w-8 h-8 rounded-full border-2 border-white bg-blue-100 flex items-center justify-center text-blue-600 font-semibold text-xs shadow-sm">
+                                        ${like.name?.charAt(0) || '?'}
+                                      </div>
+                                    `;
+                                  }}
+                                />
+                              ) : (
+                                <div className="w-8 h-8 rounded-full border-2 border-white bg-blue-100 flex items-center justify-center text-blue-600 font-semibold text-xs shadow-sm">
+                                  {like.name?.charAt(0) || '?'}
+                                </div>
+                              )}
                               <div className="ml-3">
                                 <h5 className="font-medium text-gray-700">{like.name}</h5>
                                 <div className="flex items-center">
