@@ -8,12 +8,17 @@ const MessageList = ({ messages, loading }) => {
   const messagesEndRef = useRef(null);
   const [localMessages, setLocalMessages] = useState(messages);
 
+  // Update local messages when props change
+  useEffect(() => {
+    setLocalMessages(messages);
+  }, [messages]);
+
   // Scroll to bottom when messages change
   useEffect(() => {
     if (messagesEndRef.current) {
       messagesEndRef.current.scrollIntoView({ behavior: 'smooth' });
     }
-  }, [messages]);
+  }, [localMessages]);
 
   if (loading) {
     return (
