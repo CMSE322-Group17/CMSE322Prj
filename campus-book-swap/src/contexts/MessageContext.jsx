@@ -60,14 +60,10 @@ export const MessageProvider = ({ children }) => {
     
     setLoading(prev => ({ ...prev, conversations: true }));
     try {
-      // Get the token from localStorage
-      const token = localStorage.getItem('token');
-      
-      // Use getUserChats instead of getConversations
-      const response = await messageAPI.getUserChats(user.id, token);
+      const response = await messageAPI.getUserChats(user.id);
       
       // Process conversations
-      const processedConversations = response.data?.data || [];
+      const processedConversations = response.data || [];
       setConversations(processedConversations);
       setError(null);
     } catch (err) {
@@ -83,8 +79,7 @@ export const MessageProvider = ({ children }) => {
     if (!isAuthenticated || !user) return;
     
     try {
-      const token = localStorage.getItem('token');
-      const count = await messageAPI.getUnreadMessageCount(user.id, token);
+      const count = await messageAPI.getUnreadMessageCount(user.id);
       setUnreadCount(count);
     } catch (err) {
       console.error('Error fetching unread count:', err);
@@ -97,11 +92,10 @@ export const MessageProvider = ({ children }) => {
     
     setLoading(prev => ({ ...prev, messages: true }));
     try {
-      const token = localStorage.getItem('token');
-      const response = await messageAPI.getChatMessages(chatId, token);
+      const response = await messageAPI.getChatMessages(chatId);
       
       // Process messages
-      const processedMessages = response.data?.data || [];
+      const processedMessages = response.data || [];
       setMessages(processedMessages);
       
       // Update active conversation
@@ -129,20 +123,19 @@ export const MessageProvider = ({ children }) => {
     
     setLoading(prev => ({ ...prev, sending: true }));
     try {
-      const token = localStorage.getItem('token');
       const response = await messageAPI.sendMessage({
         ...messageData,
         senderId: user.id
-      }, token);
+      });
       
       // Add the new message to the messages list
-      const newMessage = response.data?.data;
+      const newMessage = response.data;
       if (newMessage) {
         setMessages(prev => [...prev, newMessage]);
       }
       
       setError(null);
-      return response.data;
+      return response;
     } catch (err) {
       console.error('Error sending message:', err);
       setError('Failed to send message');
@@ -158,7 +151,7 @@ export const MessageProvider = ({ children }) => {
     
     try {
       // Create chat ID using user IDs and book ID
-      const chatId = `${user.id}_${receiverId}_${bookId}`;
+      const chatId = messageAPI.createChatId(user.id, receiverId, bookId);
       
       // Send initial message
       const messageData = {
@@ -190,8 +183,7 @@ export const MessageProvider = ({ children }) => {
     if (!isAuthenticated) return false;
     
     try {
-      const token = localStorage.getItem('token');
-      await messageAPI.deleteMessage(messageId, token);
+      await messageAPI.deleteMessage(messageId);
       
       // Update messages list
       setMessages(prev => prev.filter(msg => msg.id !== messageId));

@@ -1,213 +1,328 @@
 // src/services/messageAPI.js
-import axios from "axios";
 
-// Base API URL from environment
-const API_URL = import.meta.env.VITE_API_URL || "http://localhost:1337";
+// Use localStorage to store messages and user info for demo purposes
+const getStoredMessages = () => {
+  try {
+    const stored = localStorage.getItem('mockMessages');
+    return stored ? JSON.parse(stored) : [];
+  } catch (e) {
+    console.error('Error reading from localStorage:', e);
+    return [];
+  }
+};
+
+const saveMessages = (messages) => {
+  try {
+    localStorage.setItem('mockMessages', JSON.stringify(messages));
+  } catch (e) {
+    console.error('Error saving to localStorage:', e);
+  }
+};
+
+// Store and retrieve mock users
+const getStoredUsers = () => {
+  try {
+    const stored = localStorage.getItem('mockUsers');
+    return stored ? JSON.parse(stored) : {};
+  } catch (e) {
+    console.error('Error reading users from localStorage:', e);
+    return {};
+  }
+};
+
+const saveUsers = (users) => {
+  try {
+    localStorage.setItem('mockUsers', JSON.stringify(users));
+  } catch (e) {
+    console.error('Error saving users to localStorage:', e);
+  }
+};
+
+// Track books involved in chats
+const getStoredBooks = () => {
+  try {
+    const stored = localStorage.getItem('mockBooks');
+    return stored ? JSON.parse(stored) : {};
+  } catch (e) {
+    console.error('Error reading books from localStorage:', e);
+    return {};
+  }
+};
+
+const saveBooks = (books) => {
+  try {
+    localStorage.setItem('mockBooks', JSON.stringify(books));
+  } catch (e) {
+    console.error('Error saving books to localStorage:', e);
+  }
+};
+
+// Initialize with some mock data if empty
+if (!localStorage.getItem('mockMessages')) {
+  saveMessages([]);
+}
+
+if (!localStorage.getItem('mockUsers')) {
+  // Create some default users for the mock system
+  const defaultUsers = {
+    '1': { id: '1', username: 'JohnSeller', email: 'john@example.com', avatar: null },
+    '2': { id: '2', username: 'AliceBuyer', email: 'alice@example.com', avatar: null },
+    '3': { id: '3', username: 'BobSwapper', email: 'bob@example.com', avatar: null }
+  };
+  saveUsers(defaultUsers);
+}
+
+if (!localStorage.getItem('mockBooks')) {
+  // Create some default books
+  const defaultBooks = {
+    '101': { id: '101', title: 'Introduction to Computer Science', author: 'Jane Smith', cover: null },
+    '102': { id: '102', title: 'Advanced Mathematics', author: 'John Doe', cover: null },
+    '103': { id: '103', title: 'Physics Fundamentals', author: 'Albert Einstein', cover: null }
+  };
+  saveBooks(defaultBooks);
+}
 
 /**
- * Message API service to interact with the backend for messaging functionality
+ * Message API service with mock implementation
  */
 const messageAPI = {
   /**
    * Get all messages for a specific chat
-   * @param {string} chatId - The ID of the chat
-   * @param {string} token - JWT authentication token
-   * @returns {Promise<Array>} - List of messages in the chat
    */
-  getChatMessages: async (chatId, token) => {
-    try {
-      const response = await axios.get(`${API_URL}/api/messages`, {
-        params: {
-          filters: {
-            chatId: {
-              $eq: chatId,
-            },
-          },
-          sort: ["timestamp:asc"],
-        },
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
-
-      return response.data;
-    } catch (error) {
-      console.error("Error fetching chat messages:", error);
-      throw error;
-    }
+  getChatMessages: async (chatId) => {
+    // Simulate API delay
+    await new Promise(resolve => setTimeout(resolve, 300));
+    
+    const messages = getStoredMessages();
+    const chatMessages = messages.filter(msg => msg.chatId === chatId);
+    
+    return {
+      data: chatMessages,
+      meta: {
+        pagination: {
+          total: chatMessages.length
+        }
+      }
+    };
   },
 
   /**
    * Send a new message
-   * @param {Object} messageData - The message data
-   * @param {string} token - JWT authentication token
-   * @returns {Promise<Object>} - The created message
    */
-  sendMessage: async (messageData, token) => {
-    try {
-      const response = await axios.post(
-        `${API_URL}/api/messages`,
-        { data: messageData },
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-            "Content-Type": "application/json",
-          },
-        },
-      );
-
-      return response.data;
-    } catch (error) {
-      console.error("Error sending message:", error);
-      throw error;
-    }
+  sendMessage: async (messageData) => {
+    // Simulate API delay
+    await new Promise(resolve => setTimeout(resolve, 500));
+    
+    const newMessage = {
+      id: Date.now().toString(),
+      chatId: messageData.chatId,
+      senderId: messageData.senderId,
+      receiverId: messageData.receiverId,
+      bookId: messageData.bookId,
+      text: messageData.text,
+      messageType: messageData.messageType || 'text',
+      timestamp: new Date().toISOString(),
+      read: false
+    };
+    
+    const messages = getStoredMessages();
+    messages.push(newMessage);
+    saveMessages(messages);
+    
+    return {
+      data: newMessage
+    };
   },
 
   /**
    * Get a user's conversations (chats)
-   * @param {number} userId - The user's ID
-   * @param {string} token - JWT authentication token
-   * @returns {Promise<Array>} - List of the user's chats
    */
-  getUserChats: async (userId, token) => {
-    try {
-      // Get all messages where the user is either sender or receiver
-      const response = await axios.get(`${API_URL}/api/messages`, {
-        params: {
-          filters: {
-            $or: [
-              {
-                senderId: {
-                  $eq: userId,
-                },
-              },
-              {
-                receiverId: {
-                  $eq: userId,
-                },
-              },
-            ],
-          },
-          sort: ["timestamp:desc"],
-        },
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
+  getUserChats: async (userId) => {
+    // Simulate API delay
+    await new Promise(resolve => setTimeout(resolve, 300));
+    
+    const messages = getStoredMessages();
+    const users = getStoredUsers();
+    const books = getStoredBooks();
+    
+    // Get all unique chatIds where the user is involved
+    const chatIds = new Set();
+    messages.forEach(msg => {
+      if (msg.senderId == userId || msg.receiverId == userId) {
+        chatIds.add(msg.chatId);
+      }
+    });
+    
+    // Create conversation objects
+    const conversations = Array.from(chatIds).map(chatId => {
+      const chatMessages = messages.filter(msg => msg.chatId === chatId);
+      const lastMessage = chatMessages.sort((a, b) => 
+        new Date(b.timestamp) - new Date(a.timestamp)
+      )[0];
+      
+      // Extract user IDs and book ID from chatId
+      const [userId1, userId2, bookId] = chatId.split('_');
+      
+      // Determine the other user ID
+      const otherUserId = userId1 == userId ? userId2 : userId1;
+      
+      // Get other user and book details
+      const otherUser = users[otherUserId] || { username: 'Unknown User' };
+      const book = books[bookId] || { title: 'Unknown Book' };
+      
+      return {
+        chatId,
+        lastMessage,
+        unreadCount: chatMessages.filter(msg => 
+          msg.receiverId == userId && !msg.read
+        ).length,
+        otherUser,
+        book
+      };
+    });
+    
+    return {
+      data: conversations
+    };
+  },
 
-      return response.data;
-    } catch (error) {
-      console.error("Error fetching user chats:", error);
-      throw error;
+  /**
+   * Get a user by ID
+   */
+  getUser: async (userId) => {
+    // Simulate API delay
+    await new Promise(resolve => setTimeout(resolve, 200));
+    
+    const users = getStoredUsers();
+    const user = users[userId] || null;
+    
+    if (!user) {
+      throw new Error(`User with ID ${userId} not found`);
     }
+    
+    return {
+      data: user
+    };
+  },
+
+  /**
+   * Get a book by ID
+   */
+  getBook: async (bookId) => {
+    // Simulate API delay
+    await new Promise(resolve => setTimeout(resolve, 200));
+    
+    const books = getStoredBooks();
+    const book = books[bookId] || null;
+    
+    if (!book) {
+      throw new Error(`Book with ID ${bookId} not found`);
+    }
+    
+    return {
+      data: {
+        id: bookId,
+        attributes: book
+      }
+    };
   },
 
   /**
    * Mark a message as read
-   * @param {number} messageId - The ID of the message to mark as read
-   * @param {string} token - JWT authentication token
-   * @returns {Promise<Object>} - The updated message
    */
-  markMessageAsRead: async (messageId, token) => {
-    try {
-      const response = await axios.put(
-        `${API_URL}/api/messages/${messageId}`,
-        { data: { read: true } },
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-            "Content-Type": "application/json",
-          },
-        },
-      );
-
-      return response.data;
-    } catch (error) {
-      console.error("Error marking message as read:", error);
-      throw error;
-    }
+  markMessageAsRead: async (messageId) => {
+    // Simulate API delay
+    await new Promise(resolve => setTimeout(resolve, 200));
+    
+    const messages = getStoredMessages();
+    const updatedMessages = messages.map(msg => 
+      msg.id === messageId ? { ...msg, read: true } : msg
+    );
+    
+    saveMessages(updatedMessages);
+    
+    return { success: true };
   },
 
   /**
    * Mark all messages in a chat as read for a specific user
-   * @param {string} chatId - The ID of the chat
-   * @param {number} userId - The user's ID
-   * @param {string} token - JWT authentication token
-   * @returns {Promise<boolean>} - Success indicator
    */
-  markAllMessagesAsRead: async (chatId, userId, token) => {
-    try {
-      // For now, we'll mock this function since it doesn't exist in the original
-      console.log(`Marking all messages as read in chat ${chatId} for user ${userId}`);
-      return true;
-    } catch (error) {
-      console.error("Error marking all messages as read:", error);
-      throw error;
-    }
+  markAllMessagesAsRead: async (chatId, userId) => {
+    // Simulate API delay
+    await new Promise(resolve => setTimeout(resolve, 300));
+    
+    const messages = getStoredMessages();
+    const updatedMessages = messages.map(msg => 
+      msg.chatId === chatId && msg.receiverId == userId 
+        ? { ...msg, read: true } 
+        : msg
+    );
+    
+    saveMessages(updatedMessages);
+    
+    return true;
   },
 
   /**
    * Delete a message
-   * @param {number} messageId - The ID of the message to delete
-   * @param {string} token - JWT authentication token
-   * @returns {Promise<boolean>} - Success indicator
    */
-  deleteMessage: async (messageId, token) => {
-    try {
-      // For now, we'll mock this function since it doesn't exist in the original
-      console.log(`Deleting message ${messageId}`);
-      return true;
-    } catch (error) {
-      console.error("Error deleting message:", error);
-      throw error;
-    }
+  deleteMessage: async (messageId) => {
+    // Simulate API delay
+    await new Promise(resolve => setTimeout(resolve, 300));
+    
+    const messages = getStoredMessages();
+    const updatedMessages = messages.filter(msg => msg.id !== messageId);
+    
+    saveMessages(updatedMessages);
+    
+    return true;
   },
 
   /**
    * Get unread message count for a user
-   * @param {number} userId - The user's ID
-   * @param {string} token - JWT authentication token
-   * @returns {Promise<number>} - Count of unread messages
    */
-  getUnreadMessageCount: async (userId, token) => {
-    try {
-      const response = await axios.get(`${API_URL}/api/messages`, {
-        params: {
-          filters: {
-            receiverId: {
-              $eq: userId,
-            },
-            read: {
-              $eq: false,
-            },
-          },
-        },
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
-
-      return response.data.meta.pagination.total;
-    } catch (error) {
-      console.error("Error fetching unread message count:", error);
-      throw error;
-    }
+  getUnreadMessageCount: async (userId) => {
+    // Simulate API delay
+    await new Promise(resolve => setTimeout(resolve, 200));
+    
+    const messages = getStoredMessages();
+    const unreadCount = messages.filter(msg => 
+      msg.receiverId == userId && !msg.read
+    ).length;
+    
+    return unreadCount;
   },
 
   /**
    * Create a chat ID from user IDs and book ID
-   * @param {number} userId1 - First user's ID
-   * @param {number} userId2 - Second user's ID
-   * @param {number} bookId - Book's ID
-   * @returns {string} - The chat ID
    */
   createChatId: (userId1, userId2, bookId) => {
     // Ensure the smaller ID is first for consistency
     const [smallerId, largerId] =
-      userId1 < userId2 ? [userId1, userId2] : [userId2, userId1];
+      parseInt(userId1) < parseInt(userId2) ? [userId1, userId2] : [userId2, userId1];
 
     return `${smallerId}_${largerId}_${bookId}`;
   },
+
+  /**
+   * Save or update a user (helper function for the mock system)
+   */
+  saveUser: (userData) => {
+    const users = getStoredUsers();
+    users[userData.id] = userData;
+    saveUsers(users);
+    return userData;
+  },
+
+  /**
+   * Save or update a book (helper function for the mock system)
+   */
+  saveBook: (bookData) => {
+    const books = getStoredBooks();
+    books[bookData.id] = bookData;
+    saveBooks(books);
+    return bookData;
+  }
 };
 
 export default messageAPI;
