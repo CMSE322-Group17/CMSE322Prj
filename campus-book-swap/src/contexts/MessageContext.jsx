@@ -234,13 +234,14 @@ export const MessageProvider = ({ children }) => {
       // Create chat ID using user IDs and book ID
       const chatId = messageAPI.createChatId(user.id, receiverId, bookId);
       
-      // Send initial message
+      // Send initial message as a purchase request
       const messageData = {
         chatId,
         receiverId,
         bookId,
         text: initialMessage || "Hi, I'm interested in this book.",
-        messageType: 'text'
+        messageType: 'purchase_request',
+        requestStatus: 'pending'
       };
       
       const response = await sendMessage(messageData);
