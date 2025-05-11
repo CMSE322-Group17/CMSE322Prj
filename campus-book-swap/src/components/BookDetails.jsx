@@ -41,10 +41,9 @@ const BookDetail = () => {
     fetchBookDetails();
   }, [id]);
   
-  // Status styles
-  const statusStyles = {
-    'For Sale': 'bg-green-100 text-green-800',
-    'For Swap': 'bg-blue-100 text-blue-800'
+  // Get status style using the utility function
+  const getStatusStyle = (bookType) => {
+    return getBookTypeStyles(bookType).split(' ').slice(0, 2).join(' ');
   };
   
   // Generate a course code (for demo purposes)
