@@ -400,12 +400,19 @@ const Home = () => {
                 <div className="absolute bottom-0 right-0 w-40 h-56 bg-blue-400 rounded-lg shadow-2xl z-40 overflow-hidden">
                   {featuredBooks && featuredBooks.length > 0 && featuredBooks[0].cover ? (
                     <img 
-                      src={featuredBooks[0].cover || null}
+                      src={featuredBooks[0].cover} 
                       alt={featuredBooks[0].title || "Featured Book"} 
                       className="w-full h-full object-cover"
                       onError={(e) => {
                         e.target.onerror = null;
                         e.target.src = null;
+                        e.target.parentElement.classList.add('bg-gradient-to-br', 'from-blue-400', 'to-blue-600');
+                        e.target.parentElement.innerHTML = `
+                          <div class="font-serif text-white text-center">
+                            <div class="text-lg font-bold">Featured</div>
+                            <div class="text-sm mt-2">Book</div>
+                          </div>
+                        `;
                       }}
                     />
                   ) : (
