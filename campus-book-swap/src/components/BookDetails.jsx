@@ -22,32 +22,11 @@ const BookDetail = () => {
         setLoading(true);
         const response = await bookAPI.getBookById(id);
         
-        // Process book data
-        const bookData = response.data.data;
-        const bookAttributes = bookData.attributes || {};
-        
-        // Process the rating properly to ensure it's a number
-        // If it's a string, convert it to a number
-        let rating = bookAttributes.rating;
-        if (typeof rating === 'string') {
-          rating = parseFloat(rating);
-        } else if (rating === undefined || rating === null) {
-          // Generate a random rating between 3 and 5 as a fallback
-          rating = Math.random() * 2 + 3;
-        }
-        
-        const processedBook = {
-          id: bookData.id,
-          ...bookAttributes,
-          // Convert bookType if it exists or assign a default
-          bookType: bookAttributes.bookType || 'For Sale',
-          // Process cover image if it exists
-          cover: bookAttributes.cover?.data ? 
-            `${import.meta.env.VITE_API_URL}${bookAttributes.cover.data.attributes.url}` : 
-            null,
-          // Ensure rating is a number
-          rating: rating
-        };
+        // Process book data using the utility function
+        const processedBook = processBookData(
+          response.data.data, 
+          import.meta.env.VITE_API_URL
+        );
         
         setBook(processedBook);
         setError(null);
