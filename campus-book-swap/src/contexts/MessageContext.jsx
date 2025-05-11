@@ -87,36 +87,77 @@ export const MessageProvider = ({ children }) => {
 
   // Fetch unread message count
   const fetchUnreadCount = useCallback(async () => {
-    if (!isAuthenticated || !user) return;
+    if (!isAuthenticated || !user?.id) return;
     
     try {
       const count = await messageAPI.getUnreadMessageCount(user.id);
       setUnreadCount(count);
     } catch (err) {
       console.error('Error fetching unread count:', err);
+      // Don't update the count if there's an error
+      // This prevents displaying incorrect information
     }
   }, [isAuthenticated, user]);
 
   // Fetch messages for a conversation
   const fetchMessages = useCallback(async (chatId) => {
-    if (!isAuthenticated || !chatId) return;
+    if (!isAuthenticated || !chatId || !user?.id) return;
     
     setLoading(prev => ({ ...prev, messages: true }));
     try {
       const response = await messageAPI.getChatMessages(chatId);
       
-      // Process messages
-      const processedMessages = response.data || [];
+      // Process messages and ensure all images have valid sources
+      const processedMessages = (response.data || []).map(msg => {
+        // Handle attachments properly
+        let attachments = [];
+        if (msg.attachments) {
+          // If attachments is an array, use it directly
+          if (Array.isArray(msg.attachments)) {
+            attachments = msg.attachments.map(attachment => ({
+              ...attachment,
+              url: attachment.url || null
+            }));
+          } 
+          // If attachments is an object with data property (Strapi format)
+          else if (msg.attachments.data) {
+            attachments = Array.isArray(msg.attachments.data) 
+              ? msg.attachments.data.map(attachment => ({
+                  id: attachment.id,
+                  url: attachment.attributes?.url || null,
+                  ...attachment.attributes
+                }))
+              : [{
+                  id: msg.attachments.data.id,
+                  url: msg.attachments.data.attributes?.url || null,
+                  ...msg.attachments.data.attributes
+                }];
+          }
+        }
+
+        return {
+          ...msg,
+          attachments
+        };
+      });
+      
       setMessages(processedMessages);
       
       // Update active conversation
       setActiveConversation(chatId);
       
       // Mark messages as read
-      if (user && processedMessages.length > 0) {
-        await messageAPI.markAllMessagesAsRead(chatId, user.id);
-        // Update unread count
-        fetchUnreadCount();
+      if (processedMessages.length > 0) {
+        try {
+          await messageAPI.markAllMessagesAsRead(chatId, user.id);
+          // Update unread count
+          fetchUnreadCount();
+        } catch (markReadError) {
+          console.warn('Error marking messages as read:', markReadError);
+          // Continue execution even if marking as read fails
+          // Still attempt to update unread count
+          fetchUnreadCount();
+        }
       }
       
       setError(null);
