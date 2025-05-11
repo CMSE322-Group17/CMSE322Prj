@@ -275,7 +275,7 @@ export const MessageProvider = ({ children }) => {
     } finally {
       setLoading(prev => ({ ...prev, conversations: false }));
     }
-  }, [isAuthenticated, user]);
+  }, [isAuthenticated, user]); // Removed conversation dependency, using ref instead
 
   // Fetch unread message count
   const fetchUnreadCount = useCallback(async () => {
