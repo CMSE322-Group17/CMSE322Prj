@@ -371,9 +371,6 @@ const Home = () => {
                 <Link to="/books" className="px-8 py-3 bg-blue-600 text-white rounded-full font-medium hover:bg-blue-700 transition-colors shadow-lg text-center">
                   Browse Books
                 </Link>
-{/*                <Link to="/textbooks" className="px-8 py-3 bg-white text-blue-900 rounded-full font-medium hover:bg-blue-50 transition-colors shadow-lg text-center">
-                  Find Textbooks
-                </Link>*/}
               </div>
               
               {/* Key Stats */}
