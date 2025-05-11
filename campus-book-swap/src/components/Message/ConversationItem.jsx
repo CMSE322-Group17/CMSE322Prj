@@ -174,7 +174,7 @@ const ConversationItem = ({
               <span className={`inline-flex items-center text-xs px-2 py-0.5 rounded-full ${getTypeStyle()}`}>
                 {transactionType === 'swap' ? 'Swap' : 
                  transactionType === 'borrow' ? 'Borrow' : 
-                 transactionType === 'buy' ? 'Purchase' : 'Chat'}
+                 transactionType === 'buy' || transactionType === 'purchase' ? 'Purchase' : 'Chat'}
               </span>
               
               {/* Book name */}
