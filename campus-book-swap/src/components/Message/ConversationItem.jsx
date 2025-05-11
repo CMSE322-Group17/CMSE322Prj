@@ -15,17 +15,18 @@ const ConversationItem = ({
   const [otherUser, setOtherUser] = useState(otherUserData);
   const [loading, setLoading] = useState(!bookData || !otherUserData);
 
-  // Extract data from conversation
-  const chatId = conversation.chatId || conversation.id;
-  const [userId1, userId2, bookId] = chatId ? chatId.split('_') : [null, null, null];
-  const otherUserId = user?.id === parseInt(userId1) ? userId2 : userId1;
-  const lastMessage = conversation.lastMessage || conversation;
-  const hasUnread = conversation.unreadCount > 0;
+  // Extract data from conversation with proper null checks
+  const chatId = conversation?.chatId || conversation?.id;
+  const [userId1, userId2, bookId] = chatId && typeof chatId === 'string' ? chatId.split('_') : [null, null, null];
+  const otherUserId = user?.id && userId1 && userId2 ? 
+    (user.id === parseInt(userId1) ? userId2 : userId1) : null;
+  const lastMessage = conversation?.lastMessage || conversation;
+  const hasUnread = conversation?.unreadCount > 0;
   
   // Determine transaction type if available
-  const transactionType = conversation.transactionType || 
-    lastMessage.messageType === 'swap_offer' ? 'swap' :
-    lastMessage.messageType === 'borrow_request' ? 'borrow' : 'general';
+  const transactionType = conversation?.transactionType || 
+    (lastMessage?.messageType === 'swap_offer' ? 'swap' :
+     lastMessage?.messageType === 'borrow_request' ? 'borrow' : 'general');
 
   // Get color scheme based on transaction type
   const getTypeStyle = () => {
