@@ -534,6 +534,7 @@ export const MessageProvider = ({ children }) => {
     sendMessage,
     startConversation,
     deleteMessage: deleteMessageById,
+    updateRequestStatus,
     clearError
   };
 
