@@ -690,11 +690,16 @@ const Home = () => {
             onError={(e) => {
               e.target.onerror = null;
               e.target.src = null;
+              e.target.parentElement.innerHTML = `
+                <div class="bg-gradient-to-br from-blue-500 to-cyan-400 w-full h-40 flex items-center justify-center transition duration-300 group-hover:scale-105">
+                  <span class="text-white font-bold text-xl">${book.name?.substring(0, 1) || '?'}</span>
+                </div>
+              `;
             }}
           />
         ) : (
           <div className="bg-gradient-to-br from-blue-500 to-cyan-400 w-full h-40 flex items-center justify-center transition duration-300 group-hover:scale-105">
-            <span className="text-white font-bold text-xl">{book.name?.substring(0, 1)}</span>
+            <span className="text-white font-bold text-xl">{book.name?.substring(0, 1) || '?'}</span>
           </div>
         )}
         
