@@ -228,7 +228,7 @@ export const MessageProvider = ({ children }) => {
 
   // Start a new conversation
   const startConversation = useCallback(async (receiverId, bookId, initialMessage) => {
-    if (!isAuthenticated || !user) return null;
+    if (!isAuthenticated || !user?.id) return null;
     
     try {
       // Create chat ID using user IDs and book ID
