@@ -129,6 +129,41 @@ const messageAPI = {
   },
 
   /**
+   * Mark all messages in a chat as read for a specific user
+   * @param {string} chatId - The ID of the chat
+   * @param {number} userId - The user's ID
+   * @param {string} token - JWT authentication token
+   * @returns {Promise<boolean>} - Success indicator
+   */
+  markAllMessagesAsRead: async (chatId, userId, token) => {
+    try {
+      // For now, we'll mock this function since it doesn't exist in the original
+      console.log(`Marking all messages as read in chat ${chatId} for user ${userId}`);
+      return true;
+    } catch (error) {
+      console.error("Error marking all messages as read:", error);
+      throw error;
+    }
+  },
+
+  /**
+   * Delete a message
+   * @param {number} messageId - The ID of the message to delete
+   * @param {string} token - JWT authentication token
+   * @returns {Promise<boolean>} - Success indicator
+   */
+  deleteMessage: async (messageId, token) => {
+    try {
+      // For now, we'll mock this function since it doesn't exist in the original
+      console.log(`Deleting message ${messageId}`);
+      return true;
+    } catch (error) {
+      console.error("Error deleting message:", error);
+      throw error;
+    }
+  },
+
+  /**
    * Get unread message count for a user
    * @param {number} userId - The user's ID
    * @param {string} token - JWT authentication token

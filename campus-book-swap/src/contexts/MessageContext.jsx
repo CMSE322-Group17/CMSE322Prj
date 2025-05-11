@@ -1,6 +1,6 @@
 import { createContext, useState, useEffect, useContext, useCallback } from 'react';
 import { useAuth } from './AuthContext';
-import * as messageAPI from '../services/messageAPI';
+import messageAPI from '../services/messageAPI';
 
 // Create context
 const MessageContext = createContext();
@@ -60,7 +60,11 @@ export const MessageProvider = ({ children }) => {
     
     setLoading(prev => ({ ...prev, conversations: true }));
     try {
-      const response = await messageAPI.getConversations();
+      // Get the token from localStorage
+      const token = localStorage.getItem('token');
+      
+      // Use getUserChats instead of getConversations
+      const response = await messageAPI.getUserChats(user.id, token);
       
       // Process conversations
       const processedConversations = response.data?.data || [];
@@ -79,7 +83,8 @@ export const MessageProvider = ({ children }) => {
     if (!isAuthenticated || !user) return;
     
     try {
-      const count = await messageAPI.getUnreadCount(user.id);
+      const token = localStorage.getItem('token');
+      const count = await messageAPI.getUnreadMessageCount(user.id, token);
       setUnreadCount(count);
     } catch (err) {
       console.error('Error fetching unread count:', err);
@@ -92,7 +97,8 @@ export const MessageProvider = ({ children }) => {
     
     setLoading(prev => ({ ...prev, messages: true }));
     try {
-      const response = await messageAPI.getMessages(chatId);
+      const token = localStorage.getItem('token');
+      const response = await messageAPI.getChatMessages(chatId, token);
       
       // Process messages
       const processedMessages = response.data?.data || [];
@@ -123,10 +129,11 @@ export const MessageProvider = ({ children }) => {
     
     setLoading(prev => ({ ...prev, sending: true }));
     try {
+      const token = localStorage.getItem('token');
       const response = await messageAPI.sendMessage({
         ...messageData,
         senderId: user.id
-      });
+      }, token);
       
       // Add the new message to the messages list
       const newMessage = response.data?.data;
@@ -183,7 +190,8 @@ export const MessageProvider = ({ children }) => {
     if (!isAuthenticated) return false;
     
     try {
-      await messageAPI.deleteMessage(messageId);
+      const token = localStorage.getItem('token');
+      await messageAPI.deleteMessage(messageId, token);
       
       // Update messages list
       setMessages(prev => prev.filter(msg => msg.id !== messageId));
