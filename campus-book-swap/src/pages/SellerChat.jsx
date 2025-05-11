@@ -3,9 +3,9 @@ import { useParams, useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { useCart } from '../contexts/CartContext';
 import { useMessages } from '../contexts/MessageContext';
-import MessageList from '../components/messaging/MessageList';
-import MessageInput from '../components/messaging/MessageInput';
-import ChatHeader from '../components/messaging/ChatHeader';
+import MessageList from '../components/Message/MessageList';
+import MessageInput from '../components/Message/MessageInput';
+import ChatHeader from '../components/Message/ChatHeader';
 
 const SellerChat = () => {
   const { sellerId, bookId } = useParams();
