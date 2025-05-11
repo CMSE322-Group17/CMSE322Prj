@@ -263,20 +263,6 @@ const NavBar = () => {
                       >
                         Profile
                       </Link>
-                      <Link
-                        to="/cart"
-                        className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-                        onClick={() => setIsProfileOpen(false)}
-                      >
-                        My Cart
-                      </Link>
-                      <Link
-                        to="/messages"
-                        className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-                        onClick={() => setIsProfileOpen(false)}
-                      >
-                        Messages {unreadCount > 0 && `(${unreadCount})`}
-                      </Link>
                       <div className="border-t border-gray-200 mt-1 pt-1">
                         <button
                           onClick={handleLogout}
