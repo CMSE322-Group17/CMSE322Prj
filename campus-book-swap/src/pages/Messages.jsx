@@ -256,6 +256,11 @@ const Messages = () => {
                 {counts.buy}
               </span>
             )}
+            {counts.pendingRequests > 0 && (
+              <span className="ml-1 bg-yellow-500 text-white py-0.5 px-2 rounded-full text-xs">
+                {counts.pendingRequests} pending
+              </span>
+            )}
           </button>
         </nav>
       </div>
