@@ -48,7 +48,47 @@
         "swap_offer",
         "swap_accepted",
         "swap_declined",
-        "borrow_request"
+        "borrow_request",
+        "purchase_request",
+        "request_accepted",
+        "request_declined"
+      ],
+      "default": "general"
+    },
+    "requestStatus": {
+      "type": "enumeration",
+      "enum": [
+        "pending",
+        "accepted",
+        "declined",
+        "completed",
+        "cancelled"
+      ],
+      "default": "pending"
+    },
+    "read": {
+      "type": "boolean",
+      "default": false
+    },
+    "readBy": {
+      "type": "json",
+      "default": {}
+    },
+    "reactions": {
+      "type": "json",
+      "default": {}
+    },
+    "deleted": {
+      "type": "boolean",
+      "default": false
+    },
+    "attachments": {
+      "type": "media",
+      "multiple": true,
+      "allowedTypes": [
+        "images",
+        "files",
+        "videos"
       ]
     }
   }
