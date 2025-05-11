@@ -183,7 +183,36 @@ export const MessageProvider = ({ children }) => {
       // Add the new message to the messages list
       const newMessage = response.data;
       if (newMessage) {
-        setMessages(prev => [...prev, newMessage]);
+        // Handle attachments properly
+        let attachments = [];
+        if (newMessage.attachments) {
+          // If attachments is an array, use it directly
+          if (Array.isArray(newMessage.attachments)) {
+            attachments = newMessage.attachments.map(attachment => ({
+              ...attachment,
+              url: attachment.url || null
+            }));
+          } 
+          // If attachments is an object with data property (Strapi format)
+          else if (newMessage.attachments.data) {
+            attachments = Array.isArray(newMessage.attachments.data) 
+              ? newMessage.attachments.data.map(attachment => ({
+                  id: attachment.id,
+                  url: attachment.attributes?.url || null,
+                  ...attachment.attributes
+                }))
+              : [{
+                  id: newMessage.attachments.data.id,
+                  url: newMessage.attachments.data.attributes?.url || null,
+                  ...newMessage.attachments.data.attributes
+                }];
+          }
+        }
+
+        setMessages(prev => [...prev, {
+          ...newMessage,
+          attachments
+        }]);
       }
       
       setError(null);
