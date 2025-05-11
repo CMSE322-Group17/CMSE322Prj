@@ -1,24 +1,36 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { useCart } from '../contexts/CartContext';
+import { useMessages } from '../contexts/MessageContext';
+import MessageList from '../components/messaging/MessageList';
+import MessageInput from '../components/messaging/MessageInput';
+import ChatHeader from '../components/messaging/ChatHeader';
 
 const SellerChat = () => {
   const { sellerId, bookId } = useParams();
   const { user, authAxios, isAuthenticated } = useAuth();
   const { addToCart } = useCart();
+  const { 
+    messages, 
+    sendMessage, 
+    fetchMessages, 
+    loading, 
+    error, 
+    clearError 
+  } = useMessages();
+  
   const [seller, setSeller] = useState(null);
   const [book, setBook] = useState(null);
-  const [messages, setMessages] = useState([]);
-  const [newMessage, setNewMessage] = useState('');
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
   const [userBooks, setUserBooks] = useState([]);
   const [showSwapModal, setShowSwapModal] = useState(false);
   const [selectedUserBooks, setSelectedUserBooks] = useState([]);
   const [swapStatus, setSwapStatus] = useState('none'); // none, pending, accepted, declined
-  const messagesEndRef = useRef(null);
+  
   const navigate = useNavigate();
+
+  // Create a chat ID
+  const chatId = user && user.id ? `${user.id}_${sellerId}_${bookId}` : null;
 
   // Redirect if not authenticated
   useEffect(() => {
@@ -32,7 +44,6 @@ const SellerChat = () => {
     const fetchData = async () => {
       if (!isAuthenticated || !sellerId || !bookId) return;
       
-      setLoading(true);
       try {
         // Fetch seller info
         const sellerResponse = await authAxios.get(`${import.meta.env.VITE_API_URL}/api/users/${sellerId}`);
@@ -40,13 +51,18 @@ const SellerChat = () => {
         
         // Fetch book info
         const bookResponse = await authAxios.get(`${import.meta.env.VITE_API_URL}/api/books/${bookId}`);
-        setBook(bookResponse.data.data);
+        setBook({
+          ...bookResponse.data.data,
+          id: bookId,
+          cover: bookResponse.data.data.attributes.cover?.data ? 
+            `${import.meta.env.VITE_API_URL}${bookResponse.data.data.attributes.cover.data.attributes.url}` : 
+            null
+        });
         
         // Fetch chat messages
-        const messagesResponse = await authAxios.get(
-          `${import.meta.env.VITE_API_URL}/api/messages?filters[chatId][$eq]=${user.id}_${sellerId}_${bookId}`
-        );
-        setMessages(messagesResponse.data.data || []);
+        if (chatId) {
+          fetchMessages(chatId);
+        }
         
         // Fetch user's books for swap
         const userBooksResponse = await authAxios.get(
@@ -56,7 +72,7 @@ const SellerChat = () => {
         
         // Check if there's a swap offer already
         const swapStatusResponse = await authAxios.get(
-          `${import.meta.env.VITE_API_URL}/api/swap-offers?filters[chatId][$eq]=${user.id}_${sellerId}_${bookId}`
+          `${import.meta.env.VITE_API_URL}/api/swap-offers?filters[chatId][$eq]=${chatId}`
         );
         
         if (swapStatusResponse.data.data && swapStatusResponse.data.data.length > 0) {
@@ -64,90 +80,57 @@ const SellerChat = () => {
           setSwapStatus(latestSwap.attributes.status);
         }
         
-        setError(null);
+        clearError();
       } catch (err) {
         console.error('Error fetching chat data:', err);
-        setError('Failed to load chat. Please try again.');
-      } finally {
-        setLoading(false);
       }
     };
 
     fetchData();
     
-    // Set up a polling mechanism for messages
+    // Setup polling for messages
     const intervalId = setInterval(() => {
-      if (isAuthenticated && sellerId && bookId) {
-        fetchMessages();
+      if (isAuthenticated && chatId) {
+        fetchMessages(chatId);
       }
-    }, 10000); // Poll every 10 seconds
+    }, 15000); // Poll every 15 seconds
     
     return () => clearInterval(intervalId);
-  }, [isAuthenticated, sellerId, bookId, user]);
-
-  // Scroll to bottom when messages change
-  useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [messages]);
-
-  // Fetch only messages
-  const fetchMessages = async () => {
-    if (!isAuthenticated || !sellerId || !bookId) return;
-    
-    try {
-      const response = await authAxios.get(
-        `${import.meta.env.VITE_API_URL}/api/messages?filters[chatId][$eq]=${user.id}_${sellerId}_${bookId}`
-      );
-      setMessages(response.data.data || []);
-    } catch (err) {
-      console.error('Error fetching messages:', err);
-    }
-  };
+  }, [isAuthenticated, sellerId, bookId, user, chatId, authAxios, fetchMessages, clearError]);
 
   // Send a new message
-  const handleSendMessage = async (e) => {
-    e.preventDefault();
-    if (!newMessage.trim() || !isAuthenticated) return;
+  const handleSendMessage = async (text) => {
+    if (!chatId || !text.trim() || !isAuthenticated) return;
     
     try {
-      // Create the chat ID as a combination of both user IDs and the book ID
-      const chatId = `${user.id}_${sellerId}_${bookId}`;
-      
-      // Send the message to the API
-      const response = await authAxios.post(`${import.meta.env.VITE_API_URL}/api/messages`, {
+      await sendMessage({
         chatId,
-        senderId: user.id,
         receiverId: sellerId,
         bookId,
-        text: newMessage.trim(),
-        timestamp: new Date().toISOString()
+        text: text.trim(),
+        messageType: 'text'
       });
-      
-      // Add the new message to the chat
-      setMessages([...messages, response.data.data]);
-      setNewMessage('');
     } catch (err) {
       console.error('Error sending message:', err);
-      setError('Failed to send message. Please try again.');
     }
   };
 
   // Send a swap offer
   const handleSendSwapOffer = async () => {
-    if (selectedUserBooks.length === 0) return;
+    if (selectedUserBooks.length === 0 || !chatId) return;
     
     try {
-      const chatId = `${user.id}_${sellerId}_${bookId}`;
-      
       // Create a swap offer
       await authAxios.post(`${import.meta.env.VITE_API_URL}/api/swap-offers`, {
-        chatId,
-        buyerId: user.id,
-        sellerId,
-        bookId,
-        offerBookIds: selectedUserBooks.map(book => book.id),
-        status: 'pending',
-        timestamp: new Date().toISOString()
+        data: {
+          chatId,
+          buyerId: user.id,
+          sellerId,
+          bookId,
+          offerBookIds: selectedUserBooks.map(book => book.id),
+          status: 'pending',
+          timestamp: new Date().toISOString()
+        }
       });
       
       // Send a message about the swap offer
@@ -155,23 +138,19 @@ const SellerChat = () => {
         selectedUserBooks.map(book => `- ${book.attributes.title} by ${book.attributes.author}`).join('\n')
       }\n\nPlease let me know if you're interested!`;
       
-      await authAxios.post(`${import.meta.env.VITE_API_URL}/api/messages`, {
+      await sendMessage({
         chatId,
-        senderId: user.id,
         receiverId: sellerId,
         bookId,
         text: offerMessage,
-        timestamp: new Date().toISOString(),
         messageType: 'swap_offer'
       });
       
       // Update local state
-      fetchMessages();
       setSwapStatus('pending');
       setShowSwapModal(false);
     } catch (err) {
       console.error('Error sending swap offer:', err);
-      setError('Failed to send swap offer. Please try again.');
     }
   };
 
@@ -181,7 +160,10 @@ const SellerChat = () => {
     
     try {
       // Add to cart with transaction type "swap"
-      const result = await addToCart(book, 'swap');
+      const result = await addToCart({
+        ...book,
+        transactionType: 'swap'
+      });
       
       if (result.success) {
         alert("Book added to your cart as a swap item!");
@@ -191,7 +173,6 @@ const SellerChat = () => {
       }
     } catch (err) {
       console.error('Error adding to swap cart:', err);
-      setError('Failed to add book to swap cart.');
     }
   };
 
@@ -220,6 +201,13 @@ const SellerChat = () => {
 
 Would any of these interest you for a swap? I can provide more details or photos if needed.`;
         break;
+      case 'borrow':
+        templateText = `Hi, I'm interested in borrowing "${book.attributes?.title || 'your book'}". 
+        
+I can pick it up on [date] and would return it by [date]. I'm happy to leave a deposit if required.
+
+Is this book still available for borrowing?`;
+        break;
       case 'purchase':
         templateText = `Hi, I'm interested in purchasing "${book.attributes?.title || 'your book'}".
         
@@ -236,44 +224,8 @@ Thanks!`;
         templateText = `Hi, I'm interested in "${book.attributes?.title || 'your book'}".`;
     }
     
-    setNewMessage(templateText);
-  };
-
-  // Format timestamp
-  const formatTimestamp = (timestamp) => {
-    const date = new Date(timestamp);
-    return date.toLocaleString();
-  };
-
-  // Render a message with special formatting for swap offers
-  const renderMessage = (message, index) => {
-    const isCurrentUser = message.senderId === user.id;
-    const isSwapOffer = message.messageType === 'swap_offer';
-    
-    return (
-      <div 
-        key={message.id || index} 
-        className={`mb-4 flex ${isCurrentUser ? 'justify-end' : 'justify-start'}`}
-      >
-        <div 
-          className={`max-w-[75%] rounded-lg p-3 ${
-            isCurrentUser 
-              ? isSwapOffer ? 'bg-blue-100 border border-blue-200 text-blue-900' : 'bg-blue-100 text-blue-900' 
-              : isSwapOffer ? 'bg-purple-50 border border-purple-200 text-purple-900' : 'bg-gray-100 text-gray-800'
-          }`}
-        >
-          {isSwapOffer && (
-            <div className="mb-2 pb-2 border-b border-blue-200">
-              <span className="font-semibold text-blue-700">Swap Offer</span>
-            </div>
-          )}
-          <p className="whitespace-pre-line">{message.text}</p>
-          <p className="text-xs text-gray-500 mt-1 text-right">
-            {formatTimestamp(message.timestamp)}
-          </p>
-        </div>
-      </div>
-    );
+    // Send the template message
+    handleSendMessage(templateText);
   };
 
   // SwapModal component for selecting books
@@ -376,7 +328,7 @@ Thanks!`;
     );
   };
 
-  if (loading) {
+  if (loading.messages && !book && !seller) {
     return (
       <div className="max-w-4xl mx-auto p-4">
         <div className="flex justify-center py-8">
@@ -416,9 +368,9 @@ Thanks!`;
           {book && (
             <div className="flex mb-4 md:mb-0 md:mr-6">
               <div className="w-24 h-32 bg-gray-200 rounded overflow-hidden flex-shrink-0">
-                {book.attributes?.cover?.data ? (
+                {book.cover ? (
                   <img 
-                    src={`${import.meta.env.VITE_API_URL}${book.attributes.cover.data.attributes.url}`} 
+                    src={book.cover} 
                     alt={book.attributes.title}
                     className="w-full h-full object-cover" 
                   />
@@ -436,6 +388,10 @@ Thanks!`;
                   {book.attributes?.bookType === 'For Swap' || book.attributes?.exchange ? (
                     <span className="inline-block px-2 py-1 bg-blue-100 text-blue-800 text-xs rounded-full">
                       For Swap
+                    </span>
+                  ) : book.attributes?.bookType === 'For Borrowing' ? (
+                    <span className="inline-block px-2 py-1 bg-purple-100 text-purple-800 text-xs rounded-full">
+                      For Borrowing
                     </span>
                   ) : (
                     <span className="inline-block px-2 py-1 bg-green-100 text-green-800 text-xs rounded-full">
@@ -486,6 +442,18 @@ Thanks!`;
                 Add to Swap Cart
               </button>
             </>
+          )}
+          
+          {book && book.attributes?.bookType === 'For Borrowing' && (
+            <button 
+              onClick={() => generateTemplate('borrow')}
+              className="px-3 py-1.5 bg-purple-600 text-white rounded text-sm hover:bg-purple-700 flex items-center"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+              </svg>
+              Ask About Borrowing
+            </button>
           )}
           
           {book && (!book.attributes?.bookType || book.attributes?.bookType === 'For Sale') && (
@@ -547,76 +515,23 @@ Thanks!`;
       </div>
       
       {/* Chat area */}
-      <div className="bg-white rounded-lg shadow-md overflow-hidden mb-6">
+      <div className="bg-white rounded-lg shadow-md overflow-hidden h-96 flex flex-col">
         <div className="border-b border-gray-200 py-3 px-4">
           <h2 className="font-medium">Messages</h2>
         </div>
         
         {/* Messages container */}
-        <div className="h-96 overflow-y-auto p-4">
-          {messages.length === 0 ? (
-            <div className="text-center text-gray-500 py-4">
-              <p>No messages yet. Start the conversation!</p>
-              <div className="mt-4 flex justify-center gap-2">
-                <button 
-                  onClick={() => generateTemplate('swap')}
-                  className="px-3 py-1 text-blue-600 text-sm border border-blue-200 rounded hover:bg-blue-50"
-                >
-                  Swap Template
-                </button>
-                <button 
-                  onClick={() => generateTemplate('purchase')}
-                  className="px-3 py-1 text-green-600 text-sm border border-green-200 rounded hover:bg-green-50"
-                >
-                  Purchase Template
-                </button>
-              </div>
-            </div>
-          ) : (
-            messages.map((message, index) => renderMessage(message, index))
-          )}
-          <div ref={messagesEndRef} />
-        </div>
+        <MessageList 
+          messages={messages}
+          loading={loading.messages}
+        />
         
         {/* Message input */}
-        <div className="border-t border-gray-200 p-4">
-          <form onSubmit={handleSendMessage} className="flex">
-            <textarea
-              value={newMessage}
-              onChange={(e) => setNewMessage(e.target.value)}
-              className="flex-grow border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-              placeholder="Type your message..."
-              rows="2"
-            ></textarea>
-            <button 
-              type="submit"
-              className="ml-3 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
-              disabled={!newMessage.trim()}
-            >
-              Send
-            </button>
-          </form>
-          <div className="mt-2 flex flex-wrap gap-2">
-            <button 
-              onClick={() => generateTemplate('swap')}
-              className="text-blue-600 text-xs hover:underline"
-            >
-              Swap Template
-            </button>
-            <button 
-              onClick={() => generateTemplate('purchase')}
-              className="text-green-600 text-xs hover:underline"
-            >
-              Purchase Template
-            </button>
-            <button 
-              onClick={() => generateTemplate('question')}
-              className="text-gray-600 text-xs hover:underline"
-            >
-              Question Template
-            </button>
-          </div>
-        </div>
+        <MessageInput 
+          chatId={chatId}
+          receiverId={sellerId}
+          bookId={bookId}
+        />
       </div>
       
       {/* Swap Modal */}
