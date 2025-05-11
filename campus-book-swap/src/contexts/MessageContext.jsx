@@ -56,14 +56,25 @@ export const MessageProvider = ({ children }) => {
 
   // Fetch conversations
   const fetchConversations = useCallback(async () => {
-    if (!isAuthenticated || !user) return;
+    if (!isAuthenticated || !user?.id) return;
     
     setLoading(prev => ({ ...prev, conversations: true }));
     try {
       const response = await messageAPI.getUserChats(user.id);
       
-      // Process conversations
-      const processedConversations = response.data || [];
+      // Process conversations and ensure all images have valid sources
+      const processedConversations = (response.data || []).map(conv => ({
+        ...conv,
+        lastMessage: {
+          ...conv.lastMessage,
+          // Ensure image sources are valid
+          attachments: conv.lastMessage?.attachments?.map(attachment => ({
+            ...attachment,
+            url: attachment.url || null // Use null instead of empty string
+          }))
+        }
+      }));
+      
       setConversations(processedConversations);
       setError(null);
     } catch (err) {
