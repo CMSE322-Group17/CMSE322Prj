@@ -41,6 +41,7 @@ const MessageList = ({ messages, loading }) => {
 
   const renderMessage = (message, index) => {
     const isCurrentUser = message.senderId === user?.id;
+    const isPurchaseRequest = message.messageType === 'purchase_request';
     const isSwapOffer = message.messageType === 'swap_offer';
     const isBorrowRequest = message.messageType === 'borrow_request';
     const isSystem = message.messageType === 'system';
