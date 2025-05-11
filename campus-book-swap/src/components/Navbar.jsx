@@ -380,16 +380,6 @@ const NavBar = () => {
               All Books
             </Link>
             <Link
-              to="/textbooks"
-              className={`block px-3 py-2 text-base font-medium rounded-md ${
-                location.pathname === "/textbooks"
-                  ? "bg-blue-50 text-blue-600"
-                  : "text-gray-700 hover:bg-gray-100"
-              }`}
-            >
-              Textbooks
-            </Link>
-            <Link
               to="/about"
               className={`block px-3 py-2 text-base font-medium rounded-md ${
                 location.pathname === "/about"
