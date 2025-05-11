@@ -73,15 +73,52 @@ const MessageList = ({ messages, loading }) => {
       <div key={message.id || index} className={messageContainerClasses}>
         <div className={`${messageBubbleClasses} p-3 rounded-lg shadow-sm`}>
           {/* Message type header */}
+          {isPurchaseRequest && (
+            <div className="mb-2 pb-1 border-b border-green-200">
+              <span className="font-semibold text-green-700">🛒 Purchase Request</span>
+              {message.requestStatus && (
+                <span className={`ml-2 px-2 py-1 rounded-full text-xs ${
+                  message.requestStatus === 'pending' ? 'bg-yellow-200 text-yellow-800' : 
+                  message.requestStatus === 'accepted' ? 'bg-green-200 text-green-800' :
+                  message.requestStatus === 'declined' ? 'bg-red-200 text-red-800' :
+                  message.requestStatus === 'completed' ? 'bg-blue-200 text-blue-800' :
+                  'bg-gray-200 text-gray-800'
+                }`}>
+                  {message.requestStatus.charAt(0).toUpperCase() + message.requestStatus.slice(1)}
+                </span>
+              )}
+            </div>
+          )}
+          
           {isSwapOffer && (
             <div className="mb-2 pb-1 border-b border-blue-200">
               <span className="font-semibold text-blue-700">📚 Swap Offer</span>
+              {message.requestStatus && (
+                <span className={`ml-2 px-2 py-1 rounded-full text-xs ${
+                  message.requestStatus === 'pending' ? 'bg-yellow-200 text-yellow-800' : 
+                  message.requestStatus === 'accepted' ? 'bg-green-200 text-green-800' :
+                  message.requestStatus === 'declined' ? 'bg-red-200 text-red-800' :
+                  'bg-gray-200 text-gray-800'
+                }`}>
+                  {message.requestStatus.charAt(0).toUpperCase() + message.requestStatus.slice(1)}
+                </span>
+              )}
             </div>
           )}
           
           {isBorrowRequest && (
             <div className="mb-2 pb-1 border-b border-purple-200">
               <span className="font-semibold text-purple-700">📅 Borrow Request</span>
+              {message.requestStatus && (
+                <span className={`ml-2 px-2 py-1 rounded-full text-xs ${
+                  message.requestStatus === 'pending' ? 'bg-yellow-200 text-yellow-800' : 
+                  message.requestStatus === 'accepted' ? 'bg-green-200 text-green-800' :
+                  message.requestStatus === 'declined' ? 'bg-red-200 text-red-800' :
+                  'bg-gray-200 text-gray-800'
+                }`}>
+                  {message.requestStatus.charAt(0).toUpperCase() + message.requestStatus.slice(1)}
+                </span>
+              )}
             </div>
           )}
           
