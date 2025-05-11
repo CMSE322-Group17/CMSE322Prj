@@ -122,7 +122,7 @@ const BooksPage = () => {
             <div className="flex justify-between items-center">
               <div className="flex items-center">
                 <h2 className="text-xl font-bold text-gray-800">{book.title}</h2>
-                <div className={`ml-3 px-3 py-1 rounded-full text-xs font-medium ${statusStyles[book.bookType]}`}>
+                <div className={`ml-3 px-3 py-1 rounded-full text-xs font-medium ${getBookTypeStyles(book.bookType)}`}>
                   {book.bookType}
                 </div>
               </div>
