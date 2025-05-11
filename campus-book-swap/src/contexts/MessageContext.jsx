@@ -197,17 +197,75 @@ export const MessageProvider = ({ children }) => {
       const response = await messageAPI.getUserChats(user.id);
       
       // Process conversations and ensure all images have valid sources
-      const processedConversations = (response.data || []).map(conv => ({
-        ...conv,
-        lastMessage: {
-          ...conv.lastMessage,
-          // Ensure image sources are valid
-          attachments: conv.lastMessage?.attachments?.map(attachment => ({
-            ...attachment,
-            url: attachment.url || null // Use null instead of empty string
-          }))
+      const processedConversations = (response.data || []).map(conv => {
+        // Handle possibly undefined attachments
+        let attachments = [];
+        
+        if (conv.lastMessage?.attachments) {
+          // If attachments is an array, use it directly
+          if (Array.isArray(conv.lastMessage.attachments)) {
+            attachments = conv.lastMessage.attachments.map(attachment => ({
+              ...attachment,
+              url: attachment.url || null
+            }));
+          } 
+          // If attachments is an object with data property (Strapi format)
+          else if (conv.lastMessage.attachments.data) {
+            attachments = Array.isArray(conv.lastMessage.attachments.data) 
+              ? conv.lastMessage.attachments.data.map(attachment => ({
+                  id: attachment.id,
+                  url: attachment.attributes?.url || null,
+                  ...attachment.attributes
+                }))
+              : [{
+                  id: conv.lastMessage.attachments.data.id,
+                  url: conv.lastMessage.attachments.data.attributes?.url || null,
+                  ...conv.lastMessage.attachments.data.attributes
+                }];
+          }
         }
-      }));
+        
+        return {
+          ...conv,
+          lastMessage: {
+            ...conv.lastMessage,
+            attachments
+          }
+        };
+      });
+      
+      // Use ref for previous conversations to avoid dependency cycle
+      // Check for new purchase requests where the current user is the receiver
+      const previousConvs = new Map(conversationsRef.current.map(conv => [conv.chatId, conv]));
+      
+      processedConversations.forEach(conv => {
+        const prevConv = previousConvs.get(conv.chatId);
+        const lastMessage = conv.lastMessage;
+        
+        // If this is a new conversation or a updated conversation with a purchase request
+        if (lastMessage && 
+            lastMessage.messageType === 'purchase_request' && 
+            lastMessage.requestStatus === 'pending' && 
+            lastMessage.receiverId === user.id &&
+            (!prevConv || 
+             !prevConv.lastMessage || 
+             prevConv.lastMessage.id !== lastMessage.id)) {
+          
+          // Get book and sender info for notification
+          const chatParts = conv.chatId.split('_');
+          if (chatParts.length >= 3) {
+            const senderId = chatParts[0] === user.id.toString() ? chatParts[1] : chatParts[0];
+            const bookId = chatParts[2];
+            
+            // Show notification for new purchase request
+            showPurchaseRequestNotification(
+              lastMessage,
+              { id: bookId, title: conv.bookTitle || "Book" },
+              { id: senderId, username: conv.senderName || "Buyer" }
+            );
+          }
+        }
+      });
       
       setConversations(processedConversations);
       setError(null);
