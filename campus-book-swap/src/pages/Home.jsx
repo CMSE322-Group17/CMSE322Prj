@@ -96,12 +96,6 @@ const Home = () => {
           const path = firstImage.url.startsWith('/') ? firstImage.url : `/${firstImage.url}`;
           return `${baseUrl}${path}`;
         }
-        
-        // If it has a hash or provider property (newer Strapi versions)
-        if (firstImage.hash && firstImage.provider) {
-          // Construct URL from hash
-          return `${baseUrl}/uploads/${firstImage.hash}${firstImage.ext}`;
-        }
       }
       
       // Case 3: Strapi v4 format with data.attributes
