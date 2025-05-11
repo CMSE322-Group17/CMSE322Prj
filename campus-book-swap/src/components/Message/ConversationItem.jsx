@@ -45,7 +45,7 @@ const ConversationItem = ({
   // Fetch book and user data if not provided
   useEffect(() => {
     const fetchData = async () => {
-      if (!loading || !chatId) return;
+      if (!loading || !chatId || !otherUserId) return;
       
       try {
         setLoading(true);
