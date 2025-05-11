@@ -37,7 +37,7 @@ export const MessageProvider = ({ children }) => {
 
   // Fetch conversations when user is authenticated
   useEffect(() => {
-    if (isAuthenticated && user) {
+    if (isAuthenticated && user?.id) {
       fetchConversations();
       fetchUnreadCount();
       
