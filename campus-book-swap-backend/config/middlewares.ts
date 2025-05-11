@@ -5,10 +5,12 @@ module.exports = ({ env }) => [
     name: "strapi::cors",
     config: {
       enabled: true,
-      origin: ["http://localhost:5173"], // Vite default port
-      methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
-      headers: ["Content-Type", "Authorization", "Origin", "Accept"],
+      origin: ["http://localhost:5173", "http://localhost:1337"],
+      methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS", "HEAD"],
+      headers: ["Content-Type", "Authorization", "Origin", "Accept", "X-Requested-With"],
       keepHeaderOnError: true,
+      credentials: true,
+      maxAge: 86400
     },
   },
   "strapi::logger",
