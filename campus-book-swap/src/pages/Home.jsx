@@ -990,16 +990,27 @@ const Home = () => {
                       onError={(e) => {
                         e.target.onerror = null;
                         e.target.src = null;
+                        e.target.parentElement.innerHTML = `
+                          <div class="bg-gradient-to-br from-blue-500 to-cyan-400 rounded-xl shadow-md w-40 h-56 flex items-center justify-center">
+                            <div class="text-white text-center font-serif px-2">
+                              <div class="text-xs tracking-wide">A COURT OF</div>
+                              <div class="text-lg font-bold my-1">${book.displayTitle?.[0] || book.title?.split(' ')[0] || ''}</div>
+                              <div class="text-xs tracking-wide">AND</div>
+                              <div class="text-lg font-bold my-1">${book.displayTitle?.[1] || book.title?.split(' ').slice(1).join(' ') || ''}</div>
+                              <div class="text-xs mt-2">${book.author?.toUpperCase() || ''}</div>
+                            </div>
+                          </div>
+                        `;
                       }}
                     />
                   ) : (
                     <div className="bg-gradient-to-br from-blue-500 to-cyan-400 rounded-xl shadow-md w-40 h-56 flex items-center justify-center">
                       <div className="text-white text-center font-serif px-2">
                         <div className="text-xs tracking-wide">A COURT OF</div>
-                        <div className="text-lg font-bold my-1">{book.displayTitle?.[0]}</div>
+                        <div className="text-lg font-bold my-1">{book.displayTitle?.[0] || book.title?.split(' ')[0] || ''}</div>
                         <div className="text-xs tracking-wide">AND</div>
-                        <div className="text-lg font-bold my-1">{book.displayTitle?.[1]}</div>
-                        <div className="text-xs mt-2">{book.author?.toUpperCase()}</div>
+                        <div className="text-lg font-bold my-1">{book.displayTitle?.[1] || book.title?.split(' ').slice(1).join(' ') || ''}</div>
+                        <div className="text-xs mt-2">{book.author?.toUpperCase() || ''}</div>
                       </div>
                     </div>
                   )}
