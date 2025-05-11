@@ -26,7 +26,12 @@ const ConversationItem = ({
   // Determine transaction type if available
   const transactionType = conversation?.transactionType || 
     (lastMessage?.messageType === 'swap_offer' ? 'swap' :
-     lastMessage?.messageType === 'borrow_request' ? 'borrow' : 'general');
+     lastMessage?.messageType === 'borrow_request' ? 'borrow' : 
+     lastMessage?.messageType === 'purchase_request' ? 'purchase' : 'general');
+     
+  // Check if there's a pending request for the seller (current user)
+  const hasPendingRequest = lastMessage?.requestStatus === 'pending' && 
+    lastMessage?.receiverId === user?.id;
 
   // Get color scheme based on transaction type
   const getTypeStyle = () => {
