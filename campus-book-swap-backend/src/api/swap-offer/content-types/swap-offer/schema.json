@@ -1,0 +1,47 @@
+{
+  "kind": "collectionType",
+  "collectionName": "swap_offers",
+  "info": {
+    "singularName": "swap-offer",
+    "pluralName": "swap-offers",
+    "displayName": "SwapOffer"
+  },
+  "options": {
+    "draftAndPublish": true
+  },
+  "attributes": {
+    "chatId": {
+      "type": "string",
+      "required": true
+    },
+    "buyerId": {
+      "type": "string",
+      "required": true
+    },
+    "sellerId": {
+      "type": "string",
+      "required": true
+    },
+    "bookId": {
+      "type": "string",
+      "required": true
+    },
+    "offerBookIds": {
+      "type": "json",
+      "required": true
+    },
+    "status": {
+      "type": "enumeration",
+      "enum": [
+        "pending",
+        "accepted",
+        "declined",
+        "completed"
+      ]
+    },
+    "timestamp": {
+      "type": "datetime",
+      "required": true
+    }
+  }
+}

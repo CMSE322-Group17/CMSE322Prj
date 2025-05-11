@@ -15,15 +15,14 @@ const BooksPage = () => {
     sort: 'newest',
     condition: 'all',
     priceRange: 'all',
-    bookType: 'all' // New filter for book type (Sale, Swap, Borrow)
+    bookType: 'all' 
   });
   const [selectedBook, setSelectedBook] = useState(null);
 
   // Style map for book type badges
   const typeStyles = {
     'For Sale': 'bg-green-100 text-green-800 border-green-200',
-    'For Swap': 'bg-blue-100 text-blue-800 border-blue-200',
-    'For Borrowing': 'bg-purple-100 text-purple-800 border-purple-200'
+    'For Swap': 'bg-blue-100 text-blue-800 border-blue-200'
   };
   
   // Icons for book types
@@ -36,11 +35,6 @@ const BooksPage = () => {
     'For Swap': (
       <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
-      </svg>
-    ),
-    'For Borrowing': (
-      <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 14v3m4-3v3m4-3v3M3 21h18M3 10h18M3 7l9-4 9 4M4 10h16v11H4V10z" />
       </svg>
     )
   };
@@ -56,8 +50,7 @@ const BooksPage = () => {
     // Status styles
     const statusStyles = {
       'For Sale': 'bg-green-100 text-green-800',
-      'For Swap': 'bg-blue-100 text-blue-800',
-      'For Borrowing': 'bg-purple-100 text-purple-800'
+      'For Swap': 'bg-blue-100 text-blue-800'
     };
     
     // Generate random price (for demo purposes)
@@ -77,13 +70,6 @@ const BooksPage = () => {
       location: 'North Campus Library'
     };
     
-    // Borrowing details (for demo)
-    const borrowingDetails = {
-      durationOptions: ['1 week', '2 weeks', '1 month'],
-      deposit: '$20.00',
-      availableFrom: 'May 15, 2023'
-    };
-    
     // Actions based on book type
     const actions = {
       'For Sale': {
@@ -93,10 +79,6 @@ const BooksPage = () => {
       'For Swap': {
         primary: 'Propose Swap',
         secondary: 'View Wishlist'
-      },
-      'For Borrowing': {
-        primary: 'Borrow Now',
-        secondary: 'Reserve'
       }
     };
   
@@ -121,10 +103,6 @@ const BooksPage = () => {
       } else if (book.bookType === 'For Swap' && actionType === 'primary') {
         // Redirect to chat with seller for swap
         navigate(`/chat/${seller.id}/${book.id}`);
-      } else if (book.bookType === 'For Borrowing' && actionType === 'primary') {
-        // Handle borrowing process
-        alert("Borrowing request sent to seller!");
-        onClose();
       } else {
         // Handle secondary actions
         alert("Feature coming soon!");
@@ -210,7 +188,9 @@ const BooksPage = () => {
                   
                   {/* Rating badge */}
                   {book.rating && (
-                    <span className="text-gray-500 text-xs ml-2">{typeof book.rating === 'number' ? book.rating.toFixed(1) : book.rating} ({book.voters} voters)</span>
+                    <div className="absolute -bottom-3 -right-3 bg-yellow-400 rounded-full h-10 w-10 flex items-center justify-center text-gray-800 font-bold text-sm shadow-md">
+                      {typeof book.rating === 'number' ? book.rating.toFixed(1) : book.rating}
+                    </div>
                   )}
                 </div>
               </div>
@@ -285,24 +265,8 @@ const BooksPage = () => {
                         {book.bookType === 'For Swap' && (
                           <p className="flex justify-between">
                             <span className="font-medium text-gray-700">Exchange For:</span> 
-                            <span className="text-gray-600">Literature or History books</span>
+                            <span className="text-gray-600">{book.exchange || "Literature or History books"}</span>
                           </p>
-                        )}
-                        {book.bookType === 'For Borrowing' && (
-                          <>
-                            <p className="flex justify-between">
-                              <span className="font-medium text-gray-700">Duration:</span> 
-                              <span className="text-gray-600">{borrowingDetails.durationOptions.join(' / ')}</span>
-                            </p>
-                            <p className="flex justify-between">
-                              <span className="font-medium text-gray-700">Deposit:</span> 
-                              <span className="text-gray-600">{borrowingDetails.deposit}</span>
-                            </p>
-                            <p className="flex justify-between">
-                              <span className="font-medium text-gray-700">Available From:</span> 
-                              <span className="text-gray-600">{borrowingDetails.availableFrom}</span>
-                            </p>
-                          </>
                         )}
                       </div>
                     </div>
@@ -564,11 +528,6 @@ const BooksPage = () => {
 
   // Get current category name for display
   const getCurrentCategoryName = () => {
-    // Handle the special case of textbooks route
-    if (window.location.pathname.includes('/textbooks')) {
-      return 'Textbooks';
-    }
-    
     if (!categoryName || categoryName === 'all') {
       return 'All Books';
     }
@@ -605,25 +564,10 @@ const BooksPage = () => {
         ];
         setCategories(processedCategories);
         
-        // Check if we're on the textbooks route
-        const isTextbooksRoute = window.location.pathname.includes('/textbooks');
-        
-        // Fetch books based on category or all books
+        // Check if we're on the category route
         let booksData;
         
-        if (isTextbooksRoute) {
-          // Find the textbooks category if it exists
-          const textbooksCategory = processedCategories.find(cat => 
-            cat.name.toLowerCase() === 'textbooks'
-          );
-          
-          if (textbooksCategory && textbooksCategory.id !== 'all') {
-            booksData = await bookAPI.getBooksByCategory(textbooksCategory.id);
-          } else {
-            // Fallback to all books if no textbooks category found
-            booksData = await bookAPI.getPopularBooks();
-          }
-        } else if (categoryName && categoryName !== 'all') {
+        if (categoryName && categoryName !== 'all') {
           // Find category ID if we're browsing by URL slug
           const category = processedCategories.find(cat => 
             cat.name.toLowerCase().replace(/\s+/g, '-') === categoryName
@@ -648,9 +592,9 @@ const BooksPage = () => {
             coverUrl = getStrapiMediaUrl(bookData.cover);
           }
           
-          // Determine book transaction type (For Sale, For Swap, For Borrowing)
-          const bookTypes = ['For Sale', 'For Swap', 'For Borrowing'];
-          const bookType = bookTypes[book.id % bookTypes.length];
+          // Determine book transaction type (For Sale, For Swap)
+          // Removing For Borrowing type
+          const bookType = bookData.bookType || (book.id % 2 === 0 ? 'For Sale' : 'For Swap');
           
           // Map the book data
           return {
@@ -685,7 +629,7 @@ const BooksPage = () => {
     };
     
     fetchData();
-  }, [categoryName, window.location.pathname]);
+  }, [categoryName]);
 
   return (
     <div className="bg-gray-50 min-h-screen">
@@ -742,7 +686,7 @@ const BooksPage = () => {
                 </div>
               </div>
               
-              {/* Book Type Filter - NEW */}
+              {/* Book Type Filter */}
               <div className="mb-6">
                 <h3 className="font-medium text-gray-700 mb-2">Book Type</h3>
                 <div className="space-y-2">
@@ -775,16 +719,6 @@ const BooksPage = () => {
                       className="mr-2"
                     />
                     <span className="text-gray-600">For Swap</span>
-                  </label>
-                  <label className="flex items-center text-sm">
-                    <input 
-                      type="radio" 
-                      name="bookType" 
-                      checked={filters.bookType === 'For Borrowing'}
-                      onChange={() => handleFilterChange('bookType', 'For Borrowing')}
-                      className="mr-2"
-                    />
-                    <span className="text-gray-600">For Borrowing</span>
                   </label>
                 </div>
               </div>
@@ -1053,11 +987,6 @@ const BooksPage = () => {
                             <p className="text-blue-600 font-medium">Swap</p>
                           )}
                           
-                          {/* For Borrowing books */}
-                          {book.bookType === 'For Borrowing' && (
-                            <p className="text-blue-600 font-medium">Borrow</p>
-                          )}
-                          
                           <p className="text-xs text-gray-500 mt-1">
                             {book.condition} • {book.inStock > 0 ? `${book.inStock} in stock` : 'Out of stock'}
                           </p>
@@ -1081,15 +1010,6 @@ const BooksPage = () => {
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
                               </svg>
                               Propose Swap
-                            </>
-                          )}
-                          
-                          {book.bookType === 'For Borrowing' && (
-                            <>
-                              <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                              </svg>
-                              Borrow Now
                             </>
                           )}
                         </button>

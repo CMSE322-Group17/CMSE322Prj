@@ -28,35 +28,16 @@ export const CartProvider = ({ children }) => {
     setLoading(true);
     try {
       // API call to get cart items
-      // For now using mock data until backend is set up
+      // For now using empty array until backend is set up
       // const response = await authAxios.get(`${import.meta.env.VITE_API_URL}/api/cart-items`);
       // const items = response.data.data || [];
       
-      // Mock data for development
-      const mockItems = [
-        {
-          id: 1,
-          bookId: 1,
-          title: "Introduction to Computer Science",
-          author: "John Smith",
-          price: 24.99,
-          quantity: 1,
-          cover: "https://via.placeholder.com/150x225?text=CS+Intro"
-        },
-        {
-          id: 2,
-          bookId: 2,
-          title: "Calculus Made Easy",
-          author: "Sarah Johnson",
-          price: 19.95,
-          quantity: 2,
-          cover: "https://via.placeholder.com/150x225?text=Calculus"
-        }
-      ];
+      // Use empty array instead of mock data
+      const items = [];
       
-      setCartItems(mockItems);
+      setCartItems(items);
       // Update cart count (total quantity of all items)
-      const count = mockItems.reduce((total, item) => total + item.quantity, 0);
+      const count = items.reduce((total, item) => total + item.quantity, 0);
       setCartCount(count);
       setError(null);
     } catch (err) {

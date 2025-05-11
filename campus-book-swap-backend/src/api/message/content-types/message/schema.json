@@ -1,0 +1,48 @@
+{
+  "kind": "collectionType",
+  "collectionName": "messages",
+  "info": {
+    "singularName": "message",
+    "pluralName": "messages",
+    "displayName": "Message"
+  },
+  "options": {
+    "draftAndPublish": true
+  },
+  "attributes": {
+    "ChatId": {
+      "type": "string",
+      "required": true
+    },
+    "senderId": {
+      "type": "string",
+      "required": true
+    },
+    "receiverId": {
+      "type": "string",
+      "required": true
+    },
+    "bookId": {
+      "type": "string",
+      "required": true
+    },
+    "text": {
+      "type": "text",
+      "required": true
+    },
+    "timestamp": {
+      "type": "datetime",
+      "required": true
+    },
+    "messageType": {
+      "type": "enumeration",
+      "enum": [
+        "general",
+        "swap_offer",
+        "swap_accepted",
+        "swap_declined",
+        "borrow_request"
+      ]
+    }
+  }
+}

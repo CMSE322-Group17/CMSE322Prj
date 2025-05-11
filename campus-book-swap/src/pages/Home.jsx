@@ -377,9 +377,9 @@ const Home = () => {
                 <Link to="/books" className="px-8 py-3 bg-blue-600 text-white rounded-full font-medium hover:bg-blue-700 transition-colors shadow-lg text-center">
                   Browse Books
                 </Link>
-                <Link to="/textbooks" className="px-8 py-3 bg-white text-blue-900 rounded-full font-medium hover:bg-blue-50 transition-colors shadow-lg text-center">
+{/*                <Link to="/textbooks" className="px-8 py-3 bg-white text-blue-900 rounded-full font-medium hover:bg-blue-50 transition-colors shadow-lg text-center">
                   Find Textbooks
-                </Link>
+                </Link>*/}
               </div>
               
               {/* Key Stats */}
@@ -470,7 +470,7 @@ const Home = () => {
                 </div>
               </div>
               
-              <div className="action-card p-4 bg-purple-50 rounded-lg flex items-center w-full sm:w-40 transition-all hover:bg-purple-100">
+{/*              <div className="action-card p-4 bg-purple-50 rounded-lg flex items-center w-full sm:w-40 transition-all hover:bg-purple-100">
                 <div className="rounded-full bg-purple-100 p-3 mr-3">
                   <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-purple-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 14v3m4-3v3m4-3v3M3 21h18M3 10h18M3 7l9-4 9 4M4 10h16v11H4V10z" />
@@ -480,7 +480,7 @@ const Home = () => {
                   <h3 className="font-semibold text-gray-800">Borrow</h3>
                   <p className="text-xs text-gray-500">Borrow books</p>
                 </div>
-              </div>
+              </div>*/}
             </div>
           </div>
         </div>
