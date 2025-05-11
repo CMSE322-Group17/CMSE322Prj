@@ -275,7 +275,7 @@ export const MessageProvider = ({ children }) => {
       setError('Failed to delete message');
       return false;
     }
-  }, [isAuthenticated]);
+  }, [isAuthenticated, user]);
 
   // Clear context errors
   const clearError = useCallback(() => {
