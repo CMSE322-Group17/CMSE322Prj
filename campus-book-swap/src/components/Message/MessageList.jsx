@@ -166,7 +166,7 @@ const MessageList = ({ messages, loading }) => {
 
   return (
     <div className="flex-grow overflow-y-auto p-4 space-y-1 bg-gray-50">
-      {messages.map(renderMessage)}
+      {localMessages.map(renderMessage)}
       <div ref={messagesEndRef} />
     </div>
   );
