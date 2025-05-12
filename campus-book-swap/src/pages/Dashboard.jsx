@@ -664,7 +664,7 @@ const Dashboard = () => {
   };
 
   // Calculate total pending actions
-  const pendingActionsCount = pendingSwaps.length + pendingBorrows.length;
+  const pendingActionsCount = pendingSwaps.length + pendingBorrows.length + pendingPurchaseRequests.length;
 
   if (isLoading) {
     return (
