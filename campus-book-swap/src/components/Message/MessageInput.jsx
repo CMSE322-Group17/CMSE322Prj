@@ -25,7 +25,12 @@ const MessageInput = ({ chatId, receiverId, bookId, onMessageSent }) => {
     try {
       // Call the parent's onMessageSent with the message text
       if (onMessageSent) {
-        await onMessageSent(message.trim());
+        // Pass all necessary props to the onMessageSent function
+        await onMessageSent(message.trim(), {
+          chatId,
+          receiverId,
+          bookId
+        });
       }
       
       // Clear input after sending
