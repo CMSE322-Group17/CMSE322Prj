@@ -978,6 +978,39 @@ const Dashboard = () => {
                             </div>
                           </div>
                         ))}
+
+                        {/* Show Purchase Requests that require user's action */}
+                        {pendingPurchaseRequests.map(request => (
+                          <div key={`purchase-${request.id}`} className="p-3 hover:bg-gray-50">
+                            <div className="flex justify-between items-start">
+                              <div>
+                                <p className="font-medium text-gray-800">
+                                  <span className="text-green-600">{request.buyer?.username}</span> requested to purchase your book
+                                </p>
+                                <p className="text-sm text-gray-600 font-medium mt-1">
+                                  Book: {request.book?.attributes?.title}
+                                </p>
+                                <div className="mt-2 flex space-x-2">
+                                  <button 
+                                    onClick={() => handlePurchaseResponse(request.id, true)}
+                                    className="px-3 py-1 bg-green-600 text-white text-xs rounded hover:bg-green-700"
+                                  >
+                                    Accept
+                                  </button>
+                                  <button 
+                                    onClick={() => handlePurchaseResponse(request.id, false)}
+                                    className="px-3 py-1 bg-gray-100 text-gray-700 text-xs rounded hover:bg-gray-200"
+                                  >
+                                    Decline
+                                  </button>
+                                </div>
+                              </div>
+                              <span className="bg-green-100 text-green-800 px-2 py-1 rounded text-xs font-medium">
+                                Purchase Request
+                              </span>
+                            </div>
+                          </div>
+                        ))}
                       </div>
                     )}
                   </div>
