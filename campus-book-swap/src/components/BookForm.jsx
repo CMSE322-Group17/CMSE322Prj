@@ -176,10 +176,16 @@ const BookForm = ({ onSuccess, bookToEdit = null }) => {
     }
   };
 
+  // Reset price when book type changes
+  useEffect(() => {
+    if (book.bookType !== 'For Sale') {
+      setBook(prev => ({ ...prev, price: '0' }));
+    }
+  }, [book.bookType]);
+
   // Show/hide fields based on book type
   const showPriceField = book.bookType === 'For Sale';
   const showExchangeField = book.bookType === 'For Swap';
-  // const showDepositField = book.bookType === 'For Borrowing';
 
   return (
     <div className="bg-white p-6 rounded-lg shadow-md">
