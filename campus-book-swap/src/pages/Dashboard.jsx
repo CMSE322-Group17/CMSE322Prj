@@ -260,19 +260,8 @@ const Dashboard = () => {
         role: swap.attributes.buyerId === user.id ? 'requester' : 'provider'
       })) || [];
       
-      // Process borrows data (minimal processing - we'll do full processing later)
-      const borrows = borrowsResponse.data.data?.map(borrow => ({
-        id: `borrow-${borrow.id}`,
-        type: 'borrow',
-        date: borrow.attributes.timestamp,
-        returnDate: borrow.attributes.returnDate,
-        depositAmount: borrow.attributes.depositAmount,
-        bookId: borrow.attributes.bookId,
-        role: borrow.attributes.borrowerId === user.id ? 'borrower' : 'lender'
-      })) || [];
-      
       // Combine all transactions and sort by date
-      const allTransactions = [...sales, ...swaps, ...borrows].sort((a, b) => 
+      const allTransactions = [...sales, ...swaps].sort((a, b) => 
         new Date(b.date) - new Date(a.date)
       );
       
