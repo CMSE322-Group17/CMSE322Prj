@@ -19,8 +19,8 @@ const SellerChat = () => {  const { sellerId, bookId } = useParams();
     sendMessage, 
     fetchMessages, 
     loading,
-    // We'll handle errors locally instead of using context error
-    clearError 
+    error: messageError,
+    setError: setMessageError
   } = useMessage();
   
   const [seller, setSeller] = useState(null);
@@ -66,7 +66,10 @@ const SellerChat = () => {  const { sellerId, bookId } = useParams();
           fetchMessages(chatId);
         }
         
-        clearError();
+        // Clear any message errors if needed
+        if (setMessageError) {
+          setMessageError(null);
+        }
       } catch (err) {
         console.error('Error fetching chat data:', err);
       }
@@ -82,13 +85,32 @@ const SellerChat = () => {  const { sellerId, bookId } = useParams();
     }, 15000); // Poll every 15 seconds
     
     return () => clearInterval(intervalId);
-  }, [isAuthenticated, sellerId, bookId, user, chatId, fetchMessages, clearError, authAxios]);
+  }, [isAuthenticated, sellerId, bookId, user, chatId, fetchMessages, setMessageError, authAxios]);
 
   // Send a new message
   const handleSendMessage = async (text) => {
-    if (!chatId || !text || !isAuthenticated) return;
+    if (!chatId || !text || !isAuthenticated) {
+      if (!isAuthenticated) {
+        alert("Please log in to send messages");
+        return;
+      }
+      if (!chatId) {
+        console.error("Missing chat ID");
+        return;
+      }
+      return;
+    }
     
     try {
+      // Set a timeout to avoid infinite pending state
+      const timeout = setTimeout(() => {
+        console.log("Message sending timeout - refreshing messages anyway");
+        if (chatId) {
+          fetchMessages(chatId);
+        }
+      }, 10000);
+      
+      // Send the message
       await sendMessage({
         chatId,
         receiverId: sellerId,
@@ -96,8 +118,35 @@ const SellerChat = () => {  const { sellerId, bookId } = useParams();
         text,
         messageType: 'general'
       });
+      
+      clearTimeout(timeout);
+      
+      // Make sure we refresh messages to show the new one
+      if (chatId) {
+        fetchMessages(chatId);
+      }
     } catch (err) {
       console.error('Error sending message:', err);
+      
+      // Show user-friendly error message
+      let errorMessage = "Failed to send message. Please try again.";
+      
+      if (err.response) {
+        if (err.response.status === 400) {
+          errorMessage = "Message couldn't be sent. Please check your input.";
+        } else if (err.response.status === 401) {
+          errorMessage = "Your session has expired. Please log in again.";
+        } else if (err.response.status === 429) {
+          errorMessage = "You're sending messages too quickly. Please wait a moment.";
+        } else if (err.response.status >= 500) {
+          errorMessage = "Server error. Please try again later.";
+        }
+      } else if (err.request) {
+        errorMessage = "Network error. Please check your connection.";
+      }
+      
+      // Show error as alert for now - could be improved with a toast notification
+      alert(errorMessage);
     }
   };
 

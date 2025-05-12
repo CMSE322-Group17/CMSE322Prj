@@ -377,7 +377,7 @@ export interface ApiBookBook extends Schema.CollectionType {
     author: Attribute.String & Attribute.Required;
     bookOfWeek: Attribute.Boolean & Attribute.DefaultTo<false>;
     bookOfYear: Attribute.Boolean & Attribute.DefaultTo<false>;
-    bookType: Attribute.Enumeration<['For Sale', 'For Swap', 'For Borrowing']> &
+    bookType: Attribute.Enumeration<['For Sale', 'For Swap']> &
       Attribute.Required &
       Attribute.DefaultTo<'For Sale'>;
     category: Attribute.Relation<
@@ -390,7 +390,7 @@ export interface ApiBookBook extends Schema.CollectionType {
     > &
       Attribute.Required;
     course: Attribute.String;
-    cover: Attribute.Media<'images', true> & Attribute.Required;
+    cover: Attribute.Media<'images'>;
     createdAt: Attribute.DateTime;
     createdBy: Attribute.Relation<'api::book.book', 'oneToOne', 'admin::user'> &
       Attribute.Private;
@@ -408,7 +408,7 @@ export interface ApiBookBook extends Schema.CollectionType {
       'oneToMany',
       'api::message.message'
     >;
-    PriceField: Attribute.Decimal & Attribute.Required & Attribute.DefaultTo<1>;
+    price: Attribute.Float & Attribute.DefaultTo<0>;
     publishedAt: Attribute.DateTime;
     rating: Attribute.Integer &
       Attribute.SetMinMax<
@@ -449,7 +449,6 @@ export interface ApiCartItemCartItem extends Schema.CollectionType {
   };
   attributes: {
     bookId: Attribute.String & Attribute.Required;
-    borrowDuration: Attribute.String;
     createdAt: Attribute.DateTime;
     createdBy: Attribute.Relation<
       'api::cart-item.cart-item',
@@ -457,12 +456,10 @@ export interface ApiCartItemCartItem extends Schema.CollectionType {
       'admin::user'
     > &
       Attribute.Private;
-    depositAmount: Attribute.Decimal;
-    dueDate: Attribute.Date;
     price: Attribute.Decimal;
     publishedAt: Attribute.DateTime;
     quantity: Attribute.Integer & Attribute.Required & Attribute.DefaultTo<1>;
-    transactionType: Attribute.Enumeration<['buy', 'borrow', 'swap']>;
+    transactionType: Attribute.Enumeration<['buy', 'swap']>;
     updatedAt: Attribute.DateTime;
     updatedBy: Attribute.Relation<
       'api::cart-item.cart-item',
@@ -540,7 +537,6 @@ export interface ApiMessageMessage extends Schema.CollectionType {
         'swap_offer',
         'swap_accepted',
         'swap_declined',
-        'borrow_request',
         'purchase_request',
         'request_accepted',
         'request_declined'

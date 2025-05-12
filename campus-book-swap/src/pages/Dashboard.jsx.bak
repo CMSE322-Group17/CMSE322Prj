@@ -49,7 +49,7 @@ const Dashboard = () => {
         fetchMyBooks(),
         fetchPendingSwaps(),
         fetchPendingBorrows(),
-        fetchBorrowedBooks(), // Keeping as a placeholder that returns empty array
+        fetchBorrowedBooks(),
         fetchTransactionHistory(),
         fetchPendingPurchaseRequests(),
         calculateStats()
@@ -158,11 +158,13 @@ const Dashboard = () => {
     }
   };
 
-
   // Placeholder for fetchPendingBorrows (removed - not needed)
   const fetchPendingBorrows = async () => {
     // This functionality has been removed since borrowing is not needed
     setPendingBorrows([]);
+  };
+      throw err;
+    }
   };
 
   // Fetch pending purchase requests
@@ -221,22 +223,76 @@ const Dashboard = () => {
     }
   };
 
-  // Placeholder for fetchBorrowedBooks (removed - not needed)
+  // Fetch books currently borrowed by the user
   const fetchBorrowedBooks = async () => {
-    // This functionality has been removed since borrowing is not needed
-    setBorrowedBooks([]);
+    try {
+      const response = await authAxios.get(
+        `${import.meta.env.VITE_API_URL}/api/borrow-requests?filters[borrowerId][$eq]=${user.id}&filters[status][$eq]=borrowed&populate=*`
+      );
+      
+      const borrows = response.data.data || [];
+      
+      // Process the data
+      const processedBorrows = await Promise.all(borrows.map(async (borrow) => {
+        try {
+          // Fetch the book details
+          const bookResponse = await authAxios.get(
+            `${import.meta.env.VITE_API_URL}/api/books/${borrow.attributes.bookId}?populate=*`
+          );
+          
+          // Fetch the lender's details
+          const userResponse = await authAxios.get(
+            `${import.meta.env.VITE_API_URL}/api/users/${borrow.attributes.lenderId}`
+          );
+          
+          // Calculate days until due
+          const dueDate = new Date(borrow.attributes.returnDate);
+          const today = new Date();
+          const daysUntilDue = Math.ceil((dueDate - today) / (1000 * 60 * 60 * 24));
+          
+          // Return processed borrow data
+          return {
+            id: borrow.id,
+            ...borrow.attributes,
+            book: bookResponse.data.data,
+            lender: userResponse.data,
+            daysUntilDue,
+            isOverdue: daysUntilDue < 0
+          };
+        } catch (err) {
+          console.error('Error processing borrowed book data:', err);
+          return {
+            id: borrow.id,
+            ...borrow.attributes,
+            book: { attributes: { title: 'Unknown Book' } },
+            lender: { username: 'Unknown User' },
+            daysUntilDue: 0,
+            isOverdue: false
+          };
+        }
+      }));
+      
+      setBorrowedBooks(processedBorrows);
+    } catch (err) {
+      console.error('Error fetching borrowed books:', err);
+      throw err;
+    }
   };
 
   // Fetch transaction history
   const fetchTransactionHistory = async () => {
     try {
-      // Fetch completed transactions (sales, swaps)
+      // Fetch completed transactions (sales, swaps, borrows)
       const salesResponse = await authAxios.get(
         `${import.meta.env.VITE_API_URL}/api/orders?filters[userId][$eq]=${user.id}&sort[0]=timestamp:desc&populate=*`
       );
       
       const swapsResponse = await authAxios.get(
         `${import.meta.env.VITE_API_URL}/api/swap-offers?filters[$or][0][buyerId][$eq]=${user.id}&filters[$or][1][sellerId][$eq]=${user.id}&filters[status][$eq]=completed&sort[0]=timestamp:desc&populate=*`
+      );
+      
+      const borrowsResponse = await authAxios.get(
+        `${import.meta.env.VITE_API_URL}/api/borrow-requests?filters[$or][0][borrowerId][$eq]=${user.id}&filters[$or][1][lenderId][$eq]=${user.id}&filters[status][$eq]=returned&sort[0]=timestamp:desc&populate=*`
       );
       
       // Process sales data
@@ -260,8 +316,19 @@ const Dashboard = () => {
         role: swap.attributes.buyerId === user.id ? 'requester' : 'provider'
       })) || [];
       
+      // Process borrows data (minimal processing - we'll do full processing later)
+      const borrows = borrowsResponse.data.data?.map(borrow => ({
+        id: `borrow-${borrow.id}`,
+        type: 'borrow',
+        date: borrow.attributes.timestamp,
+        returnDate: borrow.attributes.returnDate,
+        depositAmount: borrow.attributes.depositAmount,
+        bookId: borrow.attributes.bookId,
+        role: borrow.attributes.borrowerId === user.id ? 'borrower' : 'lender'
+      })) || [];
+      
       // Combine all transactions and sort by date
-      const allTransactions = [...sales, ...swaps].sort((a, b) => 
+      const allTransactions = [...sales, ...swaps, ...borrows].sort((a, b) => 
         new Date(b.date) - new Date(a.date)
       );
       
@@ -282,6 +349,26 @@ const Dashboard = () => {
             // Determine the other user
             const otherUserId = transaction.role === 'requester' ? 
               transaction.sellerId : transaction.buyerId;
+            
+            const userResponse = await authAxios.get(
+              `${import.meta.env.VITE_API_URL}/api/users/${otherUserId}`
+            );
+            
+            return {
+              ...transaction,
+              book: bookResponse.data.data,
+              otherUser: userResponse.data
+            };
+          }
+          else if (transaction.type === 'borrow') {
+            // For borrows, fetch the book details
+            const bookResponse = await authAxios.get(
+              `${import.meta.env.VITE_API_URL}/api/books/${transaction.bookId}?populate=*`
+            );
+            
+            // Determine the other user
+            const otherUserId = transaction.role === 'borrower' ? 
+              transaction.lenderId : transaction.borrowerId;
             
             const userResponse = await authAxios.get(
               `${import.meta.env.VITE_API_URL}/api/users/${otherUserId}`
@@ -325,43 +412,48 @@ const Dashboard = () => {
       };
       
       // Calculate based on API responses
-      // Using the correct format for Strapi v4 count endpoint
       const booksResponse = await authAxios.get(
-        `${import.meta.env.VITE_API_URL}/api/books?filters[users_permissions_user][id][$eq]=${user.id}&pagination[pageSize]=1&pagination[page]=1`
+        `${import.meta.env.VITE_API_URL}/api/books/count?filters[users_permissions_user][id][$eq]=${user.id}`
       );
-      mockStats.totalListings = booksResponse.data.meta.pagination.total;
-      mockStats.activeListings = booksResponse.data.meta.pagination.total; // Assuming all are active for now
+      mockStats.totalListings = booksResponse.data;
+      mockStats.activeListings = booksResponse.data; // Assuming all are active for now
       
       // Completed sales + swaps + borrows
       const completedSalesResponse = await authAxios.get(
-        `${import.meta.env.VITE_API_URL}/api/orders?filters[userId][$eq]=${user.id}&filters[status][$eq]=completed&pagination[pageSize]=1&pagination[page]=1`
+        `${import.meta.env.VITE_API_URL}/api/orders/count?filters[userId][$eq]=${user.id}&filters[status][$eq]=completed`
       );
       
       const completedSwapsResponse = await authAxios.get(
-        `${import.meta.env.VITE_API_URL}/api/swap-offers?filters[$or][0][buyerId][$eq]=${user.id}&filters[$or][1][sellerId][$eq]=${user.id}&filters[status][$eq]=completed&pagination[pageSize]=1&pagination[page]=1`
+        `${import.meta.env.VITE_API_URL}/api/swap-offers/count?filters[$or][0][buyerId][$eq]=${user.id}&filters[$or][1][sellerId][$eq]=${user.id}&filters[status][$eq]=completed`
       );
       
-      // Borrow functionality removed
+      const completedBorrowsResponse = await authAxios.get(
+        `${import.meta.env.VITE_API_URL}/api/borrow-requests/count?filters[$or][0][borrowerId][$eq]=${user.id}&filters[$or][1][lenderId][$eq]=${user.id}&filters[status][$eq]=returned`
+      );
       
       mockStats.completedTransactions = 
-        completedSalesResponse.data.meta.pagination.total + 
-        completedSwapsResponse.data.meta.pagination.total;
+        completedSalesResponse.data + 
+        completedSwapsResponse.data + 
+        completedBorrowsResponse.data;
       
       // Pending transactions
       const pendingSwapsResponse = await authAxios.get(
-        `${import.meta.env.VITE_API_URL}/api/swap-offers?filters[$or][0][buyerId][$eq]=${user.id}&filters[$or][1][sellerId][$eq]=${user.id}&filters[status][$eq]=pending&pagination[pageSize]=1&pagination[page]=1`
+        `${import.meta.env.VITE_API_URL}/api/swap-offers/count?filters[$or][0][buyerId][$eq]=${user.id}&filters[$or][1][sellerId][$eq]=${user.id}&filters[status][$eq]=pending`
       );
       
-      // Borrow functionality removed
+      const pendingBorrowsResponse = await authAxios.get(
+        `${import.meta.env.VITE_API_URL}/api/borrow-requests/count?filters[$or][0][borrowerId][$eq]=${user.id}&filters[$or][1][lenderId][$eq]=${user.id}&filters[status][$eq]=pending`
+      );
       
       // Get pending purchase requests count
       const pendingPurchasesResponse = await authAxios.get(
-        `${import.meta.env.VITE_API_URL}/api/messages?filters[receiver][id][$eq]=${user.id}&filters[messageType][$eq]=purchase_request&filters[requestStatus][$eq]=pending&pagination[pageSize]=1&pagination[page]=1`
+        `${import.meta.env.VITE_API_URL}/api/messages/count?filters[receiver][id][$eq]=${user.id}&filters[messageType][$eq]=purchase_request&filters[requestStatus][$eq]=pending`
       );
       
       mockStats.pendingTransactions = 
-        pendingSwapsResponse.data.meta.pagination.total + 
-        pendingPurchasesResponse.data.meta.pagination.total;
+        pendingSwapsResponse.data + 
+        pendingBorrowsResponse.data + 
+        pendingPurchasesResponse.data;
       
       // For earnings and savings, we would need more detailed calculation
       // Using mock values for demonstration
@@ -445,12 +537,45 @@ const Dashboard = () => {
     }
   };
 
-  // Placeholder for handleBorrowResponse (removed - not needed)
+  // Handle responding to a borrow request
   const handleBorrowResponse = async (borrowId, accept) => {
-    // This functionality has been removed since borrowing is not needed
-    console.log("Borrow response functionality has been removed", {borrowId, accept});
-    fetchPendingBorrows();
-    calculateStats();
+    try {
+      // Update the borrow request status
+      await authAxios.put(`${import.meta.env.VITE_API_URL}/api/borrow-requests/${borrowId}`, {
+        data: {
+          status: accept ? 'accepted' : 'declined'
+        }
+      });
+      
+      // Refresh pending borrows
+      fetchPendingBorrows();
+      
+      // Update the stats
+      calculateStats();
+      
+      // Send a message notification
+      const borrow = pendingBorrows.find(b => b.id === borrowId);
+      if (borrow) {
+        const message = accept
+          ? "I've accepted your borrow request! Let's coordinate a pickup time."
+          : "I'm sorry, but I've declined your borrow request.";
+        
+        await authAxios.post(`${import.meta.env.VITE_API_URL}/api/messages`, {
+          data: {
+            chatId: `${borrow.borrowerId}_${borrow.lenderId}_${borrow.bookId}`,
+            senderId: user.id,
+            receiverId: borrow.isUserBorrower ? borrow.lenderId : borrow.borrowerId,
+            bookId: borrow.bookId,
+            text: message,
+            timestamp: new Date().toISOString(),
+            messageType: accept ? 'borrow_accepted' : 'borrow_declined'
+          }
+        });
+      }
+    } catch (err) {
+      console.error('Error responding to borrow request:', err);
+      setError('Failed to respond to borrow request');
+    }
   };
 
   // Handle responding to a purchase request
@@ -572,13 +697,23 @@ const Dashboard = () => {
               )}
             </button>
             <button
+              onClick={() => setActiveTab('borrowed')}
+              className={`mr-8 py-4 px-1 ${
+                activeTab === 'borrowed'
+                  ? 'border-b-2 border-blue-500 text-blue-600'
+                  : 'text-gray-500 hover:text-gray-700 hover:border-gray-300'
+              }`}
+            >
+{/*              Books I'm Borrowing
+            </button>
+            <button
               onClick={() => setActiveTab('history')}
               className={`mr-8 py-4 px-1 ${
                 activeTab === 'history'
                   ? 'border-b-2 border-blue-500 text-blue-600'
                   : 'text-gray-500 hover:text-gray-700 hover:border-gray-300'
               }`}
-            >
+            >*/}
               Transaction History
             </button>
           </nav>

@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
-import axios from 'axios';
+import { bookAPI } from '../services/api';
 
 const BookForm = ({ onSuccess, bookToEdit = null }) => {
   const initialState = {
@@ -12,14 +12,14 @@ const BookForm = ({ onSuccess, bookToEdit = null }) => {
     exchange: '',
     subject: '',
     course: '',
-    seller: '',
+    seller: '', // Will be automatically populated with the user's username
     featured: false,
     bookOfWeek: false,
     bookOfYear: false,
     displayTitle: '',
     category: '',
-    bookType: 'For Sale',
-    depositAmount: ''
+    bookType: 'For Sale'
+    // users_permissions_user is handled in handleSubmit, not part of form state
   };
 
   const [book, setBook] = useState(initialState);
@@ -36,15 +36,11 @@ const BookForm = ({ onSuccess, bookToEdit = null }) => {
   useEffect(() => {
     const fetchCategories = async () => {
       try {
-        const apiUrl = `${import.meta.env.VITE_API_URL}/api/categories`;
-        console.log("Fetching categories from:", apiUrl);
+        // Use our bookAPI service to get categories
+        const response = await bookAPI.getCategories();
         
-        const response = await axios.get(apiUrl);
-        console.log("Category response:", response.data);
-        
-        if (response.data && response.data.data) {
-          const processedCategories = response.data.data.map(cat => {
-            console.log("Category item:", cat);
+        if (response && response.data) {
+          const processedCategories = response.data.map(cat => {
             return {
               id: cat.id,
               // Try different possible property names for the category name
@@ -52,7 +48,6 @@ const BookForm = ({ onSuccess, bookToEdit = null }) => {
             };
           });
           
-          console.log("Processed categories:", processedCategories);
           setCategories(processedCategories);
         }
       } catch (err) {
@@ -62,6 +57,11 @@ const BookForm = ({ onSuccess, bookToEdit = null }) => {
     };
 
     fetchCategories();
+    
+    // Auto-populate the seller field with the user's username
+    if (user?.username) {
+      setBook(prev => ({ ...prev, seller: user.username }));
+    }
     
     // If we have a book to edit, populate the form
     if (bookToEdit) {
@@ -80,8 +80,8 @@ const BookForm = ({ onSuccess, bookToEdit = null }) => {
         bookOfYear: bookToEdit.bookOfYear || false,
         displayTitle: bookToEdit.displayTitle || '',
         category: bookToEdit.category?.id || '',
-        bookType: bookToEdit.bookType || 'For Sale',
-        depositAmount: bookToEdit.depositAmount || ''
+        bookType: bookToEdit.bookType || 'For Sale'
+        // Note: We don't need to set users_permissions_user here as it's handled in handleSubmit
       });
       
       if (bookToEdit.cover) {
@@ -119,62 +119,45 @@ const BookForm = ({ onSuccess, bookToEdit = null }) => {
     setSuccess('');
     
     try {
-      console.log("Submitting book data:", book);
+      // Make sure we have a user ID before proceeding
+      if (!user?.id) {
+        throw new Error('User must be logged in to create a book');
+      }
       
-      // Create data object in the format Strapi expects
+      // Format book data for submission
       const bookData = {
-        data: {
-          title: book.title,
-          author: book.author,
-          description: book.description,
-          price: book.bookType === 'For Sale' ? parseFloat(book.price) || 0 : null,
-          condition: book.condition,
-          exchange: book.exchange,
-          subject: book.subject,
-          course: book.course,
-          seller: book.seller,
-          featured: book.featured,
-          bookOfWeek: book.bookOfWeek,
-          bookOfYear: book.bookOfYear,
-          displayTitle: book.displayTitle,
-          category: book.category || null,
-          bookType: book.bookType,
-          depositAmount: book.bookType === 'For Borrowing' ? parseFloat(book.depositAmount) || 0 : null,
-          users_permissions_user: user?.id || null
-        }
+        title: book.title,
+        author: book.author,
+        description: book.description,
+        price: book.bookType === 'For Sale' ? (parseFloat(book.price) || 0) : 0,
+        condition: book.condition,
+        exchange: book.exchange,
+        subject: book.subject,
+        course: book.course,
+        seller: book.seller || user.username, // Set seller name to username if not provided
+        featured: book.featured,
+        bookOfWeek: book.bookOfWeek,
+        bookOfYear: book.bookOfYear,
+        displayTitle: book.displayTitle,
+        category: book.category || null,
+        bookType: book.bookType,
+        users_permissions_user: user.id // Explicitly use the logged-in user's ID
       };
       
-      console.log("Formatted data for Strapi:", bookData);
+      // Log the actual data before submission for debugging
+      console.log('Submitting book data:', bookData);
       
       let bookResponse;
       
+      // Use bookAPI service for creating/updating books
       if (bookToEdit) {
-        bookResponse = await authAxios.put(
-          `${import.meta.env.VITE_API_URL}/api/books/${bookToEdit.id}`, 
-          bookData
-        );
+        bookResponse = await bookAPI.updateBook(bookToEdit.id, bookData, coverImage);
       } else {
-        bookResponse = await authAxios.post(
-          `${import.meta.env.VITE_API_URL}/api/books`, 
-          bookData
-        );
+        bookResponse = await bookAPI.createBook(bookData, coverImage);
       }
       
-      console.log("Book response:", bookResponse.data);
-      
-      // If there's a new cover image, upload it
-      if (coverImage) {
-        const formData = new FormData();
-        formData.append('files', coverImage);
-        formData.append('ref', 'api::book.book');
-        formData.append('refId', bookResponse.data.data.id);
-        formData.append('field', 'cover');
-        
-        await authAxios.post(
-          `${import.meta.env.VITE_API_URL}/api/upload`, 
-          formData
-        );
-      }
+      // Log the response for debugging
+      console.log('Book API response:', bookResponse);
       
       setSuccess(bookToEdit ? 'Book updated successfully!' : 'Book listed successfully!');
       setBook(initialState);
@@ -187,9 +170,25 @@ const BookForm = ({ onSuccess, bookToEdit = null }) => {
     } catch (err) {
       console.error('Error submitting book:', err);
       
+      // Handle authentication/user ID errors
+      if (err.message === 'User must be logged in to create a book') {
+        setError('You must be logged in to create a book. Please sign in and try again.');
+        return;
+      }
+      
       if (err.response) {
         console.log('Error data:', err.response.data);
-        setError(`Server error: ${err.response.data?.error?.message || 'Failed to submit book'}`);
+        // More detailed error logging to help diagnose issues
+        console.log('Error status:', err.response.status);
+        console.log('Error headers:', err.response.headers);
+        
+        if (err.response.data?.error?.message === 'Missing "data" payload in the request body') {
+          setError('There was an issue with the data format. Please try again.');
+        } else if (err.response.status === 401 || err.response.status === 403) {
+          setError('Authentication error: Please sign in again to create a book.');
+        } else {
+          setError(`Server error: ${err.response.data?.error?.message || 'Failed to submit book'}`);
+        }
       } else if (err.request) {
         setError('No response from server. Check your connection.');
       } else {
@@ -200,10 +199,16 @@ const BookForm = ({ onSuccess, bookToEdit = null }) => {
     }
   };
 
+  // Reset price when book type changes
+  useEffect(() => {
+    if (book.bookType !== 'For Sale') {
+      setBook(prev => ({ ...prev, price: '0' }));
+    }
+  }, [book.bookType]);
+
   // Show/hide fields based on book type
   const showPriceField = book.bookType === 'For Sale';
   const showExchangeField = book.bookType === 'For Swap';
-  // const showDepositField = book.bookType === 'For Borrowing';
 
   return (
     <div className="bg-white p-6 rounded-lg shadow-md">
@@ -310,9 +315,11 @@ const BookForm = ({ onSuccess, bookToEdit = null }) => {
                 onChange={handleChange}
                 step="0.01"
                 min="0"
-                className="w-full p-2 border border-gray-300 rounded"
+                className="w-full p-2 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                 required={showPriceField}
+                placeholder="Enter price"
               />
+              <p className="text-sm text-gray-500 mt-1">Only required for books listed for sale</p>
             </div>
           )}
           
@@ -396,16 +403,16 @@ const BookForm = ({ onSuccess, bookToEdit = null }) => {
           </div>
           
           <div>
-            <label htmlFor="seller" className="block mb-1 font-medium">Seller Name <span className="text-red-500">*</span></label>
+            <label htmlFor="seller" className="block mb-1 font-medium">Seller Name <span className="text-gray-500">(auto-filled)</span></label>
             <input
               type="text"
               id="seller"
               name="seller"
-              value={book.seller}
-              onChange={handleChange}
-              className="w-full p-2 border border-gray-300 rounded"
+              value={book.seller || user?.username || ''}
+              className="w-full p-2 border border-gray-300 rounded bg-gray-100"
               required
               readOnly
+              disabled
             />
           </div>
           

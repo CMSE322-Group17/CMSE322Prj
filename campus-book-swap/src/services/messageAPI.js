@@ -422,7 +422,10 @@ const messageQueue = {
 // Load saved queue on startup
 messageQueue.loadQueue();
 
-// Create axios instance with default config
+// Import the shared API instance from api.js (unused for now but available if needed)
+import { api as sharedApi } from './api.js';
+
+// Create a specialized message API instance
 const api = axios.create({
   baseURL: API_URL,
   timeout: 10000,
@@ -431,16 +434,16 @@ const api = axios.create({
   }
 });
 
-// Add request interceptor for rate limiting and auth
+// Add request interceptor for rate limiting
 api.interceptors.request.use(
   async (config) => {
-    // Add auth token
+    // Add auth token (this is redundant with the shared API but kept for safety)
     const token = localStorage.getItem('token');
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
 
-    // Check rate limit
+    // Message-specific rate limiting
     const endpoint = config.url;
     try {
       rateLimiter.canMakeRequest(endpoint);
@@ -461,15 +464,46 @@ api.interceptors.request.use(
   }
 );
 
-// Add response interceptor for error handling
+// Add response interceptor with more robust error handling
 api.interceptors.response.use(
   (response) => response,
   async (error) => {
+    // Handle authentication errors
     if (error.response?.status === 401) {
-      // Handle token refresh here if needed
-      localStorage.removeItem('token');
-      window.location.href = '/login';
+      try {
+        // Try to refresh token if available
+        const refreshToken = localStorage.getItem('refreshToken');
+        if (refreshToken) {
+          const response = await axios.post(`${API_URL}/api/auth/refresh-token`, { refreshToken });
+          const { token } = response.data;
+          localStorage.setItem('token', token);
+          
+          // Retry the original request with new token
+          error.config.headers.Authorization = `Bearer ${token}`;
+          return axios(error.config);
+        } else {
+          // No refresh token, redirect to login
+          localStorage.removeItem('token');
+          window.location.href = '/signin';
+        }
+      } catch (refreshError) {
+        // Refresh token failed, redirect to login
+        localStorage.removeItem('token');
+        localStorage.removeItem('refreshToken');
+        window.location.href = '/signin';
+      }
     }
+    
+    // Handle rate limiting errors
+    if (error.response?.status === 429) {
+      const retryAfter = error.response.headers['retry-after'] || 10;
+      console.warn(`Rate limited. Retry after ${retryAfter} seconds.`);
+      
+      // Wait for the retry period and then retry the request
+      await new Promise(resolve => setTimeout(resolve, retryAfter * 1000));
+      return axios(error.config);
+    }
+    
     return Promise.reject(error);
   }
 );

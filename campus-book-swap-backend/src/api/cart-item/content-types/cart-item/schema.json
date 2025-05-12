@@ -30,18 +30,8 @@
       "type": "enumeration",
       "enum": [
         "buy",
-        "borrow",
         "swap"
       ]
-    },
-    "borrowDuration": {
-      "type": "string"
-    },
-    "depositAmount": {
-      "type": "decimal"
-    },
-    "dueDate": {
-      "type": "date"
     }
   }
 }
