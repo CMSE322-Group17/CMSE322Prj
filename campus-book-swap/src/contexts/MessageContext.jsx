@@ -216,232 +216,233 @@ export const MessageProvider = ({ children }) => {
                 }];
           }
         }
-
+        
         return {
           ...msg,
           attachments
         };
       });
       
-      setMessages(processedMessages);
+      // Sort messages by date
+      const sortedMessages = processedMessages.sort((a, b) => {
+        return new Date(a.createdAt) - new Date(b.createdAt);
+      });
       
-      // Update active conversation
-      setActiveConversation(chatId);
+      setMessages(sortedMessages);
+      setError(null);
       
       // Mark messages as read
-      if (processedMessages.length > 0) {
-        try {
-          await messageAPI.markAllMessagesAsRead(chatId, user.id);
-          // Update unread count
-          fetchUnreadCount();
-        } catch (markReadError) {
-          console.warn('Error marking messages as read:', markReadError);
-          // Continue execution even if marking as read fails
-          // Still attempt to update unread count
+      if (sortedMessages.length > 0) {
+        const unreadMessages = sortedMessages.filter(
+          msg => msg.receiverId === userRef.current.id && !msg.isRead
+        );
+        
+        if (unreadMessages.length > 0) {
+          // Mark messages as read in parallel
+          await Promise.all(
+            unreadMessages.map(msg => messageAPI.markMessageAsRead(msg.id, userRef.current.id))
+          );
+          
+          // Update unread count after marking messages as read
           fetchUnreadCount();
         }
       }
-      
-      setError(null);
     } catch (err) {
       console.error('Error fetching messages:', err);
       setError('Failed to load messages');
     } finally {
       setLoading(prev => ({ ...prev, messages: false }));
     }
-  }, [isAuthenticated, user, fetchUnreadCount]);
+  }, [isAuthenticated, fetchUnreadCount]);
 
-  // Send a message
+  // Function to send a message
   const sendMessage = useCallback(async (messageData) => {
-    if (!isAuthenticated || !user?.id) return null;
+    if (!isAuthenticated || !userRef.current) return;
     
     setLoading(prev => ({ ...prev, sending: true }));
     try {
-      const response = await messageAPI.sendMessage({
-        ...messageData,
-        senderId: user.id
-      });
-      
-      // Add the new message to the messages list
-      const newMessage = response.data;
-      if (newMessage) {
-        // Handle attachments properly
-        let attachments = [];
-        if (newMessage.attachments) {
-          // If attachments is an array, use it directly
-          if (Array.isArray(newMessage.attachments)) {
-            attachments = newMessage.attachments.map(attachment => ({
-              ...attachment,
-              url: attachment.url || null
-            }));
-          } 
-          // If attachments is an object with data property (Strapi format)
-          else if (newMessage.attachments.data) {
-            attachments = Array.isArray(newMessage.attachments.data) 
-              ? newMessage.attachments.data.map(attachment => ({
-                  id: attachment.id,
-                  url: attachment.attributes?.url || null,
-                  ...attachment.attributes
-                }))
-              : [{
-                  id: newMessage.attachments.data.id,
-                  url: newMessage.attachments.data.attributes?.url || null,
-                  ...newMessage.attachments.data.attributes
-                }];
-          }
-        }
-
-        setMessages(prev => [...prev, {
-          ...newMessage,
-          attachments
-        }]);
+      // Add sender ID if not provided
+      if (!messageData.senderId) {
+        messageData.senderId = userRef.current.id;
       }
       
-      setError(null);
-      return response;
+      const response = await messageAPI.sendMessage(messageData);
+      
+      // Update messages and conversations
+      if (response.data) {
+        // Update messages if we're in the active conversation
+        if (activeConversation === messageData.chatId) {
+          // Add the new message to the messages state
+          setMessages(prevMessages => [...prevMessages, response.data]);
+        }
+        
+        // Always update conversations list to reflect the latest message
+        setTimeout(() => {
+          fetchConversations();
+        }, 100);
+      }
+      
+      return response.data;
     } catch (err) {
       console.error('Error sending message:', err);
       setError('Failed to send message');
-      return null;
+      throw err;
     } finally {
       setLoading(prev => ({ ...prev, sending: false }));
     }
-  }, [isAuthenticated, user]);
+  }, [isAuthenticated, activeConversation, fetchConversations]);
 
-  // Start a new conversation
+  // Function to start a new conversation
   const startConversation = useCallback(async (receiverId, bookId, initialMessage) => {
-    if (!isAuthenticated || !user?.id) return null;
+    if (!isAuthenticated || !userRef.current?.id || !receiverId || !bookId) {
+      return null;
+    }
     
     try {
-      // Create chat ID using user IDs and book ID
-      const chatId = messageAPI.createChatId(user.id, receiverId, bookId);
+      // Create a chat ID using the message API utility
+      const chatId = messageAPI.createChatId(userRef.current.id, receiverId, bookId);
       
-      // Send initial message as a purchase request
-      const messageData = {
+      // Check if conversation already exists
+      const existingConversation = conversationsRef.current.find(
+        conv => conv.chatId === chatId
+      );
+      
+      if (existingConversation) {
+        // If it exists, just set it as active and return the chat ID
+        setActiveConversation(chatId);
+        return chatId;
+      }
+      
+      // Otherwise, send the first message to start the conversation
+      if (initialMessage) {
+        await sendMessage({
+          chatId,
+          senderId: userRef.current.id,
+          receiverId,
+          bookId,
+          text: initialMessage,
+          messageType: 'text'
+        });
+      }
+      
+      // Refresh conversations to include the new one
+      await fetchConversations();
+      
+      // Set the new conversation as active
+      setActiveConversation(chatId);
+      
+      return chatId;
+    } catch (err) {
+      console.error('Error starting conversation:', err);
+      setError('Failed to start conversation');
+      return null;
+    }
+  }, [isAuthenticated, fetchConversations, sendMessage]);
+
+  // Function to create a purchase request
+  const createPurchaseRequest = useCallback(async (receiverId, bookId, price, note) => {
+    if (!isAuthenticated || !userRef.current?.id || !receiverId || !bookId) {
+      return null;
+    }
+    
+    try {
+      // Create a chat ID
+      const chatId = messageAPI.createChatId(userRef.current.id, receiverId, bookId);
+      
+      // Create request message
+      const requestData = {
         chatId,
+        senderId: userRef.current.id,
         receiverId,
         bookId,
-        text: initialMessage || "Hi, I'm interested in this book.",
+        price,
+        text: note || `I'd like to purchase this book for $${price}.`,
         messageType: 'purchase_request',
-        requestStatus: 'pending'
+        requestStatus: 'pending',
+        isRead: false
       };
       
-      const response = await sendMessage(messageData);
-      
-      // Set as active conversation
-      setActiveConversation(chatId);
+      // Send the purchase request
+      const response = await sendMessage(requestData);
       
       // Refresh conversations
       await fetchConversations();
       
       return response;
     } catch (err) {
-      console.error('Error starting conversation:', err);
-      setError('Failed to start conversation');
+      console.error('Error creating purchase request:', err);
+      setError('Failed to create purchase request');
       return null;
     }
-  }, [isAuthenticated, user, sendMessage, fetchConversations]);
+  }, [isAuthenticated, sendMessage, fetchConversations]);
 
-  // Delete a message
-  const deleteMessageById = useCallback(async (messageId) => {
-    if (!isAuthenticated || !user?.id) return false;
-    
-    try {
-      await messageAPI.deleteMessage(messageId);
-      
-      // Update messages list
-      setMessages(prev => prev.filter(msg => msg.id !== messageId));
-      
-      return true;
-    } catch (err) {
-      console.error('Error deleting message:', err);
-      setError('Failed to delete message');
+  // Function to update a request status
+  const updateRequestStatus = useCallback(async (messageId, newStatus) => {
+    if (!isAuthenticated || !userRef.current) {
       return false;
     }
-  }, [isAuthenticated, user]);
-
-  // Update request status
-  const updateRequestStatus = useCallback(async (messageId, newStatus) => {
-    if (!isAuthenticated || !user?.id) return false;
     
     try {
-      await messageAPI.updateRequestStatus(messageId, newStatus);
+      const response = await messageAPI.updateRequestStatus(messageId, newStatus);
       
-      // Find the message and update it in the messages array
-      setMessages(prevMessages => {
-        // Get the updated message first for notification purposes
-        const updatedMessage = prevMessages.find(msg => msg.id === messageId);
-        
-        // If message found, queue a notification outside the state update
-        if (updatedMessage && updatedMessage.senderId !== user.id) {
-          // Run notification in next tick to avoid render issues
-          setTimeout(() => {
-            showRequestStatusNotification(
-              updatedMessage,
-              newStatus,
-              { title: updatedMessage.bookTitle || "Book" }
-            );
-          }, 0);
+      if (response.data) {
+        // If the update was successful, refresh message list and conversations
+        // Update messages if we're viewing the conversation containing this message
+        if (activeConversation) {
+          setMessages(prevMessages => 
+            prevMessages.map(msg => 
+              msg.id === messageId 
+                ? { ...msg, requestStatus: newStatus } 
+                : msg
+            )
+          );
         }
         
-        // Return updated messages array
-        return prevMessages.map(msg => 
-          msg.id === messageId 
-            ? { ...msg, requestStatus: newStatus } 
-            : msg
-        );
-      });
-      
-      // Update the affected conversation as well, but with a small delay
-      // to prevent the infinite loop
-      setTimeout(() => {
-        fetchConversations();
-      }, 100);
-      
-      return true;
+        // Use setTimeout to prevent any possible render loops
+        setTimeout(() => {
+          fetchConversations();
+        }, 100);
+        
+        // Show notification about status change
+        const requestMessage = messagesRef.current.find(msg => msg.id === messageId);
+        if (requestMessage) {
+          showRequestStatusNotification(requestMessage, newStatus);
+        }
+        
+        return true;
+      }
+      return false;
     } catch (err) {
       console.error('Error updating request status:', err);
-      setError('Failed to update request status');
+      setError(`Failed to update request to ${newStatus}`);
       return false;
     }
-  }, [isAuthenticated, user, fetchConversations]);
+  }, [isAuthenticated, activeConversation, fetchConversations]);
 
-  // Clear context errors
-  const clearError = useCallback(() => {
-    setError(null);
-  }, []);
-
-  // Context value
-  const value = {
+  // The exported context value
+  const contextValue = {
     conversations,
     messages,
-    activeConversation,
     unreadCount,
     loading,
     error,
+    activeConversation,
+    notificationsEnabled,
+    setActiveConversation,
     fetchConversations,
     fetchMessages,
     sendMessage,
     startConversation,
-    deleteMessage: deleteMessageById,
+    createPurchaseRequest,
     updateRequestStatus,
-    clearError
+    fetchUnreadCount
   };
 
   return (
-    <MessageContext.Provider value={value}>
+    <MessageContext.Provider value={contextValue}>
       {children}
     </MessageContext.Provider>
   );
 };
 
-// Custom hook to use the message context
-export const useMessages = () => {
-  const context = useContext(MessageContext);
-  if (context === undefined) {
-    throw new Error('useMessages must be used within a MessageProvider');
-  }
-  return context;
-};
-
-export default MessageContext;
+// useMessage hook is now imported from ./useMessage.js
