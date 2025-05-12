@@ -421,7 +421,7 @@ const BookDetail = () => {
         <h2 className="text-xl font-bold mb-6">Related Books</h2>
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
           {[...Array(5)].map((_, i) => (
-            <Link to={`/book/${book.id + i + 1}`} key={i} className="group">
+            <Link to={`/book/${book.id + i + 1}`} key={`related-book-${book.id}-${i}`} className="group">
               <div className="bg-white rounded-lg shadow-sm overflow-hidden transition-all duration-300 hover:shadow-md">
                 <div className="h-48 bg-gray-200 relative overflow-hidden">
                   <div className="bg-gradient-to-br from-blue-500 to-indigo-600 w-full h-full flex items-center justify-center transition-transform duration-300 group-hover:scale-105">
