@@ -157,7 +157,15 @@ const BookForm = ({ onSuccess, bookToEdit = null }) => {
       
       if (err.response) {
         console.log('Error data:', err.response.data);
-        setError(`Server error: ${err.response.data?.error?.message || 'Failed to submit book'}`);
+        // More detailed error logging to help diagnose issues
+        console.log('Error status:', err.response.status);
+        console.log('Error headers:', err.response.headers);
+        
+        if (err.response.data?.error?.message === 'Missing "data" payload in the request body') {
+          setError('There was an issue with the data format. Please try again.');
+        } else {
+          setError(`Server error: ${err.response.data?.error?.message || 'Failed to submit book'}`);
+        }
       } else if (err.request) {
         setError('No response from server. Check your connection.');
       } else {
