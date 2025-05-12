@@ -51,6 +51,7 @@ const Dashboard = () => {
         fetchPendingBorrows(),
         fetchBorrowedBooks(),
         fetchTransactionHistory(),
+        fetchPendingPurchaseRequests(),
         calculateStats()
       ]);
     } catch (err) {
