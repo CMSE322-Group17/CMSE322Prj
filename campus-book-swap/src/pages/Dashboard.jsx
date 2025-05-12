@@ -293,26 +293,6 @@ const Dashboard = () => {
               otherUser: userResponse.data
             };
           }
-          else if (transaction.type === 'borrow') {
-            // For borrows, fetch the book details
-            const bookResponse = await authAxios.get(
-              `${import.meta.env.VITE_API_URL}/api/books/${transaction.bookId}?populate=*`
-            );
-            
-            // Determine the other user
-            const otherUserId = transaction.role === 'borrower' ? 
-              transaction.lenderId : transaction.borrowerId;
-            
-            const userResponse = await authAxios.get(
-              `${import.meta.env.VITE_API_URL}/api/users/${otherUserId}`
-            );
-            
-            return {
-              ...transaction,
-              book: bookResponse.data.data,
-              otherUser: userResponse.data
-            };
-          }
           
           return transaction;
         } catch (err) {
