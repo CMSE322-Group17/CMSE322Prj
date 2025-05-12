@@ -422,7 +422,10 @@ const messageQueue = {
 // Load saved queue on startup
 messageQueue.loadQueue();
 
-// Create axios instance with default config
+// Import the shared API instance from api.js (unused for now but available if needed)
+import { api as sharedApi } from './api.js';
+
+// Create a specialized message API instance
 const api = axios.create({
   baseURL: API_URL,
   timeout: 10000,
