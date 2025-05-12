@@ -60,14 +60,12 @@ const Home = () => {
     .animate-slideInRight {
       animation: slideInRight 0.4s ease-out forwards;
     }
-  `;
-
-  // Helper function to get image URL from Strapi data
+  `;    // Helper function to get image URL from Strapi data
   const getStrapiMediaUrl = (imageData) => {
     if (!imageData) return null;
     
     // Base URL (ensure it doesn't end with a slash)
-    const baseUrl = (import.meta.env.VITE_STRAPI_API_URL || 'http://localhost:1337').replace(/\/$/, '');
+    const baseUrl = (import.meta.env.VITE_API_URL || 'http://localhost:1337').replace(/\/$/, '');
     
     try {
       // Case 1: String URL
