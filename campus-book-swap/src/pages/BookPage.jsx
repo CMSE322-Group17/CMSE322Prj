@@ -3,6 +3,7 @@ import { Link, useParams, useNavigate } from 'react-router-dom';
 import { bookAPI } from '../services/api';
 import { useAuth } from '../contexts/AuthContext';
 import { useCart } from '../contexts/CartContext';
+import { processBookData, getBookTypeStyles } from '../utils/bookFormatters';
 
 const BooksPage = () => {
   const { categoryName } = useParams();
@@ -48,10 +49,8 @@ const BooksPage = () => {
     const navigate = useNavigate();
     
     // Status styles
-    const statusStyles = {
-      'For Sale': 'bg-green-100 text-green-800',
-      'For Swap': 'bg-blue-100 text-blue-800'
-    };
+    // Use the utility function for book type styles
+    const getStatusStyle = (bookType) => getBookTypeStyles(bookType);
     
     // Generate random price (for demo purposes)
     const price = book.bookType === 'For Sale' ? book.price : null;
@@ -123,7 +122,7 @@ const BooksPage = () => {
             <div className="flex justify-between items-center">
               <div className="flex items-center">
                 <h2 className="text-xl font-bold text-gray-800">{book.title}</h2>
-                <div className={`ml-3 px-3 py-1 rounded-full text-xs font-medium ${statusStyles[book.bookType]}`}>
+                <div className={`ml-3 px-3 py-1 rounded-full text-xs font-medium ${getBookTypeStyles(book.bookType)}`}>
                   {book.bookType}
                 </div>
               </div>

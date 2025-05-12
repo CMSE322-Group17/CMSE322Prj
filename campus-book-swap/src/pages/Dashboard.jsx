@@ -18,6 +18,8 @@ const Dashboard = () => {
   const [myBooks, setMyBooks] = useState([]);
   const [pendingSwaps, setPendingSwaps] = useState([]);
   const [pendingBorrows, setPendingBorrows] = useState([]);
+  const [pendingPurchaseRequests, setPendingPurchaseRequests] = useState([]);
+  // eslint-disable-next-line no-unused-vars
   const [borrowedBooks, setBorrowedBooks] = useState([]);
   const [transactionHistory, setTransactionHistory] = useState([]);
   const [stats, setStats] = useState({
@@ -36,6 +38,7 @@ const Dashboard = () => {
     } else if (user && user.id) {
       fetchDashboardData();
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isAuthenticated, user, navigate]);
 
   // Fetch all dashboard data
@@ -48,6 +51,7 @@ const Dashboard = () => {
         fetchPendingBorrows(),
         fetchBorrowedBooks(),
         fetchTransactionHistory(),
+        fetchPendingPurchaseRequests(),
         calculateStats()
       ]);
     } catch (err) {
@@ -193,6 +197,62 @@ const Dashboard = () => {
       setPendingBorrows(processedBorrows);
     } catch (err) {
       console.error('Error fetching pending borrows:', err);
+      throw err;
+    }
+  };
+
+  // Fetch pending purchase requests
+  const fetchPendingPurchaseRequests = async () => {
+    try {
+      // Get all messages where:
+      // 1. This user is the receiver (seller)
+      // 2. Message type is purchase_request
+      // 3. Request status is pending
+      const response = await authAxios.get(
+        `${import.meta.env.VITE_API_URL}/api/messages?filters[receiver][id][$eq]=${user.id}&filters[messageType][$eq]=purchase_request&filters[requestStatus][$eq]=pending&populate=*`
+      );
+      
+      const purchaseRequests = response.data.data || [];
+      
+      // Process the data
+      const processedRequests = await Promise.all(purchaseRequests.map(async (request) => {
+        try {
+          // Fetch the book details
+          const bookId = request.attributes.book?.data?.id || request.attributes.bookId;
+          const bookResponse = await authAxios.get(
+            `${import.meta.env.VITE_API_URL}/api/books/${bookId}?populate=*`
+          );
+          
+          // Fetch the buyer's details
+          const senderId = request.attributes.sender?.data?.id || request.attributes.senderId;
+          const userResponse = await authAxios.get(
+            `${import.meta.env.VITE_API_URL}/api/users/${senderId}`
+          );
+          
+          // Return processed request data
+          return {
+            id: request.id,
+            ...request.attributes,
+            book: bookResponse.data.data,
+            buyer: userResponse.data,
+            chatId: request.attributes.ChatId,
+            type: 'purchase'
+          };
+        } catch (err) {
+          console.error('Error processing purchase request data:', err);
+          return {
+            id: request.id,
+            ...request.attributes,
+            book: { attributes: { title: 'Unknown Book' } },
+            buyer: { username: 'Unknown User' },
+            type: 'purchase'
+          };
+        }
+      }));
+      
+      setPendingPurchaseRequests(processedRequests);
+    } catch (err) {
+      console.error('Error fetching pending purchase requests:', err);
       throw err;
     }
   };
@@ -419,9 +479,15 @@ const Dashboard = () => {
         `${import.meta.env.VITE_API_URL}/api/borrow-requests/count?filters[$or][0][borrowerId][$eq]=${user.id}&filters[$or][1][lenderId][$eq]=${user.id}&filters[status][$eq]=pending`
       );
       
+      // Get pending purchase requests count
+      const pendingPurchasesResponse = await authAxios.get(
+        `${import.meta.env.VITE_API_URL}/api/messages/count?filters[receiver][id][$eq]=${user.id}&filters[messageType][$eq]=purchase_request&filters[requestStatus][$eq]=pending`
+      );
+      
       mockStats.pendingTransactions = 
         pendingSwapsResponse.data + 
-        pendingBorrowsResponse.data;
+        pendingBorrowsResponse.data + 
+        pendingPurchasesResponse.data;
       
       // For earnings and savings, we would need more detailed calculation
       // Using mock values for demonstration
@@ -546,6 +612,47 @@ const Dashboard = () => {
     }
   };
 
+  // Handle responding to a purchase request
+  const handlePurchaseResponse = async (messageId, accept) => {
+    try {
+      // Update the message request status
+      await authAxios.put(`${import.meta.env.VITE_API_URL}/api/messages/${messageId}`, {
+        data: {
+          requestStatus: accept ? 'accepted' : 'declined'
+        }
+      });
+      
+      // Refresh pending purchase requests
+      fetchPendingPurchaseRequests();
+      
+      // Update the stats
+      calculateStats();
+      
+      // Send a message notification
+      const request = pendingPurchaseRequests.find(req => req.id === messageId);
+      if (request) {
+        const message = accept
+          ? "Great news! I've accepted your purchase request. Let's arrange payment and delivery."
+          : "I'm sorry, but I've declined your purchase request.";
+        
+        await authAxios.post(`${import.meta.env.VITE_API_URL}/api/messages`, {
+          data: {
+            ChatId: request.chatId,
+            sender: { id: user.id },
+            receiver: { id: request.buyer.id },
+            book: { id: request.book.id },
+            text: message,
+            messageType: accept ? 'purchase_accepted' : 'purchase_declined',
+            timestamp: new Date().toISOString()
+          }
+        });
+      }
+    } catch (err) {
+      console.error('Error responding to purchase request:', err);
+      setError('Failed to respond to purchase request');
+    }
+  };
+
   // Format timestamp
   const formatDate = (dateString) => {
     const date = new Date(dateString);
@@ -557,7 +664,7 @@ const Dashboard = () => {
   };
 
   // Calculate total pending actions
-  const pendingActionsCount = pendingSwaps.length + pendingBorrows.length;
+  const pendingActionsCount = pendingSwaps.length + pendingBorrows.length + pendingPurchaseRequests.length;
 
   if (isLoading) {
     return (
@@ -867,6 +974,39 @@ const Dashboard = () => {
                               </div>
                               <span className="bg-purple-100 text-purple-800 px-2 py-1 rounded text-xs font-medium">
                                 Borrow Request
+                              </span>
+                            </div>
+                          </div>
+                        ))}
+
+                        {/* Show Purchase Requests that require user's action */}
+                        {pendingPurchaseRequests.map(request => (
+                          <div key={`purchase-${request.id}`} className="p-3 hover:bg-gray-50">
+                            <div className="flex justify-between items-start">
+                              <div>
+                                <p className="font-medium text-gray-800">
+                                  <span className="text-green-600">{request.buyer?.username}</span> requested to purchase your book
+                                </p>
+                                <p className="text-sm text-gray-600 font-medium mt-1">
+                                  Book: {request.book?.attributes?.title}
+                                </p>
+                                <div className="mt-2 flex space-x-2">
+                                  <button 
+                                    onClick={() => handlePurchaseResponse(request.id, true)}
+                                    className="px-3 py-1 bg-green-600 text-white text-xs rounded hover:bg-green-700"
+                                  >
+                                    Accept
+                                  </button>
+                                  <button 
+                                    onClick={() => handlePurchaseResponse(request.id, false)}
+                                    className="px-3 py-1 bg-gray-100 text-gray-700 text-xs rounded hover:bg-gray-200"
+                                  >
+                                    Decline
+                                  </button>
+                                </div>
+                              </div>
+                              <span className="bg-green-100 text-green-800 px-2 py-1 rounded text-xs font-medium">
+                                Purchase Request
                               </span>
                             </div>
                           </div>
@@ -1199,6 +1339,87 @@ const Dashboard = () => {
                                   </Link>
                                 </div>
                               )}
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Pending Purchase Requests Section */}
+                {pendingPurchaseRequests.length > 0 && (
+                  <div>
+                    <h3 className="text-md font-medium mb-3 text-green-800 flex items-center">
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 3h18M9 9h6m-6 4h6m-6 4h6m-6 4h6" />
+                      </svg>
+                      Purchase Requests
+                    </h3>
+                    
+                    <div className="space-y-4">
+                      {pendingPurchaseRequests.map(request => (
+                        <div key={request.id} className="bg-green-50 rounded-lg p-4 border border-green-200">
+                          <div className="flex items-start">
+                            <div className="flex-shrink-0">
+                              <div className="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center text-green-600 font-bold">
+                                {request.buyer?.username ? request.buyer.username.charAt(0).toUpperCase() : 'U'}
+                              </div>
+                            </div>
+                            
+                            <div className="ml-4 flex-grow">
+                              <div className="flex justify-between">
+                                <h4 className="font-medium text-gray-800">
+                                  {request.buyer?.username} wants to purchase your book
+                                </h4>
+                                <span className="text-xs text-gray-500">
+                                  {formatDate(request.timestamp)}
+                                </span>
+                              </div>
+                              
+                              <div className="mt-2 bg-white p-3 rounded-lg border border-gray-200">
+                                <div className="flex items-center">
+                                  <div className="w-12 h-16 bg-gray-200 rounded overflow-hidden flex-shrink-0">
+                                    {request.book?.attributes?.cover?.data ? (
+                                      <img 
+                                        src={`${import.meta.env.VITE_API_URL}${request.book.attributes.cover.data.attributes.url}`} 
+                                        alt={request.book.attributes.title}
+                                        className="w-full h-full object-cover"
+                                      />
+                                    ) : (
+                                      <div className="w-full h-full bg-gray-300 flex items-center justify-center">
+                                        <span className="text-gray-500 text-xs">No image</span>
+                                      </div>
+                                    )}
+                                  </div>
+                                  
+                                  <div className="ml-3">
+                                    <h5 className="font-medium text-gray-800">{request.book?.attributes?.title}</h5>
+                                    <p className="text-sm text-gray-500">{request.book?.attributes?.author}</p>
+                                  </div>
+                                </div>
+                              </div>
+                              
+                              <div className="mt-2 flex space-x-2">
+                                <button 
+                                  onClick={() => handlePurchaseResponse(request.id, true)}
+                                  className="px-3 py-1.5 bg-green-600 text-white text-sm rounded hover:bg-green-700"
+                                >
+                                  Accept Request
+                                </button>
+                                <button 
+                                  onClick={() => handlePurchaseResponse(request.id, false)}
+                                  className="px-3 py-1.5 bg-white border border-gray-300 text-gray-700 text-sm rounded hover:bg-gray-50"
+                                >
+                                  Decline
+                                </button>
+                                <Link 
+                                  to={`/chat/${request.buyer.id}/${request.book.id}`}
+                                  className="px-3 py-1.5 bg-gray-100 text-gray-700 text-sm rounded hover:bg-gray-200 ml-auto"
+                                >
+                                  View Chat
+                                </Link>
+                              </div>
                             </div>
                           </div>
                         </div>

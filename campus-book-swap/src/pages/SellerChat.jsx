@@ -3,32 +3,33 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
-import { useCart } from '../contexts/CartContext';
-import { useMessages } from '../contexts/MessageContext';
+// import { useCart } from '../contexts/CartContext';  // We'll use this in future features
+import { useMessage } from '../contexts/useMessage';
 import MessageList from '../components/Message/MessageList';
 import MessageInput from '../components/Message/MessageInput';
 import ChatHeader from '../components/Message/ChatHeader';
 import messageAPI from '../services/messageAPI';
 
-const SellerChat = () => {
-  const { sellerId, bookId } = useParams();
+const SellerChat = () => {  const { sellerId, bookId } = useParams();
   const { user, authAxios, isAuthenticated } = useAuth();
-  const { addToCart } = useCart();
+  // We might need cart functionality later but we're not using it now
+  // const { addToCart } = useCart();
   const { 
     messages, 
     sendMessage, 
     fetchMessages, 
-    loading, 
-    error, 
+    loading,
+    // We'll handle errors locally instead of using context error
     clearError 
-  } = useMessages();
+  } = useMessage();
   
   const [seller, setSeller] = useState(null);
   const [book, setBook] = useState(null);
-  const [userBooks, setUserBooks] = useState([]);
-  const [showSwapModal, setShowSwapModal] = useState(false);
-  const [selectedUserBooks, setSelectedUserBooks] = useState([]);
-  const [swapStatus, setSwapStatus] = useState('none'); // none, pending, accepted, declined
+  // For future features - keeping these state variables commented for potential future implementation
+  // const [userBooks, setUserBooks] = useState([]);
+  // const [showSwapModal, setShowSwapModal] = useState(false);
+  // const [selectedUserBooks, setSelectedUserBooks] = useState([]);
+  // const [swapStatus, setSwapStatus] = useState('none'); // none, pending, accepted, declined
   
   const navigate = useNavigate();
 

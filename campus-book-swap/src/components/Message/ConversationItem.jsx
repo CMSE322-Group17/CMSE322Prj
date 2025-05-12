@@ -26,7 +26,12 @@ const ConversationItem = ({
   // Determine transaction type if available
   const transactionType = conversation?.transactionType || 
     (lastMessage?.messageType === 'swap_offer' ? 'swap' :
-     lastMessage?.messageType === 'borrow_request' ? 'borrow' : 'general');
+     lastMessage?.messageType === 'borrow_request' ? 'borrow' : 
+     lastMessage?.messageType === 'purchase_request' ? 'purchase' : 'general');
+     
+  // Check if there's a pending request for the seller (current user)
+  const hasPendingRequest = lastMessage?.requestStatus === 'pending' && 
+    lastMessage?.receiverId === user?.id;
 
   // Get color scheme based on transaction type
   const getTypeStyle = () => {
@@ -36,6 +41,7 @@ const ConversationItem = ({
       case 'borrow':
         return 'bg-purple-100 text-purple-800';
       case 'buy':
+      case 'purchase':
         return 'bg-green-100 text-green-800';
       default:
         return 'bg-gray-100 text-gray-800';
@@ -55,13 +61,14 @@ const ConversationItem = ({
           try {
             const bookResponse = await authAxios.get(`${import.meta.env.VITE_API_URL}/api/books/${bookId}?populate=*`);
             
+            const bookData = bookResponse.data?.data?.attributes || {};
+            const coverUrl = bookData.cover?.data?.attributes?.url;
+            
             setBook({
               id: bookId,
-              title: bookResponse.data.data.attributes.title,
-              author: bookResponse.data.data.attributes.author,
-              cover: bookResponse.data.data.attributes.cover?.data ? 
-                `${import.meta.env.VITE_API_URL}${bookResponse.data.data.attributes.cover.data.attributes.url}` : 
-                null
+              title: bookData.title || "Unknown Title",
+              author: bookData.author || "Unknown Author",
+              cover: coverUrl ? `${import.meta.env.VITE_API_URL}${coverUrl}` : null
             });
           } catch (err) {
             console.error('Error fetching book:', err);
@@ -126,7 +133,10 @@ const ConversationItem = ({
   return (
     <div 
       className={`border-b border-gray-200 cursor-pointer transition-colors ${
-        active ? 'bg-blue-50' : hasUnread ? 'bg-blue-50/30' : 'hover:bg-gray-50'
+        active ? 'bg-blue-50' : 
+        hasPendingRequest ? 'bg-yellow-50' :
+        hasUnread ? 'bg-blue-50/30' : 
+        'hover:bg-gray-50'
       }`}
       onClick={handleClick}
     >
@@ -165,7 +175,7 @@ const ConversationItem = ({
               <span className={`inline-flex items-center text-xs px-2 py-0.5 rounded-full ${getTypeStyle()}`}>
                 {transactionType === 'swap' ? 'Swap' : 
                  transactionType === 'borrow' ? 'Borrow' : 
-                 transactionType === 'buy' ? 'Purchase' : 'Chat'}
+                 transactionType === 'buy' || transactionType === 'purchase' ? 'Purchase' : 'Chat'}
               </span>
               
               {/* Book name */}
@@ -183,8 +193,14 @@ const ConversationItem = ({
             </p>
           </div>
           
-          {/* Unread indicator */}
-          {hasUnread && (
+          {/* Pending request or unread indicator */}
+          {hasPendingRequest ? (
+            <div className="flex-shrink-0">
+              <span className="bg-yellow-500 text-white text-xs px-2 py-1 rounded-full flex items-center">
+                New Request
+              </span>
+            </div>
+          ) : hasUnread && (
             <div className="flex-shrink-0">
               <span className="bg-blue-600 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
                 {conversation.unreadCount > 9 ? '9+' : conversation.unreadCount}

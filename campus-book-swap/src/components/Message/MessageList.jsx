@@ -68,6 +68,15 @@ const MessageList = ({ messages, loading }) => {
     // Special styling for different message types
     if (isPurchaseRequest) {
       messageBubbleClasses = "bg-green-100 border border-green-300 text-green-800";
+      
+      // Additional styling based on request status
+      if (message.requestStatus === 'accepted') {
+        messageBubbleClasses = "bg-green-100 border border-green-400 text-green-800";
+      } else if (message.requestStatus === 'declined') {
+        messageBubbleClasses = "bg-red-50 border border-red-300 text-red-800";
+      } else if (message.requestStatus === 'completed') {
+        messageBubbleClasses = "bg-blue-100 border border-blue-400 text-blue-800";
+      }
     } else if (isSwapOffer) {
       messageBubbleClasses = "bg-blue-100 border border-blue-300 text-blue-800";
     } else if (isBorrowRequest) {
@@ -134,6 +143,22 @@ const MessageList = ({ messages, loading }) => {
           <div className="text-xs mt-1 opacity-70 text-right">
             {formatTimestamp(message.timestamp)}
           </div>
+          
+          {/* Add request actions for purchase requests or swap offers */}
+          {(message.messageType === 'purchase_request' || message.messageType === 'swap_offer') && (
+            <RequestActions 
+              message={message} 
+              onStatusChange={(messageId, newStatus) => {
+                setLocalMessages(prev => 
+                  prev.map(msg => 
+                    msg.id === messageId 
+                      ? { ...msg, requestStatus: newStatus } 
+                      : msg
+                  )
+                );
+              }} 
+            />
+          )}
         </div>
       </div>
     );
@@ -141,7 +166,7 @@ const MessageList = ({ messages, loading }) => {
 
   return (
     <div className="flex-grow overflow-y-auto p-4 space-y-1 bg-gray-50">
-      {messages.map(renderMessage)}
+      {localMessages.map(renderMessage)}
       <div ref={messagesEndRef} />
     </div>
   );

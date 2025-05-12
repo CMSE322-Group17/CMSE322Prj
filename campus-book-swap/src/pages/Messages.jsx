@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
-import { useMessages } from '../contexts/MessageContext';
+import { useMessage } from '../contexts/useMessage';
 import ConversationItem from '../components/Message/ConversationItem';
 import MessageList from '../components/Message/MessageList';
 import MessageInput from '../components/Message/MessageInput';
@@ -19,7 +19,7 @@ const Messages = () => {
     fetchConversations,
     fetchMessages,
     sendMessage
-  } = useMessages();
+  } = useMessage();
   
   const [selectedChat, setSelectedChat] = useState(null);
   const [activeChatDetails, setActiveChatDetails] = useState({
@@ -65,20 +65,22 @@ const Messages = () => {
           `${import.meta.env.VITE_API_URL}/api/users/${otherUserId}`
         );
         
+        // Extract book data safely
+        const bookData = bookResponse.data?.data?.attributes || {};
+        const coverUrl = bookData.cover?.data?.attributes?.url;
+        
         // Update state with fetched details
         setActiveChatDetails({
           book: {
             id: bookId,
-            title: bookResponse.data.data.attributes.title,
-            author: bookResponse.data.data.attributes.author,
-            cover: bookResponse.data.data.attributes.cover?.data ? 
-              `${import.meta.env.VITE_API_URL}${bookResponse.data.data.attributes.cover.data.attributes.url}` : 
-              null
+            title: bookData.title || "Unknown Title",
+            author: bookData.author || "Unknown Author",
+            cover: coverUrl ? `${import.meta.env.VITE_API_URL}${coverUrl}` : null
           },
           otherUser: {
             id: otherUserId,
-            username: userResponse.data.username,
-            avatar: userResponse.data.avatar || null
+            username: userResponse.data?.username || "Unknown User",
+            avatar: userResponse.data?.avatar || null
           }
         });
       } catch (err) {
@@ -124,11 +126,29 @@ const Messages = () => {
     return conversations.filter(convo => {
       // Check message type for special messages
       const messageType = convo.lastMessage?.messageType;
-      if (activeTab === 'swap' && messageType === 'swap_offer') return true;
-      if (activeTab === 'borrow' && messageType === 'borrow_request') return true;
+      
+      // Handle purchase requests
+      if (activeTab === 'buy' && 
+          (messageType === 'purchase_request' || 
+           messageType === 'purchase')) {
+        return true;
+      }
+      
+      // Handle swap offers
+      if (activeTab === 'swap' && messageType === 'swap_offer') {
+        return true;
+      }
+      
+      // Handle borrow requests
+      if (activeTab === 'borrow' && messageType === 'borrow_request') {
+        return true;
+      }
       
       // Check transaction type field if it exists
-      return convo.transactionType === activeTab;
+      return convo.transactionType === activeTab || 
+             (activeTab === 'buy' && 
+              (convo.transactionType === 'purchase' || 
+               convo.transactionType === 'buy'));
     });
   };
 
@@ -136,10 +156,28 @@ const Messages = () => {
   const getCounts = () => {
     const counts = {
       all: conversations.length,
-      swap: conversations.filter(c => c.lastMessage?.messageType === 'swap_offer' || c.transactionType === 'swap').length,
-      borrow: conversations.filter(c => c.lastMessage?.messageType === 'borrow_request' || c.transactionType === 'borrow').length,
-      buy: conversations.filter(c => c.transactionType === 'buy').length
+      swap: conversations.filter(c => 
+        c.lastMessage?.messageType === 'swap_offer' || 
+        c.transactionType === 'swap'
+      ).length,
+      borrow: conversations.filter(c => 
+        c.lastMessage?.messageType === 'borrow_request' || 
+        c.transactionType === 'borrow'
+      ).length,
+      buy: conversations.filter(c => 
+        c.lastMessage?.messageType === 'purchase_request' || 
+        c.lastMessage?.messageType === 'purchase' || 
+        c.transactionType === 'buy' || 
+        c.transactionType === 'purchase'
+      ).length
     };
+    
+    // Add special count for pending purchase requests where the user is the receiver (seller)
+    counts.pendingRequests = conversations.filter(c => 
+      (c.lastMessage?.messageType === 'purchase_request' || c.lastMessage?.messageType === 'purchase') && 
+      c.lastMessage?.requestStatus === 'pending' && 
+      c.lastMessage?.receiverId === user?.id
+    ).length;
     
     return counts;
   };
@@ -218,6 +256,11 @@ const Messages = () => {
             {counts.buy > 0 && (
               <span className="ml-2 bg-green-100 text-green-700 py-0.5 px-2 rounded-full text-xs">
                 {counts.buy}
+              </span>
+            )}
+            {counts.pendingRequests > 0 && (
+              <span className="ml-1 bg-yellow-500 text-white py-0.5 px-2 rounded-full text-xs">
+                {counts.pendingRequests} pending
               </span>
             )}
           </button>

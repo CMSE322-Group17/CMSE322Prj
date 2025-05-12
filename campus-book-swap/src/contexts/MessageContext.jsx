@@ -1,9 +1,8 @@
-import { createContext, useState, useEffect, useContext, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { useAuth } from './AuthContext';
 import messageAPI from '../services/messageAPI';
-
-// Create context
-const MessageContext = createContext();
+import { requestNotificationPermission, showPurchaseRequestNotification, showRequestStatusNotification } from '../utils/notificationUtils';
+import { MessageContext } from './MessageContextDef';
 
 export const MessageProvider = ({ children }) => {
   const { user, isAuthenticated } = useAuth();
@@ -18,6 +17,36 @@ export const MessageProvider = ({ children }) => {
   });
   const [error, setError] = useState(null);
   const [pollingInterval, setPollingInterval] = useState(null);
+  const [notificationsEnabled, setNotificationsEnabled] = useState(false);
+  
+  // Use refs to avoid dependency cycles
+  const conversationsRef = useRef(conversations);
+  const messagesRef = useRef(messages);
+  const userRef = useRef(user);
+  
+  // Keep refs updated with current state
+  useEffect(() => {
+    conversationsRef.current = conversations;
+  }, [conversations]);
+  
+  useEffect(() => {
+    messagesRef.current = messages;
+  }, [messages]);
+  
+  useEffect(() => {
+    userRef.current = user;
+  }, [user]);
+
+  // Request notification permission when component mounts
+  useEffect(() => {
+    if (isAuthenticated) {
+      const checkNotificationPermission = async () => {
+        const permissionGranted = await requestNotificationPermission();
+        setNotificationsEnabled(permissionGranted);
+      };
+      checkNotificationPermission();
+    }
+  }, [isAuthenticated]);
 
   // Reset state when user logs out
   useEffect(() => {
@@ -35,6 +64,106 @@ export const MessageProvider = ({ children }) => {
     }
   }, [isAuthenticated, pollingInterval]);
 
+  // Define the fetch functions
+  const fetchConversations = useCallback(async () => {
+    if (!isAuthenticated || !userRef.current?.id) return;
+    
+    setLoading(prev => ({ ...prev, conversations: true }));
+    try {
+      const response = await messageAPI.getUserChats(userRef.current.id);
+      
+      // Process conversations and ensure all images have valid sources
+      const processedConversations = (response.data || []).map(conv => {
+        // Handle possibly undefined attachments
+        let attachments = [];
+        
+        if (conv.lastMessage?.attachments) {
+          // If attachments is an array, use it directly
+          if (Array.isArray(conv.lastMessage.attachments)) {
+            attachments = conv.lastMessage.attachments.map(attachment => ({
+              ...attachment,
+              url: attachment.url || null
+            }));
+          } 
+          // If attachments is an object with data property (Strapi format)
+          else if (conv.lastMessage.attachments.data) {
+            attachments = Array.isArray(conv.lastMessage.attachments.data) 
+              ? conv.lastMessage.attachments.data.map(attachment => ({
+                  id: attachment.id,
+                  url: attachment.attributes?.url || null,
+                  ...attachment.attributes
+                }))
+              : [{
+                  id: conv.lastMessage.attachments.data.id,
+                  url: conv.lastMessage.attachments.data.attributes?.url || null,
+                  ...conv.lastMessage.attachments.data.attributes
+                }];
+          }
+        }
+        
+        return {
+          ...conv,
+          lastMessage: {
+            ...conv.lastMessage,
+            attachments
+          }
+        };
+      });
+      
+      // Get previous conversations from state for comparison
+      const previousConvs = new Map(conversationsRef.current.map(conv => [conv.chatId, conv]));
+      
+      // Check for new purchase requests where the current user is the receiver
+      processedConversations.forEach(conv => {
+        const prevConv = previousConvs.get(conv.chatId);
+        const lastMessage = conv.lastMessage;
+        
+        if (lastMessage && 
+            lastMessage.messageType === 'purchase_request' && 
+            lastMessage.requestStatus === 'pending' && 
+            lastMessage.receiverId === userRef.current.id && 
+            (!prevConv || 
+             !prevConv.lastMessage || 
+             prevConv.lastMessage.id !== lastMessage.id)) {
+          
+          // Get book and sender info for notification
+          const chatParts = conv.chatId.split('_');
+          // Handle chat ID format safely
+          if (chatParts.length >= 3) {
+            const senderId = userRef.current.id.toString() === chatParts[0] ? chatParts[1] : chatParts[0];
+            const bookId = chatParts[2];
+            
+            // Show notification for new purchase request
+            showPurchaseRequestNotification(
+              lastMessage,
+              { id: bookId, title: conv.bookTitle || "Book" },
+              { id: senderId, username: conv.senderName || "Buyer" }
+            );
+          }
+        }
+      });
+      
+      setConversations(processedConversations);
+      setError(null);
+    } catch (err) {
+      console.error('Error fetching conversations:', err);
+      setError('Failed to load conversations');
+    } finally {
+      setLoading(prev => ({ ...prev, conversations: false }));
+    }
+  }, [isAuthenticated]);
+
+  const fetchUnreadCount = useCallback(async () => {
+    if (!isAuthenticated || !userRef.current?.id) return;
+    
+    try {
+      const count = await messageAPI.getUnreadMessageCount(userRef.current.id);
+      setUnreadCount(count);
+    } catch (err) {
+      console.error('Error fetching unread count:', err);
+    }
+  }, [isAuthenticated]);
+  
   // Fetch conversations when user is authenticated
   useEffect(() => {
     if (isAuthenticated && user?.id) {
@@ -52,72 +181,25 @@ export const MessageProvider = ({ children }) => {
         clearInterval(interval);
       };
     }
-  }, [isAuthenticated, user]);
+  }, [isAuthenticated, user, fetchConversations, fetchUnreadCount]);
 
-  // Fetch conversations
-  const fetchConversations = useCallback(async () => {
-    if (!isAuthenticated || !user?.id) return;
-    
-    setLoading(prev => ({ ...prev, conversations: true }));
-    try {
-      const response = await messageAPI.getUserChats(user.id);
-      
-      // Process conversations and ensure all images have valid sources
-      const processedConversations = (response.data || []).map(conv => ({
-        ...conv,
-        lastMessage: {
-          ...conv.lastMessage,
-          // Ensure image sources are valid
-          attachments: conv.lastMessage?.attachments?.map(attachment => ({
-            ...attachment,
-            url: attachment.url || null // Use null instead of empty string
-          }))
-        }
-      }));
-      
-      setConversations(processedConversations);
-      setError(null);
-    } catch (err) {
-      console.error('Error fetching conversations:', err);
-      setError('Failed to load conversations');
-    } finally {
-      setLoading(prev => ({ ...prev, conversations: false }));
-    }
-  }, [isAuthenticated, user]);
-
-  // Fetch unread message count
-  const fetchUnreadCount = useCallback(async () => {
-    if (!isAuthenticated || !user?.id) return;
-    
-    try {
-      const count = await messageAPI.getUnreadMessageCount(user.id);
-      setUnreadCount(count);
-    } catch (err) {
-      console.error('Error fetching unread count:', err);
-      // Don't update the count if there's an error
-      // This prevents displaying incorrect information
-    }
-  }, [isAuthenticated, user]);
-
-  // Fetch messages for a conversation
+  // Function to fetch messages for a specific conversation
   const fetchMessages = useCallback(async (chatId) => {
-    if (!isAuthenticated || !chatId || !user?.id) return;
+    if (!isAuthenticated || !userRef.current?.id || !chatId) return;
     
     setLoading(prev => ({ ...prev, messages: true }));
     try {
       const response = await messageAPI.getChatMessages(chatId);
       
-      // Process messages and ensure all images have valid sources
+      // Process messages to ensure all attachments have valid URLs
       const processedMessages = (response.data || []).map(msg => {
-        // Handle attachments properly
+        // Handle possibly undefined attachments
         let attachments = [];
+        
         if (msg.attachments) {
           // If attachments is an array, use it directly
           if (Array.isArray(msg.attachments)) {
-            attachments = msg.attachments.map(attachment => ({
-              ...attachment,
-              url: attachment.url || null
-            }));
+            attachments = msg.attachments;
           } 
           // If attachments is an object with data property (Strapi format)
           else if (msg.attachments.data) {
@@ -134,185 +216,233 @@ export const MessageProvider = ({ children }) => {
                 }];
           }
         }
-
+        
         return {
           ...msg,
           attachments
         };
       });
       
-      setMessages(processedMessages);
+      // Sort messages by date
+      const sortedMessages = processedMessages.sort((a, b) => {
+        return new Date(a.createdAt) - new Date(b.createdAt);
+      });
       
-      // Update active conversation
-      setActiveConversation(chatId);
+      setMessages(sortedMessages);
+      setError(null);
       
       // Mark messages as read
-      if (processedMessages.length > 0) {
-        try {
-          await messageAPI.markAllMessagesAsRead(chatId, user.id);
-          // Update unread count
-          fetchUnreadCount();
-        } catch (markReadError) {
-          console.warn('Error marking messages as read:', markReadError);
-          // Continue execution even if marking as read fails
-          // Still attempt to update unread count
+      if (sortedMessages.length > 0) {
+        const unreadMessages = sortedMessages.filter(
+          msg => msg.receiverId === userRef.current.id && !msg.isRead
+        );
+        
+        if (unreadMessages.length > 0) {
+          // Mark messages as read in parallel
+          await Promise.all(
+            unreadMessages.map(msg => messageAPI.markMessageAsRead(msg.id, userRef.current.id))
+          );
+          
+          // Update unread count after marking messages as read
           fetchUnreadCount();
         }
       }
-      
-      setError(null);
     } catch (err) {
       console.error('Error fetching messages:', err);
       setError('Failed to load messages');
     } finally {
       setLoading(prev => ({ ...prev, messages: false }));
     }
-  }, [isAuthenticated, user, fetchUnreadCount]);
+  }, [isAuthenticated, fetchUnreadCount]);
 
-  // Send a message
+  // Function to send a message
   const sendMessage = useCallback(async (messageData) => {
-    if (!isAuthenticated || !user?.id) return null;
+    if (!isAuthenticated || !userRef.current) return;
     
     setLoading(prev => ({ ...prev, sending: true }));
     try {
-      const response = await messageAPI.sendMessage({
-        ...messageData,
-        senderId: user.id
-      });
-      
-      // Add the new message to the messages list
-      const newMessage = response.data;
-      if (newMessage) {
-        // Handle attachments properly
-        let attachments = [];
-        if (newMessage.attachments) {
-          // If attachments is an array, use it directly
-          if (Array.isArray(newMessage.attachments)) {
-            attachments = newMessage.attachments.map(attachment => ({
-              ...attachment,
-              url: attachment.url || null
-            }));
-          } 
-          // If attachments is an object with data property (Strapi format)
-          else if (newMessage.attachments.data) {
-            attachments = Array.isArray(newMessage.attachments.data) 
-              ? newMessage.attachments.data.map(attachment => ({
-                  id: attachment.id,
-                  url: attachment.attributes?.url || null,
-                  ...attachment.attributes
-                }))
-              : [{
-                  id: newMessage.attachments.data.id,
-                  url: newMessage.attachments.data.attributes?.url || null,
-                  ...newMessage.attachments.data.attributes
-                }];
-          }
-        }
-
-        setMessages(prev => [...prev, {
-          ...newMessage,
-          attachments
-        }]);
+      // Add sender ID if not provided
+      if (!messageData.senderId) {
+        messageData.senderId = userRef.current.id;
       }
       
-      setError(null);
-      return response;
+      const response = await messageAPI.sendMessage(messageData);
+      
+      // Update messages and conversations
+      if (response.data) {
+        // Update messages if we're in the active conversation
+        if (activeConversation === messageData.chatId) {
+          // Add the new message to the messages state
+          setMessages(prevMessages => [...prevMessages, response.data]);
+        }
+        
+        // Always update conversations list to reflect the latest message
+        setTimeout(() => {
+          fetchConversations();
+        }, 100);
+      }
+      
+      return response.data;
     } catch (err) {
       console.error('Error sending message:', err);
       setError('Failed to send message');
-      return null;
+      throw err;
     } finally {
       setLoading(prev => ({ ...prev, sending: false }));
     }
-  }, [isAuthenticated, user]);
+  }, [isAuthenticated, activeConversation, fetchConversations]);
 
-  // Start a new conversation
+  // Function to start a new conversation
   const startConversation = useCallback(async (receiverId, bookId, initialMessage) => {
-    if (!isAuthenticated || !user?.id) return null;
+    if (!isAuthenticated || !userRef.current?.id || !receiverId || !bookId) {
+      return null;
+    }
     
     try {
-      // Create chat ID using user IDs and book ID
-      const chatId = messageAPI.createChatId(user.id, receiverId, bookId);
+      // Create a chat ID using the message API utility
+      const chatId = messageAPI.createChatId(userRef.current.id, receiverId, bookId);
       
-      // Send initial message as a purchase request
-      const messageData = {
+      // Check if conversation already exists
+      const existingConversation = conversationsRef.current.find(
+        conv => conv.chatId === chatId
+      );
+      
+      if (existingConversation) {
+        // If it exists, just set it as active and return the chat ID
+        setActiveConversation(chatId);
+        return chatId;
+      }
+      
+      // Otherwise, send the first message to start the conversation
+      if (initialMessage) {
+        await sendMessage({
+          chatId,
+          senderId: userRef.current.id,
+          receiverId,
+          bookId,
+          text: initialMessage,
+          messageType: 'text'
+        });
+      }
+      
+      // Refresh conversations to include the new one
+      await fetchConversations();
+      
+      // Set the new conversation as active
+      setActiveConversation(chatId);
+      
+      return chatId;
+    } catch (err) {
+      console.error('Error starting conversation:', err);
+      setError('Failed to start conversation');
+      return null;
+    }
+  }, [isAuthenticated, fetchConversations, sendMessage]);
+
+  // Function to create a purchase request
+  const createPurchaseRequest = useCallback(async (receiverId, bookId, price, note) => {
+    if (!isAuthenticated || !userRef.current?.id || !receiverId || !bookId) {
+      return null;
+    }
+    
+    try {
+      // Create a chat ID
+      const chatId = messageAPI.createChatId(userRef.current.id, receiverId, bookId);
+      
+      // Create request message
+      const requestData = {
         chatId,
+        senderId: userRef.current.id,
         receiverId,
         bookId,
-        text: initialMessage || "Hi, I'm interested in this book.",
+        price,
+        text: note || `I'd like to purchase this book for $${price}.`,
         messageType: 'purchase_request',
-        requestStatus: 'pending'
+        requestStatus: 'pending',
+        isRead: false
       };
       
-      const response = await sendMessage(messageData);
-      
-      // Set as active conversation
-      setActiveConversation(chatId);
+      // Send the purchase request
+      const response = await sendMessage(requestData);
       
       // Refresh conversations
       await fetchConversations();
       
       return response;
     } catch (err) {
-      console.error('Error starting conversation:', err);
-      setError('Failed to start conversation');
+      console.error('Error creating purchase request:', err);
+      setError('Failed to create purchase request');
       return null;
     }
-  }, [isAuthenticated, user, sendMessage, fetchConversations]);
+  }, [isAuthenticated, sendMessage, fetchConversations]);
 
-  // Delete a message
-  const deleteMessageById = useCallback(async (messageId) => {
-    if (!isAuthenticated || !user?.id) return false;
-    
-    try {
-      await messageAPI.deleteMessage(messageId);
-      
-      // Update messages list
-      setMessages(prev => prev.filter(msg => msg.id !== messageId));
-      
-      return true;
-    } catch (err) {
-      console.error('Error deleting message:', err);
-      setError('Failed to delete message');
+  // Function to update a request status
+  const updateRequestStatus = useCallback(async (messageId, newStatus) => {
+    if (!isAuthenticated || !userRef.current) {
       return false;
     }
-  }, [isAuthenticated, user]);
+    
+    try {
+      const response = await messageAPI.updateRequestStatus(messageId, newStatus);
+      
+      if (response.data) {
+        // If the update was successful, refresh message list and conversations
+        // Update messages if we're viewing the conversation containing this message
+        if (activeConversation) {
+          setMessages(prevMessages => 
+            prevMessages.map(msg => 
+              msg.id === messageId 
+                ? { ...msg, requestStatus: newStatus } 
+                : msg
+            )
+          );
+        }
+        
+        // Use setTimeout to prevent any possible render loops
+        setTimeout(() => {
+          fetchConversations();
+        }, 100);
+        
+        // Show notification about status change
+        const requestMessage = messagesRef.current.find(msg => msg.id === messageId);
+        if (requestMessage) {
+          showRequestStatusNotification(requestMessage, newStatus);
+        }
+        
+        return true;
+      }
+      return false;
+    } catch (err) {
+      console.error('Error updating request status:', err);
+      setError(`Failed to update request to ${newStatus}`);
+      return false;
+    }
+  }, [isAuthenticated, activeConversation, fetchConversations]);
 
-  // Clear context errors
-  const clearError = useCallback(() => {
-    setError(null);
-  }, []);
-
-  // Context value
-  const value = {
+  // The exported context value
+  const contextValue = {
     conversations,
     messages,
-    activeConversation,
     unreadCount,
     loading,
     error,
+    activeConversation,
+    notificationsEnabled,
+    setActiveConversation,
     fetchConversations,
     fetchMessages,
     sendMessage,
     startConversation,
-    deleteMessage: deleteMessageById,
-    clearError
+    createPurchaseRequest,
+    updateRequestStatus,
+    fetchUnreadCount
   };
 
   return (
-    <MessageContext.Provider value={value}>
+    <MessageContext.Provider value={contextValue}>
       {children}
     </MessageContext.Provider>
   );
 };
 
-// Custom hook to use the message context
-export const useMessages = () => {
-  const context = useContext(MessageContext);
-  if (context === undefined) {
-    throw new Error('useMessages must be used within a MessageProvider');
-  }
-  return context;
-};
-
-export default MessageContext;
+// useMessage hook is now imported from ./useMessage.js

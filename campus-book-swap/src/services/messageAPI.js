@@ -1132,7 +1132,9 @@ const messageAPI = {
         `/api/messages/${messageId}`,
         {
           data: {
-            requestStatus: newStatus
+            requestStatus: newStatus,
+            // Add a system message when status changes
+            systemMessage: `Request status updated to ${newStatus}`
           }
         },
         { 
