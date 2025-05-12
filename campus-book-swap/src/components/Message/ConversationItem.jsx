@@ -61,13 +61,14 @@ const ConversationItem = ({
           try {
             const bookResponse = await authAxios.get(`${import.meta.env.VITE_API_URL}/api/books/${bookId}?populate=*`);
             
+            const bookData = bookResponse.data?.data?.attributes || {};
+            const coverUrl = bookData.cover?.data?.attributes?.url;
+            
             setBook({
               id: bookId,
-              title: bookResponse.data.data.attributes.title,
-              author: bookResponse.data.data.attributes.author,
-              cover: bookResponse.data.data.attributes.cover?.data ? 
-                `${import.meta.env.VITE_API_URL}${bookResponse.data.data.attributes.cover.data.attributes.url}` : 
-                null
+              title: bookData.title || "Unknown Title",
+              author: bookData.author || "Unknown Author",
+              cover: coverUrl ? `${import.meta.env.VITE_API_URL}${coverUrl}` : null
             });
           } catch (err) {
             console.error('Error fetching book:', err);
