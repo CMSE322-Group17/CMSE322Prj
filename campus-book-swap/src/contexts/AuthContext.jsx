@@ -86,9 +86,6 @@ export const AuthProvider = ({ children }) => {
         // Make sure headers object exists
         config.headers = config.headers || {};
         config.headers.Authorization = `Bearer ${token}`;
-        console.log("Added token to request:", config.url);
-      } else {
-        console.log("No token available for request:", config.url);
       }
       return config;
     },
