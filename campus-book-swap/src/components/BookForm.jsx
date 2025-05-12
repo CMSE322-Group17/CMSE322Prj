@@ -170,6 +170,12 @@ const BookForm = ({ onSuccess, bookToEdit = null }) => {
     } catch (err) {
       console.error('Error submitting book:', err);
       
+      // Handle authentication/user ID errors
+      if (err.message === 'User must be logged in to create a book') {
+        setError('You must be logged in to create a book. Please sign in and try again.');
+        return;
+      }
+      
       if (err.response) {
         console.log('Error data:', err.response.data);
         // More detailed error logging to help diagnose issues
