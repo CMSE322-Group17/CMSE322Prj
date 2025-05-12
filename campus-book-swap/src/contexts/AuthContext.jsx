@@ -94,6 +94,53 @@ export const AuthProvider = ({ children }) => {
       return Promise.reject(error);
     }
   );
+  
+  // Add response interceptor to handle auth errors
+  authAxios.interceptors.response.use(
+    (response) => response,
+    async (error) => {
+      const originalRequest = error.config;
+      
+      // Handle 401 Unauthorized errors
+      if (error.response?.status === 401 && !originalRequest._retry) {
+        originalRequest._retry = true;
+        
+        // Try to refresh token if available
+        const refreshToken = localStorage.getItem('refreshToken');
+        if (refreshToken) {
+          try {
+            let apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:1337';
+            apiUrl = apiUrl.endsWith('/') ? apiUrl.slice(0, -1) : apiUrl;
+            
+            const response = await axios.post(`${apiUrl}/api/auth/refresh-token`, {
+              refreshToken
+            });
+            
+            const { token } = response.data;
+            localStorage.setItem('token', token);
+            
+            // Update the original request with new token
+            originalRequest.headers.Authorization = `Bearer ${token}`;
+            return axios(originalRequest);
+          } catch (refreshError) {
+            console.error('Token refresh failed:', refreshError);
+            // Force logout on refresh token failure
+            localStorage.removeItem('token');
+            localStorage.removeItem('refreshToken');
+            setIsAuthenticated(false);
+            setUser(null);
+          }
+        } else {
+          // No refresh token, force logout
+          localStorage.removeItem('token');
+          setIsAuthenticated(false);
+          setUser(null);
+        }
+      }
+      
+      return Promise.reject(error);
+    }
+  );
 
   return (
     <AuthContext.Provider value={{ 
