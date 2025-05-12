@@ -18,8 +18,7 @@ const BookForm = ({ onSuccess, bookToEdit = null }) => {
     bookOfYear: false,
     displayTitle: '',
     category: '',
-    bookType: 'For Sale',
-    depositAmount: ''
+    bookType: 'For Sale'
   };
 
   const [book, setBook] = useState(initialState);
