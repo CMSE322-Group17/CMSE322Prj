@@ -408,7 +408,7 @@ export interface ApiBookBook extends Schema.CollectionType {
       'oneToMany',
       'api::message.message'
     >;
-    price: Attribute.Decimal & Attribute.Required & Attribute.DefaultTo<0>;
+    price: Attribute.Float & Attribute.DefaultTo<0>;
     publishedAt: Attribute.DateTime;
     rating: Attribute.Integer &
       Attribute.SetMinMax<
