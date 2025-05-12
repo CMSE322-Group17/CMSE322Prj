@@ -1346,6 +1346,87 @@ const Dashboard = () => {
                     </div>
                   </div>
                 )}
+
+                {/* Pending Purchase Requests Section */}
+                {pendingPurchaseRequests.length > 0 && (
+                  <div>
+                    <h3 className="text-md font-medium mb-3 text-green-800 flex items-center">
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 3h18M9 9h6m-6 4h6m-6 4h6m-6 4h6" />
+                      </svg>
+                      Purchase Requests
+                    </h3>
+                    
+                    <div className="space-y-4">
+                      {pendingPurchaseRequests.map(request => (
+                        <div key={request.id} className="bg-green-50 rounded-lg p-4 border border-green-200">
+                          <div className="flex items-start">
+                            <div className="flex-shrink-0">
+                              <div className="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center text-green-600 font-bold">
+                                {request.buyer?.username ? request.buyer.username.charAt(0).toUpperCase() : 'U'}
+                              </div>
+                            </div>
+                            
+                            <div className="ml-4 flex-grow">
+                              <div className="flex justify-between">
+                                <h4 className="font-medium text-gray-800">
+                                  {request.buyer?.username} wants to purchase your book
+                                </h4>
+                                <span className="text-xs text-gray-500">
+                                  {formatDate(request.timestamp)}
+                                </span>
+                              </div>
+                              
+                              <div className="mt-2 bg-white p-3 rounded-lg border border-gray-200">
+                                <div className="flex items-center">
+                                  <div className="w-12 h-16 bg-gray-200 rounded overflow-hidden flex-shrink-0">
+                                    {request.book?.attributes?.cover?.data ? (
+                                      <img 
+                                        src={`${import.meta.env.VITE_API_URL}${request.book.attributes.cover.data.attributes.url}`} 
+                                        alt={request.book.attributes.title}
+                                        className="w-full h-full object-cover"
+                                      />
+                                    ) : (
+                                      <div className="w-full h-full bg-gray-300 flex items-center justify-center">
+                                        <span className="text-gray-500 text-xs">No image</span>
+                                      </div>
+                                    )}
+                                  </div>
+                                  
+                                  <div className="ml-3">
+                                    <h5 className="font-medium text-gray-800">{request.book?.attributes?.title}</h5>
+                                    <p className="text-sm text-gray-500">{request.book?.attributes?.author}</p>
+                                  </div>
+                                </div>
+                              </div>
+                              
+                              <div className="mt-2 flex space-x-2">
+                                <button 
+                                  onClick={() => handlePurchaseResponse(request.id, true)}
+                                  className="px-3 py-1.5 bg-green-600 text-white text-sm rounded hover:bg-green-700"
+                                >
+                                  Accept Request
+                                </button>
+                                <button 
+                                  onClick={() => handlePurchaseResponse(request.id, false)}
+                                  className="px-3 py-1.5 bg-white border border-gray-300 text-gray-700 text-sm rounded hover:bg-gray-50"
+                                >
+                                  Decline
+                                </button>
+                                <Link 
+                                  to={`/chat/${request.buyer.id}/${request.book.id}`}
+                                  className="px-3 py-1.5 bg-gray-100 text-gray-700 text-sm rounded hover:bg-gray-200 ml-auto"
+                                >
+                                  View Chat
+                                </Link>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
               </div>
             )}
           </div>
