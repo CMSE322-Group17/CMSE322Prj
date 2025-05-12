@@ -342,14 +342,33 @@ export const bookAPI = {
       // Handle file uploads separately using FormData
       const formData = new FormData();
       
-      // The "data" key is expected by Strapi to be a string containing JSON
-      const strData = JSON.stringify({ data: bookData });
+      // For Strapi REST API, we need to format data correctly
+      // The data field must be a JSON string containing a data object with the actual content
+      const bookDataJson = JSON.stringify({
+        data: {
+          title: bookData.title,
+          author: bookData.author,
+          description: bookData.description,
+          price: bookData.price,
+          condition: bookData.condition,
+          exchange: bookData.exchange,
+          subject: bookData.subject,
+          course: bookData.course,
+          seller: bookData.seller,
+          featured: bookData.featured,
+          bookOfWeek: bookData.bookOfWeek,
+          bookOfYear: bookData.bookOfYear,
+          displayTitle: bookData.displayTitle,
+          category: bookData.category,
+          bookType: bookData.bookType,
+          users_permissions_user: bookData.users_permissions_user
+        }
+      });
       
-      // Add the JSON data to the form
-      formData.append('data', strData);
+      formData.append('data', bookDataJson);
       
       // Log what we're sending for debugging
-      console.log('Updating book with data structure:', strData);
+      console.log('Updating book with data structure:', bookDataJson);
       
       // Add the cover image if it exists
       if (coverImage) {
