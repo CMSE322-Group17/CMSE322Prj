@@ -390,7 +390,7 @@ export interface ApiBookBook extends Schema.CollectionType {
     > &
       Attribute.Required;
     course: Attribute.String;
-    cover: Attribute.Media<'images', true> & Attribute.Required;
+    cover: Attribute.Media<'images'>;
     createdAt: Attribute.DateTime;
     createdBy: Attribute.Relation<'api::book.book', 'oneToOne', 'admin::user'> &
       Attribute.Private;
