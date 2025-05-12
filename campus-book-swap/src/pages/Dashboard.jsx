@@ -612,6 +612,47 @@ const Dashboard = () => {
     }
   };
 
+  // Handle responding to a purchase request
+  const handlePurchaseResponse = async (messageId, accept) => {
+    try {
+      // Update the message request status
+      await authAxios.put(`${import.meta.env.VITE_API_URL}/api/messages/${messageId}`, {
+        data: {
+          requestStatus: accept ? 'accepted' : 'declined'
+        }
+      });
+      
+      // Refresh pending purchase requests
+      fetchPendingPurchaseRequests();
+      
+      // Update the stats
+      calculateStats();
+      
+      // Send a message notification
+      const request = pendingPurchaseRequests.find(req => req.id === messageId);
+      if (request) {
+        const message = accept
+          ? "Great news! I've accepted your purchase request. Let's arrange payment and delivery."
+          : "I'm sorry, but I've declined your purchase request.";
+        
+        await authAxios.post(`${import.meta.env.VITE_API_URL}/api/messages`, {
+          data: {
+            ChatId: request.chatId,
+            sender: { id: user.id },
+            receiver: { id: request.buyer.id },
+            book: { id: request.book.id },
+            text: message,
+            messageType: accept ? 'purchase_accepted' : 'purchase_declined',
+            timestamp: new Date().toISOString()
+          }
+        });
+      }
+    } catch (err) {
+      console.error('Error responding to purchase request:', err);
+      setError('Failed to respond to purchase request');
+    }
+  };
+
   // Format timestamp
   const formatDate = (dateString) => {
     const date = new Date(dateString);
