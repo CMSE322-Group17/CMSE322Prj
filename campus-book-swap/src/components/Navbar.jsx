@@ -3,13 +3,13 @@ import { useState, useEffect, useRef } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
 import { useCart } from "../contexts/CartContext";
-import { useMessages } from "../contexts/MessageContext"; // Import the message context
+import { useMessage } from "../contexts/useMessage"; // Import the message context
 import MiniCart from "./MiniCart";
 
 const NavBar = () => {
   const { isAuthenticated, user, logout } = useAuth();
   const { cartCount } = useCart();
-  const { unreadCount } = useMessages(); // Get unread message count
+  const { unreadCount } = useMessage(); // Get unread message count
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
