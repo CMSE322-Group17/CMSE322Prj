@@ -19,8 +19,8 @@ const SellerChat = () => {  const { sellerId, bookId } = useParams();
     sendMessage, 
     fetchMessages, 
     loading,
-    // We'll handle errors locally instead of using context error
-    clearError 
+    error: messageError,
+    setError: setMessageError
   } = useMessage();
   
   const [seller, setSeller] = useState(null);
