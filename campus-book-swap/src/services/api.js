@@ -325,6 +325,12 @@ export const bookAPI = {
           status: error.response.status,
           data: error.response.data
         });
+        
+        // Check specifically for user-related errors
+        if (error.response.status === 400 && 
+            error.response.data?.error?.message?.includes('users_permissions_user')) {
+          console.error('User ID error detected. Make sure user is logged in and ID is valid.');
+        }
       }
       throw error;
     }
