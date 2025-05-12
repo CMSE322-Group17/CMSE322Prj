@@ -158,59 +158,11 @@ const Dashboard = () => {
     }
   };
 
-  // Fetch pending borrow requests
+
+  // Placeholder for fetchPendingBorrows (removed - not needed)
   const fetchPendingBorrows = async () => {
-    try {
-      const response = await authAxios.get(
-        `${import.meta.env.VITE_API_URL}/api/borrow-requests?filters[$or][0][borrowerId][$eq]=${user.id}&filters[$or][1][lenderId][$eq]=${user.id}&filters[status][$eq]=pending&populate=*`
-      );
-      
-      const borrows = response.data.data || [];
-      
-      // Process the data
-      const processedBorrows = await Promise.all(borrows.map(async (borrow) => {
-        try {
-          // Determine if the user is the borrower or lender
-          const isUserBorrower = borrow.attributes.borrowerId === user.id;
-          
-          // Fetch the book details
-          const bookResponse = await authAxios.get(
-            `${import.meta.env.VITE_API_URL}/api/books/${borrow.attributes.bookId}?populate=*`
-          );
-          
-          // Fetch the other user's details
-          const otherUserId = isUserBorrower ? borrow.attributes.lenderId : borrow.attributes.borrowerId;
-          const userResponse = await authAxios.get(
-            `${import.meta.env.VITE_API_URL}/api/users/${otherUserId}`
-          );
-          
-          // Return processed borrow data
-          return {
-            id: borrow.id,
-            ...borrow.attributes,
-            isUserBorrower,
-            book: bookResponse.data.data,
-            otherUser: userResponse.data,
-            type: 'borrow'
-          };
-        } catch (err) {
-          console.error('Error processing borrow data:', err);
-          return {
-            id: borrow.id,
-            ...borrow.attributes,
-            isUserBorrower: borrow.attributes.borrowerId === user.id,
-            book: { attributes: { title: 'Unknown Book' } },
-            otherUser: { username: 'Unknown User' },
-            type: 'borrow'
-          };
-        }
-      }));
-      
-      setPendingBorrows(processedBorrows);
-    } catch (err) {
-      console.error('Error fetching pending borrows:', err);
-      throw err;
-    }
+    // This functionality has been removed since borrowing is not needed
+    setPendingBorrows([]);
   };
 
   // Fetch pending purchase requests
