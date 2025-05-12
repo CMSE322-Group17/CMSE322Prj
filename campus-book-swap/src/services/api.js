@@ -299,6 +299,13 @@ export const bookAPI = {
       return response.data;
     } catch (error) {
       console.error('Error creating book:', error);
+      // Add more details about the error response if available
+      if (error.response) {
+        console.log('Error details:', {
+          status: error.response.status,
+          data: error.response.data
+        });
+      }
       throw error;
     }
   },
