@@ -403,16 +403,16 @@ const BookForm = ({ onSuccess, bookToEdit = null }) => {
           </div>
           
           <div>
-            <label htmlFor="seller" className="block mb-1 font-medium">Seller Name <span className="text-red-500">*</span></label>
+            <label htmlFor="seller" className="block mb-1 font-medium">Seller Name <span className="text-gray-500">(auto-filled)</span></label>
             <input
               type="text"
               id="seller"
               name="seller"
-              value={book.seller}
-              onChange={handleChange}
-              className="w-full p-2 border border-gray-300 rounded"
+              value={book.seller || user?.username || ''}
+              className="w-full p-2 border border-gray-300 rounded bg-gray-100"
               required
               readOnly
+              disabled
             />
           </div>
           
