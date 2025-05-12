@@ -17,15 +17,9 @@ export const AuthProvider = ({ children }) => {
       if (token) {
         try {
           console.log("Verifying token with Strapi...");
-          // Verify token with Strapi
-          const response = await axios.get(
-            `${import.meta.env.VITE_API_URL}/api/users/me`, 
-            {
-              headers: {
-                Authorization: `Bearer ${token}`
-              }
-            }
-          );
+          
+          // Verify token with Strapi using our authAPI
+          const response = await authAPI.verifyToken(token);
           
           console.log("Token verified successfully, user data:", response.data);
           
