@@ -65,20 +65,22 @@ const Messages = () => {
           `${import.meta.env.VITE_API_URL}/api/users/${otherUserId}`
         );
         
+        // Extract book data safely
+        const bookData = bookResponse.data?.data?.attributes || {};
+        const coverUrl = bookData.cover?.data?.attributes?.url;
+        
         // Update state with fetched details
         setActiveChatDetails({
           book: {
             id: bookId,
-            title: bookResponse.data.data.attributes.title,
-            author: bookResponse.data.data.attributes.author,
-            cover: bookResponse.data.data.attributes.cover?.data ? 
-              `${import.meta.env.VITE_API_URL}${bookResponse.data.data.attributes.cover.data.attributes.url}` : 
-              null
+            title: bookData.title || "Unknown Title",
+            author: bookData.author || "Unknown Author",
+            cover: coverUrl ? `${import.meta.env.VITE_API_URL}${coverUrl}` : null
           },
           otherUser: {
             id: otherUserId,
-            username: userResponse.data.username,
-            avatar: userResponse.data.avatar || null
+            username: userResponse.data?.username || "Unknown User",
+            avatar: userResponse.data?.avatar || null
           }
         });
       } catch (err) {
