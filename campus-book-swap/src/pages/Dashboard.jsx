@@ -38,6 +38,7 @@ const Dashboard = () => {
     } else if (user && user.id) {
       fetchDashboardData();
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isAuthenticated, user, navigate]);
 
   // Fetch all dashboard data
