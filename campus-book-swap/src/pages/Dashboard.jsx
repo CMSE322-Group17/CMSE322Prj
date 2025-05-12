@@ -479,9 +479,15 @@ const Dashboard = () => {
         `${import.meta.env.VITE_API_URL}/api/borrow-requests/count?filters[$or][0][borrowerId][$eq]=${user.id}&filters[$or][1][lenderId][$eq]=${user.id}&filters[status][$eq]=pending`
       );
       
+      // Get pending purchase requests count
+      const pendingPurchasesResponse = await authAxios.get(
+        `${import.meta.env.VITE_API_URL}/api/messages/count?filters[receiver][id][$eq]=${user.id}&filters[messageType][$eq]=purchase_request&filters[requestStatus][$eq]=pending`
+      );
+      
       mockStats.pendingTransactions = 
         pendingSwapsResponse.data + 
-        pendingBorrowsResponse.data;
+        pendingBorrowsResponse.data + 
+        pendingPurchasesResponse.data;
       
       // For earnings and savings, we would need more detailed calculation
       // Using mock values for demonstration
