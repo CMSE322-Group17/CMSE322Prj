@@ -12,13 +12,14 @@ const BookForm = ({ onSuccess, bookToEdit = null }) => {
     exchange: '',
     subject: '',
     course: '',
-    seller: '',
+    seller: '', // Will be automatically populated with the user's username
     featured: false,
     bookOfWeek: false,
     bookOfYear: false,
     displayTitle: '',
     category: '',
     bookType: 'For Sale'
+    // users_permissions_user is handled in handleSubmit, not part of form state
   };
 
   const [book, setBook] = useState(initialState);
