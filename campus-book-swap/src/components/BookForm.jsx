@@ -81,6 +81,7 @@ const BookForm = ({ onSuccess, bookToEdit = null }) => {
         displayTitle: bookToEdit.displayTitle || '',
         category: bookToEdit.category?.id || '',
         bookType: bookToEdit.bookType || 'For Sale'
+        // Note: We don't need to set users_permissions_user here as it's handled in handleSubmit
       });
       
       if (bookToEdit.cover) {
