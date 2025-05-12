@@ -32,8 +32,24 @@ export const AuthProvider = ({ children }) => {
           setIsAuthenticated(true);
         } catch (error) {
           console.error('Token validation error:', error);
+          
+          // Enhanced error logging
+          if (error.response) {
+            console.error(`Error status: ${error.response.status}`);
+            console.error('Error data:', error.response.data);
+          } else if (error.request) {
+            console.error('No response received:', error.request);
+          } else {
+            console.error('Error message:', error.message);
+          }
+          
           // Token is invalid or expired
           localStorage.removeItem('token');
+          
+          // Also remove refreshToken if it exists
+          if (localStorage.getItem('refreshToken')) {
+            localStorage.removeItem('refreshToken');
+          }
         }
       } else {
         console.log("No token found in localStorage");
