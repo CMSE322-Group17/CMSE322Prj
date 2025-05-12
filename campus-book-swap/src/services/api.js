@@ -272,20 +272,19 @@ export const bookAPI = {
       // Handle file uploads separately using FormData
       const formData = new FormData();
       
-      // Prepare the JSON data for Strapi
-      const jsonData = {
-        data: { ...bookData }
-      };
-      
-      // Log data structure before sending
-      console.log('Creating book with data structure:', jsonData);
+      // The "data" key is expected by Strapi to be a string containing JSON
+      const strData = JSON.stringify({ data: bookData });
       
       // Add the JSON data to the form
-      formData.append('data', JSON.stringify(jsonData));
+      formData.append('data', strData);
+      
+      // Log what we're sending for debugging
+      console.log('Creating book with data structure:', strData);
       
       // Add the cover image if it exists
       if (coverImage) {
         formData.append('files.cover', coverImage);
+        console.log('Adding cover image to request:', coverImage.name);
       }
       
       const token = localStorage.getItem('token');
