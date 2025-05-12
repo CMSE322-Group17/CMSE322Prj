@@ -74,8 +74,7 @@ const BookForm = ({ onSuccess, bookToEdit = null }) => {
         bookOfYear: bookToEdit.bookOfYear || false,
         displayTitle: bookToEdit.displayTitle || '',
         category: bookToEdit.category?.id || '',
-        bookType: bookToEdit.bookType || 'For Sale',
-        depositAmount: bookToEdit.depositAmount || ''
+        bookType: bookToEdit.bookType || 'For Sale'
       });
       
       if (bookToEdit.cover) {
