@@ -221,66 +221,16 @@ const Dashboard = () => {
     }
   };
 
-  // Fetch books currently borrowed by the user
+  // Placeholder for fetchBorrowedBooks (removed - not needed)
   const fetchBorrowedBooks = async () => {
-    try {
-      const response = await authAxios.get(
-        `${import.meta.env.VITE_API_URL}/api/borrow-requests?filters[borrowerId][$eq]=${user.id}&filters[status][$eq]=borrowed&populate=*`
-      );
-      
-      const borrows = response.data.data || [];
-      
-      // Process the data
-      const processedBorrows = await Promise.all(borrows.map(async (borrow) => {
-        try {
-          // Fetch the book details
-          const bookResponse = await authAxios.get(
-            `${import.meta.env.VITE_API_URL}/api/books/${borrow.attributes.bookId}?populate=*`
-          );
-          
-          // Fetch the lender's details
-          const userResponse = await authAxios.get(
-            `${import.meta.env.VITE_API_URL}/api/users/${borrow.attributes.lenderId}`
-          );
-          
-          // Calculate days until due
-          const dueDate = new Date(borrow.attributes.returnDate);
-          const today = new Date();
-          const daysUntilDue = Math.ceil((dueDate - today) / (1000 * 60 * 60 * 24));
-          
-          // Return processed borrow data
-          return {
-            id: borrow.id,
-            ...borrow.attributes,
-            book: bookResponse.data.data,
-            lender: userResponse.data,
-            daysUntilDue,
-            isOverdue: daysUntilDue < 0
-          };
-        } catch (err) {
-          console.error('Error processing borrowed book data:', err);
-          return {
-            id: borrow.id,
-            ...borrow.attributes,
-            book: { attributes: { title: 'Unknown Book' } },
-            lender: { username: 'Unknown User' },
-            daysUntilDue: 0,
-            isOverdue: false
-          };
-        }
-      }));
-      
-      setBorrowedBooks(processedBorrows);
-    } catch (err) {
-      console.error('Error fetching borrowed books:', err);
-      throw err;
-    }
+    // This functionality has been removed since borrowing is not needed
+    setBorrowedBooks([]);
   };
 
   // Fetch transaction history
   const fetchTransactionHistory = async () => {
     try {
-      // Fetch completed transactions (sales, swaps, borrows)
+      // Fetch completed transactions (sales, swaps)
       const salesResponse = await authAxios.get(
         `${import.meta.env.VITE_API_URL}/api/orders?filters[userId][$eq]=${user.id}&sort[0]=timestamp:desc&populate=*`
       );
