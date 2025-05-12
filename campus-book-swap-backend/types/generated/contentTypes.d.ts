@@ -377,7 +377,7 @@ export interface ApiBookBook extends Schema.CollectionType {
     author: Attribute.String & Attribute.Required;
     bookOfWeek: Attribute.Boolean & Attribute.DefaultTo<false>;
     bookOfYear: Attribute.Boolean & Attribute.DefaultTo<false>;
-    bookType: Attribute.Enumeration<['For Sale', 'For Swap', 'For Borrowing']> &
+    bookType: Attribute.Enumeration<['For Sale', 'For Swap']> &
       Attribute.Required &
       Attribute.DefaultTo<'For Sale'>;
     category: Attribute.Relation<
