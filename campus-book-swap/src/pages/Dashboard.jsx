@@ -445,45 +445,12 @@ const Dashboard = () => {
     }
   };
 
-  // Handle responding to a borrow request
+  // Placeholder for handleBorrowResponse (removed - not needed)
   const handleBorrowResponse = async (borrowId, accept) => {
-    try {
-      // Update the borrow request status
-      await authAxios.put(`${import.meta.env.VITE_API_URL}/api/borrow-requests/${borrowId}`, {
-        data: {
-          status: accept ? 'accepted' : 'declined'
-        }
-      });
-      
-      // Refresh pending borrows
-      fetchPendingBorrows();
-      
-      // Update the stats
-      calculateStats();
-      
-      // Send a message notification
-      const borrow = pendingBorrows.find(b => b.id === borrowId);
-      if (borrow) {
-        const message = accept
-          ? "I've accepted your borrow request! Let's coordinate a pickup time."
-          : "I'm sorry, but I've declined your borrow request.";
-        
-        await authAxios.post(`${import.meta.env.VITE_API_URL}/api/messages`, {
-          data: {
-            chatId: `${borrow.borrowerId}_${borrow.lenderId}_${borrow.bookId}`,
-            senderId: user.id,
-            receiverId: borrow.isUserBorrower ? borrow.lenderId : borrow.borrowerId,
-            bookId: borrow.bookId,
-            text: message,
-            timestamp: new Date().toISOString(),
-            messageType: accept ? 'borrow_accepted' : 'borrow_declined'
-          }
-        });
-      }
-    } catch (err) {
-      console.error('Error responding to borrow request:', err);
-      setError('Failed to respond to borrow request');
-    }
+    // This functionality has been removed since borrowing is not needed
+    console.log("Borrow response functionality has been removed", {borrowId, accept});
+    fetchPendingBorrows();
+    calculateStats();
   };
 
   // Handle responding to a purchase request
