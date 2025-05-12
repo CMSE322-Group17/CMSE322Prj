@@ -184,6 +184,8 @@ const BookForm = ({ onSuccess, bookToEdit = null }) => {
         
         if (err.response.data?.error?.message === 'Missing "data" payload in the request body') {
           setError('There was an issue with the data format. Please try again.');
+        } else if (err.response.status === 401 || err.response.status === 403) {
+          setError('Authentication error: Please sign in again to create a book.');
         } else {
           setError(`Server error: ${err.response.data?.error?.message || 'Failed to submit book'}`);
         }
