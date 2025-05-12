@@ -119,25 +119,33 @@ const BookForm = ({ onSuccess, bookToEdit = null }) => {
     setSuccess('');
     
     try {
+      // Make sure we have a user ID before proceeding
+      if (!user?.id) {
+        throw new Error('User must be logged in to create a book');
+      }
+      
       // Format book data for submission
       const bookData = {
         title: book.title,
         author: book.author,
         description: book.description,
-        price: book.bookType === 'For Sale' ? parseFloat(book.price) || 0 : 0,
+        price: book.bookType === 'For Sale' ? (parseFloat(book.price) || 0) : 0,
         condition: book.condition,
         exchange: book.exchange,
         subject: book.subject,
         course: book.course,
-        seller: book.seller,
+        seller: book.seller || user.username, // Set seller name to username if not provided
         featured: book.featured,
         bookOfWeek: book.bookOfWeek,
         bookOfYear: book.bookOfYear,
         displayTitle: book.displayTitle,
         category: book.category || null,
         bookType: book.bookType,
-        users_permissions_user: user?.id || null
+        users_permissions_user: user.id // Explicitly use the logged-in user's ID
       };
+      
+      // Log the actual data before submission for debugging
+      console.log('Submitting book data:', bookData);
       
       let bookResponse;
       
