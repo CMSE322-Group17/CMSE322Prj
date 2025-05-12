@@ -130,7 +130,7 @@ export const MessageProvider = ({ children }) => {
           const chatParts = conv.chatId.split('_');
           // Handle chat ID format safely
           if (chatParts.length >= 3) {
-            const senderId = user.id.toString() === chatParts[0] ? chatParts[1] : chatParts[0];
+            const senderId = userRef.current.id.toString() === chatParts[0] ? chatParts[1] : chatParts[0];
             const bookId = chatParts[2];
             
             // Show notification for new purchase request
