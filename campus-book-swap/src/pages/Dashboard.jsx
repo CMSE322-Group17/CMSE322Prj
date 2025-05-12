@@ -49,7 +49,7 @@ const Dashboard = () => {
         fetchMyBooks(),
         fetchPendingSwaps(),
         fetchPendingBorrows(),
-        fetchBorrowedBooks(),
+        fetchBorrowedBooks(), // Keeping as a placeholder that returns empty array
         fetchTransactionHistory(),
         fetchPendingPurchaseRequests(),
         calculateStats()
