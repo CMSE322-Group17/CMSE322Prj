@@ -201,6 +201,62 @@ const Dashboard = () => {
     }
   };
 
+  // Fetch pending purchase requests
+  const fetchPendingPurchaseRequests = async () => {
+    try {
+      // Get all messages where:
+      // 1. This user is the receiver (seller)
+      // 2. Message type is purchase_request
+      // 3. Request status is pending
+      const response = await authAxios.get(
+        `${import.meta.env.VITE_API_URL}/api/messages?filters[receiver][id][$eq]=${user.id}&filters[messageType][$eq]=purchase_request&filters[requestStatus][$eq]=pending&populate=*`
+      );
+      
+      const purchaseRequests = response.data.data || [];
+      
+      // Process the data
+      const processedRequests = await Promise.all(purchaseRequests.map(async (request) => {
+        try {
+          // Fetch the book details
+          const bookId = request.attributes.book?.data?.id || request.attributes.bookId;
+          const bookResponse = await authAxios.get(
+            `${import.meta.env.VITE_API_URL}/api/books/${bookId}?populate=*`
+          );
+          
+          // Fetch the buyer's details
+          const senderId = request.attributes.sender?.data?.id || request.attributes.senderId;
+          const userResponse = await authAxios.get(
+            `${import.meta.env.VITE_API_URL}/api/users/${senderId}`
+          );
+          
+          // Return processed request data
+          return {
+            id: request.id,
+            ...request.attributes,
+            book: bookResponse.data.data,
+            buyer: userResponse.data,
+            chatId: request.attributes.ChatId,
+            type: 'purchase'
+          };
+        } catch (err) {
+          console.error('Error processing purchase request data:', err);
+          return {
+            id: request.id,
+            ...request.attributes,
+            book: { attributes: { title: 'Unknown Book' } },
+            buyer: { username: 'Unknown User' },
+            type: 'purchase'
+          };
+        }
+      }));
+      
+      setPendingPurchaseRequests(processedRequests);
+    } catch (err) {
+      console.error('Error fetching pending purchase requests:', err);
+      throw err;
+    }
+  };
+
   // Fetch books currently borrowed by the user
   const fetchBorrowedBooks = async () => {
     try {
