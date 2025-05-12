@@ -70,19 +70,31 @@ const Dashboard = () => {
         `${import.meta.env.VITE_API_URL}/api/books?filters[users_permissions_user][id][$eq]=${user.id}&populate=*`
       );
       
-      const books = response.data.data.map(book => ({
-        id: book.id,
-        ...book.attributes,
-        cover: book.attributes.cover?.data ? 
-          `${import.meta.env.VITE_API_URL}${book.attributes.cover.data.attributes.url}` : 
-          null,
-        category: book.attributes.category?.data ? {
-          id: book.attributes.category.data.id,
-          name: book.attributes.category.data.attributes?.name || 
-                book.attributes.category.data.attributes?.Type || 
-                'Unknown Category'
-        } : null
-      }));
+      const books = response.data.data.map(book => {
+        // Safe access to cover URL with proper fallback
+        let coverUrl = null;
+        try {
+          if (book.attributes?.cover?.data?.attributes?.url) {
+            coverUrl = `${import.meta.env.VITE_API_URL}${book.attributes.cover.data.attributes.url}`;
+          } else if (book.attributes?.cover?.url) {
+            coverUrl = `${import.meta.env.VITE_API_URL}${book.attributes.cover.url}`;
+          }
+        } catch (err) {
+          console.log(`Cover processing error for book ${book.id}:`, err);
+        }
+        
+        return {
+          id: book.id,
+          ...book.attributes,
+          cover: coverUrl,
+          category: book.attributes?.category?.data ? {
+            id: book.attributes.category.data.id,
+            name: book.attributes.category.data.attributes?.name || 
+                  book.attributes.category.data.attributes?.Type || 
+                  'Unknown Category'
+          } : null
+        };
+      });
       
       setMyBooks(books);
     } catch (err) {
