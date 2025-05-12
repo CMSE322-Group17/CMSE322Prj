@@ -537,7 +537,6 @@ export interface ApiMessageMessage extends Schema.CollectionType {
         'swap_offer',
         'swap_accepted',
         'swap_declined',
-        'borrow_request',
         'purchase_request',
         'request_accepted',
         'request_declined'
