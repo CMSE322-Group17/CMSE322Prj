@@ -19,15 +19,23 @@ export const MessageProvider = ({ children }) => {
   const [pollingInterval, setPollingInterval] = useState(null);
   const [notificationsEnabled, setNotificationsEnabled] = useState(false);
   
-  // Create refs to store previous versions of state to avoid dependency cycles
+  // Use refs to avoid dependency cycles
   const conversationsRef = useRef(conversations);
   const messagesRef = useRef(messages);
+  const userRef = useRef(user);
   
   // Keep refs updated with current state
   useEffect(() => {
     conversationsRef.current = conversations;
+  }, [conversations]);
+  
+  useEffect(() => {
     messagesRef.current = messages;
-  }, [conversations, messages]);
+  }, [messages]);
+  
+  useEffect(() => {
+    userRef.current = user;
+  }, [user]);
 
   // Request notification permission when component mounts
   useEffect(() => {
