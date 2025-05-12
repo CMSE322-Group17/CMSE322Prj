@@ -1028,10 +1028,10 @@ const Home = () => {
               <div className="flex justify-center items-center mb-4">
                 <div className="flex">
                   {[1, 2, 3, 4, 5].map(star => (
-                    <span className="text-gray-500 text-xs ml-2">{typeof book.rating === 'number' ? book.rating.toFixed(1) : book.rating} ({book.voters} voters)</span>
+                    <span key={star} className={star <= Math.floor(book.rating || 0) ? "text-yellow-400" : "text-gray-300"}>★</span>
                   ))}
                 </div>
-                <span className="text-gray-500 text-xs ml-2">{book.voters || 0} voters</span>
+                <span className="text-gray-500 text-xs ml-2">{typeof book.rating === 'number' ? book.rating.toFixed(1) : book.rating} ({book.voters || 0} voters)</span>
               </div>
               
               {/* Price and transaction section */}
