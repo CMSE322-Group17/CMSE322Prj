@@ -118,8 +118,35 @@ const SellerChat = () => {  const { sellerId, bookId } = useParams();
         text,
         messageType: 'general'
       });
+      
+      clearTimeout(timeout);
+      
+      // Make sure we refresh messages to show the new one
+      if (chatId) {
+        fetchMessages(chatId);
+      }
     } catch (err) {
       console.error('Error sending message:', err);
+      
+      // Show user-friendly error message
+      let errorMessage = "Failed to send message. Please try again.";
+      
+      if (err.response) {
+        if (err.response.status === 400) {
+          errorMessage = "Message couldn't be sent. Please check your input.";
+        } else if (err.response.status === 401) {
+          errorMessage = "Your session has expired. Please log in again.";
+        } else if (err.response.status === 429) {
+          errorMessage = "You're sending messages too quickly. Please wait a moment.";
+        } else if (err.response.status >= 500) {
+          errorMessage = "Server error. Please try again later.";
+        }
+      } else if (err.request) {
+        errorMessage = "Network error. Please check your connection.";
+      }
+      
+      // Show error as alert for now - could be improved with a toast notification
+      alert(errorMessage);
     }
   };
 
