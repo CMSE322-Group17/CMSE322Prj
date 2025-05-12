@@ -111,8 +111,7 @@ export const MessageProvider = ({ children }) => {
       });
       
       // Get previous conversations from state for comparison
-      const currentConversations = conversations;
-      const previousConvs = new Map(currentConversations.map(conv => [conv.chatId, conv]));
+      const previousConvs = new Map(conversationsRef.current.map(conv => [conv.chatId, conv]));
       
       // Check for new purchase requests where the current user is the receiver
       processedConversations.forEach(conv => {
