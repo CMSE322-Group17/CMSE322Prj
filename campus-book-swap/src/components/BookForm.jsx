@@ -112,62 +112,37 @@ const BookForm = ({ onSuccess, bookToEdit = null }) => {
     setSuccess('');
     
     try {
-      console.log("Submitting book data:", book);
-      
-      // Create data object in the format Strapi expects
+      // Format book data for submission
       const bookData = {
-        data: {
-          title: book.title,
-          author: book.author,
-          description: book.description,
-          price: book.bookType === 'For Sale' ? parseFloat(book.price) || 0 : null,
-          condition: book.condition,
-          exchange: book.exchange,
-          subject: book.subject,
-          course: book.course,
-          seller: book.seller,
-          featured: book.featured,
-          bookOfWeek: book.bookOfWeek,
-          bookOfYear: book.bookOfYear,
-          displayTitle: book.displayTitle,
-          category: book.category || null,
-          bookType: book.bookType,
-          depositAmount: book.bookType === 'For Borrowing' ? parseFloat(book.depositAmount) || 0 : null,
-          users_permissions_user: user?.id || null
-        }
+        title: book.title,
+        author: book.author,
+        description: book.description,
+        price: book.bookType === 'For Sale' ? parseFloat(book.price) || 0 : 0,
+        condition: book.condition,
+        exchange: book.exchange,
+        subject: book.subject,
+        course: book.course,
+        seller: book.seller,
+        featured: book.featured,
+        bookOfWeek: book.bookOfWeek,
+        bookOfYear: book.bookOfYear,
+        displayTitle: book.displayTitle,
+        category: book.category || null,
+        bookType: book.bookType,
+        users_permissions_user: user?.id || null
       };
-      
-      console.log("Formatted data for Strapi:", bookData);
       
       let bookResponse;
       
+      // Use bookAPI service for creating/updating books
       if (bookToEdit) {
-        bookResponse = await authAxios.put(
-          `${import.meta.env.VITE_API_URL}/api/books/${bookToEdit.id}`, 
-          bookData
-        );
+        bookResponse = await bookAPI.updateBook(bookToEdit.id, bookData, coverImage);
       } else {
-        bookResponse = await authAxios.post(
-          `${import.meta.env.VITE_API_URL}/api/books`, 
-          bookData
-        );
+        bookResponse = await bookAPI.createBook(bookData, coverImage);
       }
       
-      console.log("Book response:", bookResponse.data);
-      
-      // If there's a new cover image, upload it
-      if (coverImage) {
-        const formData = new FormData();
-        formData.append('files', coverImage);
-        formData.append('ref', 'api::book.book');
-        formData.append('refId', bookResponse.data.data.id);
-        formData.append('field', 'cover');
-        
-        await authAxios.post(
-          `${import.meta.env.VITE_API_URL}/api/upload`, 
-          formData
-        );
-      }
+      // Log the response for debugging
+      console.log('Book API response:', bookResponse);
       
       setSuccess(bookToEdit ? 'Book updated successfully!' : 'Book listed successfully!');
       setBook(initialState);
