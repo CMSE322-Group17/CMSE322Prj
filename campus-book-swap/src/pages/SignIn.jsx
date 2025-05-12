@@ -18,9 +18,9 @@ const SignIn = () => {
     setIsLoading(true);
     
     try {
-      // Connect to your Strapi backend
-      const response = await axios.post(`${import.meta.env.VITE_API_URL}/api/auth/local`, {
-        identifier: email,
+      // Connect to Strapi backend using our authAPI
+      const response = await authAPI.login({
+        email: email,
         password: password
       });
       
