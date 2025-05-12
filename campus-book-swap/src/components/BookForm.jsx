@@ -58,6 +58,11 @@ const BookForm = ({ onSuccess, bookToEdit = null }) => {
 
     fetchCategories();
     
+    // Auto-populate the seller field with the user's username
+    if (user?.username) {
+      setBook(prev => ({ ...prev, seller: user.username }));
+    }
+    
     // If we have a book to edit, populate the form
     if (bookToEdit) {
       setBook({
