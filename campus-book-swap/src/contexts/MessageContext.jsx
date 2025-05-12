@@ -121,7 +121,7 @@ export const MessageProvider = ({ children }) => {
         if (lastMessage && 
             lastMessage.messageType === 'purchase_request' && 
             lastMessage.requestStatus === 'pending' && 
-            lastMessage.receiverId === user.id && 
+            lastMessage.receiverId === userRef.current.id && 
             (!prevConv || 
              !prevConv.lastMessage || 
              prevConv.lastMessage.id !== lastMessage.id)) {
