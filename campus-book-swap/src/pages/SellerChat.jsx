@@ -85,13 +85,32 @@ const SellerChat = () => {  const { sellerId, bookId } = useParams();
     }, 15000); // Poll every 15 seconds
     
     return () => clearInterval(intervalId);
-  }, [isAuthenticated, sellerId, bookId, user, chatId, fetchMessages, clearError, authAxios]);
+  }, [isAuthenticated, sellerId, bookId, user, chatId, fetchMessages, setMessageError, authAxios]);
 
   // Send a new message
   const handleSendMessage = async (text) => {
-    if (!chatId || !text || !isAuthenticated) return;
+    if (!chatId || !text || !isAuthenticated) {
+      if (!isAuthenticated) {
+        alert("Please log in to send messages");
+        return;
+      }
+      if (!chatId) {
+        console.error("Missing chat ID");
+        return;
+      }
+      return;
+    }
     
     try {
+      // Set a timeout to avoid infinite pending state
+      const timeout = setTimeout(() => {
+        console.log("Message sending timeout - refreshing messages anyway");
+        if (chatId) {
+          fetchMessages(chatId);
+        }
+      }, 10000);
+      
+      // Send the message
       await sendMessage({
         chatId,
         receiverId: sellerId,
