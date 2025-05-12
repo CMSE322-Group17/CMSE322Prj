@@ -1,10 +1,8 @@
-import { createContext, useState, useEffect, useContext, useCallback, useRef } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { useAuth } from './AuthContext';
 import messageAPI from '../services/messageAPI';
 import { requestNotificationPermission, showPurchaseRequestNotification, showRequestStatusNotification } from '../utils/notificationUtils';
-
-// Create context
-const MessageContext = createContext();
+import { MessageContext } from './MessageContextDef';
 
 export const MessageProvider = ({ children }) => {
   const { user, isAuthenticated } = useAuth();
