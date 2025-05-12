@@ -64,13 +64,13 @@ export const MessageProvider = ({ children }) => {
     }
   }, [isAuthenticated, pollingInterval]);
 
-  // Define fetch functions first, then use them in effects
-  const fetchConversationsRef = useCallback(async () => {
-    if (!isAuthenticated || !user?.id) return;
+  // Define the fetch functions
+  const fetchConversations = useCallback(async () => {
+    if (!isAuthenticated || !userRef.current?.id) return;
     
     setLoading(prev => ({ ...prev, conversations: true }));
     try {
-      const response = await messageAPI.getUserChats(user.id);
+      const response = await messageAPI.getUserChats(userRef.current.id);
       
       // Process conversations and ensure all images have valid sources
       const processedConversations = (response.data || []).map(conv => {
