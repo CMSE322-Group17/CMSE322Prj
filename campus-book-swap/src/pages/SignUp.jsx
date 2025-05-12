@@ -28,12 +28,13 @@ const SignUp = () => {
     setIsLoading(true);
     
     try {
-      // Log the URL being used for debugging
-      const apiUrl = `${import.meta.env.VITE_API_URL}/api/auth/local/register`;
-      console.log('Registration URL:', apiUrl);
+      console.log('Registering user with data:', {
+        username: formData.username,
+        email: formData.email
+      });
       
-      // Register user with Strapi
-      const response = await axios.post(apiUrl, {
+      // Register user with Strapi using our authAPI
+      const response = await authAPI.register({
         username: formData.username,
         email: formData.email,
         password: formData.password
