@@ -325,48 +325,43 @@ const Dashboard = () => {
       };
       
       // Calculate based on API responses
+      // Using the correct format for Strapi v4 count endpoint
       const booksResponse = await authAxios.get(
-        `${import.meta.env.VITE_API_URL}/api/books/count?filters[users_permissions_user][id][$eq]=${user.id}`
+        `${import.meta.env.VITE_API_URL}/api/books?filters[users_permissions_user][id][$eq]=${user.id}&pagination[pageSize]=1&pagination[page]=1`
       );
-      mockStats.totalListings = booksResponse.data;
-      mockStats.activeListings = booksResponse.data; // Assuming all are active for now
+      mockStats.totalListings = booksResponse.data.meta.pagination.total;
+      mockStats.activeListings = booksResponse.data.meta.pagination.total; // Assuming all are active for now
       
       // Completed sales + swaps + borrows
       const completedSalesResponse = await authAxios.get(
-        `${import.meta.env.VITE_API_URL}/api/orders/count?filters[userId][$eq]=${user.id}&filters[status][$eq]=completed`
+        `${import.meta.env.VITE_API_URL}/api/orders?filters[userId][$eq]=${user.id}&filters[status][$eq]=completed&pagination[pageSize]=1&pagination[page]=1`
       );
       
       const completedSwapsResponse = await authAxios.get(
-        `${import.meta.env.VITE_API_URL}/api/swap-offers/count?filters[$or][0][buyerId][$eq]=${user.id}&filters[$or][1][sellerId][$eq]=${user.id}&filters[status][$eq]=completed`
+        `${import.meta.env.VITE_API_URL}/api/swap-offers?filters[$or][0][buyerId][$eq]=${user.id}&filters[$or][1][sellerId][$eq]=${user.id}&filters[status][$eq]=completed&pagination[pageSize]=1&pagination[page]=1`
       );
       
-      const completedBorrowsResponse = await authAxios.get(
-        `${import.meta.env.VITE_API_URL}/api/borrow-requests/count?filters[$or][0][borrowerId][$eq]=${user.id}&filters[$or][1][lenderId][$eq]=${user.id}&filters[status][$eq]=returned`
-      );
+      // Borrow functionality removed
       
       mockStats.completedTransactions = 
-        completedSalesResponse.data + 
-        completedSwapsResponse.data + 
-        completedBorrowsResponse.data;
+        completedSalesResponse.data.meta.pagination.total + 
+        completedSwapsResponse.data.meta.pagination.total;
       
       // Pending transactions
       const pendingSwapsResponse = await authAxios.get(
-        `${import.meta.env.VITE_API_URL}/api/swap-offers/count?filters[$or][0][buyerId][$eq]=${user.id}&filters[$or][1][sellerId][$eq]=${user.id}&filters[status][$eq]=pending`
+        `${import.meta.env.VITE_API_URL}/api/swap-offers?filters[$or][0][buyerId][$eq]=${user.id}&filters[$or][1][sellerId][$eq]=${user.id}&filters[status][$eq]=pending&pagination[pageSize]=1&pagination[page]=1`
       );
       
-      const pendingBorrowsResponse = await authAxios.get(
-        `${import.meta.env.VITE_API_URL}/api/borrow-requests/count?filters[$or][0][borrowerId][$eq]=${user.id}&filters[$or][1][lenderId][$eq]=${user.id}&filters[status][$eq]=pending`
-      );
+      // Borrow functionality removed
       
       // Get pending purchase requests count
       const pendingPurchasesResponse = await authAxios.get(
-        `${import.meta.env.VITE_API_URL}/api/messages/count?filters[receiver][id][$eq]=${user.id}&filters[messageType][$eq]=purchase_request&filters[requestStatus][$eq]=pending`
+        `${import.meta.env.VITE_API_URL}/api/messages?filters[receiver][id][$eq]=${user.id}&filters[messageType][$eq]=purchase_request&filters[requestStatus][$eq]=pending&pagination[pageSize]=1&pagination[page]=1`
       );
       
       mockStats.pendingTransactions = 
-        pendingSwapsResponse.data + 
-        pendingBorrowsResponse.data + 
-        pendingPurchasesResponse.data;
+        pendingSwapsResponse.data.meta.pagination.total + 
+        pendingPurchasesResponse.data.meta.pagination.total;
       
       // For earnings and savings, we would need more detailed calculation
       // Using mock values for demonstration
