@@ -1,10 +1,10 @@
 import { useState, useRef, useEffect } from 'react';
-import { useMessages } from '../../contexts/MessageContext';
+import { useMessage } from '../../contexts/useMessage';
 
 const MessageInput = ({ chatId, receiverId, bookId, onMessageSent }) => {
   const [message, setMessage] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const { loading } = useMessages();
+  const { loading } = useMessage();
   const textareaRef = useRef(null);
 
   // Auto-resize textarea as content grows
