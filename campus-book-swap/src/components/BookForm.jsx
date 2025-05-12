@@ -47,7 +47,6 @@ const BookForm = ({ onSuccess, bookToEdit = null }) => {
             };
           });
           
-          console.log("Processed categories:", processedCategories);
           setCategories(processedCategories);
         }
       } catch (err) {
