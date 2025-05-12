@@ -434,16 +434,16 @@ const api = axios.create({
   }
 });
 
-// Add request interceptor for rate limiting and auth
+// Add request interceptor for rate limiting
 api.interceptors.request.use(
   async (config) => {
-    // Add auth token
+    // Add auth token (this is redundant with the shared API but kept for safety)
     const token = localStorage.getItem('token');
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
 
-    // Check rate limit
+    // Message-specific rate limiting
     const endpoint = config.url;
     try {
       rateLimiter.canMakeRequest(endpoint);
