@@ -66,7 +66,10 @@ const SellerChat = () => {  const { sellerId, bookId } = useParams();
           fetchMessages(chatId);
         }
         
-        clearError();
+        // Clear any message errors if needed
+        if (setMessageError) {
+          setMessageError(null);
+        }
       } catch (err) {
         console.error('Error fetching chat data:', err);
       }
