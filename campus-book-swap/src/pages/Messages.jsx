@@ -19,7 +19,7 @@ const Messages = () => {
     fetchConversations,
     fetchMessages,
     sendMessage
-  } = useMessages();
+  } = useMessage();
   
   const [selectedChat, setSelectedChat] = useState(null);
   const [activeChatDetails, setActiveChatDetails] = useState({
