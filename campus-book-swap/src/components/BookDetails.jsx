@@ -361,7 +361,7 @@ const BookDetail = () => {
                     <div className="flex items-center">
                       <div className="flex">
                         {[1, 2, 3, 4, 5].map(star => (
-                          <span key={star} className={star <= Math.floor(seller.rating) ? "text-yellow-400" : "text-gray-300"}>★</span>
+                          <span key={`star-${star}`} className={star <= Math.floor(seller.rating) ? "text-yellow-400" : "text-gray-300"}>★</span>
                         ))}
                       </div>
                       <span className="text-gray-500 text-xs ml-2">{seller.rating.toFixed(1)} ({seller.transactions} transactions)</span>
