@@ -183,128 +183,23 @@ export const MessageProvider = ({ children }) => {
     }
   }, [isAuthenticated, user, fetchConversations, fetchUnreadCount]);
 
-  // Fetch conversations
-  const fetchConversations = useCallback(async () => {
-    if (!isAuthenticated || !user?.id) return;
-    
-    setLoading(prev => ({ ...prev, conversations: true }));
-    try {
-      const response = await messageAPI.getUserChats(user.id);
-      
-      // Process conversations and ensure all images have valid sources
-      const processedConversations = (response.data || []).map(conv => {
-        // Handle possibly undefined attachments
-        let attachments = [];
-        
-        if (conv.lastMessage?.attachments) {
-          // If attachments is an array, use it directly
-          if (Array.isArray(conv.lastMessage.attachments)) {
-            attachments = conv.lastMessage.attachments.map(attachment => ({
-              ...attachment,
-              url: attachment.url || null
-            }));
-          } 
-          // If attachments is an object with data property (Strapi format)
-          else if (conv.lastMessage.attachments.data) {
-            attachments = Array.isArray(conv.lastMessage.attachments.data) 
-              ? conv.lastMessage.attachments.data.map(attachment => ({
-                  id: attachment.id,
-                  url: attachment.attributes?.url || null,
-                  ...attachment.attributes
-                }))
-              : [{
-                  id: conv.lastMessage.attachments.data.id,
-                  url: conv.lastMessage.attachments.data.attributes?.url || null,
-                  ...conv.lastMessage.attachments.data.attributes
-                }];
-          }
-        }
-        
-        return {
-          ...conv,
-          lastMessage: {
-            ...conv.lastMessage,
-            attachments
-          }
-        };
-      });
-      
-      // Use ref for previous conversations to avoid dependency cycle
-      // Check for new purchase requests where the current user is the receiver
-      const previousConvs = new Map(conversationsRef.current.map(conv => [conv.chatId, conv]));
-      
-      processedConversations.forEach(conv => {
-        const prevConv = previousConvs.get(conv.chatId);
-        const lastMessage = conv.lastMessage;
-        
-        // If this is a new conversation or a updated conversation with a purchase request
-        if (lastMessage && 
-            lastMessage.messageType === 'purchase_request' && 
-            lastMessage.requestStatus === 'pending' && 
-            lastMessage.receiverId === user.id &&
-            (!prevConv || 
-             !prevConv.lastMessage || 
-             prevConv.lastMessage.id !== lastMessage.id)) {
-          
-          // Get book and sender info for notification
-          const chatParts = conv.chatId.split('_');
-          if (chatParts.length >= 3) {
-            const senderId = chatParts[0] === user.id.toString() ? chatParts[1] : chatParts[0];
-            const bookId = chatParts[2];
-            
-            // Show notification for new purchase request
-            showPurchaseRequestNotification(
-              lastMessage,
-              { id: bookId, title: conv.bookTitle || "Book" },
-              { id: senderId, username: conv.senderName || "Buyer" }
-            );
-          }
-        }
-      });
-      
-      setConversations(processedConversations);
-      setError(null);
-    } catch (err) {
-      console.error('Error fetching conversations:', err);
-      setError('Failed to load conversations');
-    } finally {
-      setLoading(prev => ({ ...prev, conversations: false }));
-    }
-  }, [isAuthenticated, user]); // Removed conversation dependency, using ref instead
-
-  // Fetch unread message count
-  const fetchUnreadCount = useCallback(async () => {
-    if (!isAuthenticated || !user?.id) return;
-    
-    try {
-      const count = await messageAPI.getUnreadMessageCount(user.id);
-      setUnreadCount(count);
-    } catch (err) {
-      console.error('Error fetching unread count:', err);
-      // Don't update the count if there's an error
-      // This prevents displaying incorrect information
-    }
-  }, [isAuthenticated, user]);
-
-  // Fetch messages for a conversation
+  // Function to fetch messages for a specific conversation
   const fetchMessages = useCallback(async (chatId) => {
-    if (!isAuthenticated || !chatId || !user?.id) return;
+    if (!isAuthenticated || !userRef.current?.id || !chatId) return;
     
     setLoading(prev => ({ ...prev, messages: true }));
     try {
       const response = await messageAPI.getChatMessages(chatId);
       
-      // Process messages and ensure all images have valid sources
+      // Process messages to ensure all attachments have valid URLs
       const processedMessages = (response.data || []).map(msg => {
-        // Handle attachments properly
+        // Handle possibly undefined attachments
         let attachments = [];
+        
         if (msg.attachments) {
           // If attachments is an array, use it directly
           if (Array.isArray(msg.attachments)) {
-            attachments = msg.attachments.map(attachment => ({
-              ...attachment,
-              url: attachment.url || null
-            }));
+            attachments = msg.attachments;
           } 
           // If attachments is an object with data property (Strapi format)
           else if (msg.attachments.data) {
