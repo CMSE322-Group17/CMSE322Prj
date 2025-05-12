@@ -449,7 +449,6 @@ export interface ApiCartItemCartItem extends Schema.CollectionType {
   };
   attributes: {
     bookId: Attribute.String & Attribute.Required;
-    borrowDuration: Attribute.String;
     createdAt: Attribute.DateTime;
     createdBy: Attribute.Relation<
       'api::cart-item.cart-item',
