@@ -292,9 +292,11 @@ const BookForm = ({ onSuccess, bookToEdit = null }) => {
                 onChange={handleChange}
                 step="0.01"
                 min="0"
-                className="w-full p-2 border border-gray-300 rounded"
+                className="w-full p-2 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                 required={showPriceField}
+                placeholder="Enter price"
               />
+              <p className="text-sm text-gray-500 mt-1">Only required for books listed for sale</p>
             </div>
           )}
           
