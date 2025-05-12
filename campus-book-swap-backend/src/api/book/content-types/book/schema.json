@@ -113,8 +113,8 @@
       "required": true
     },
     "price": {
-      "type": "decimal",
-      "required": true,
+      "type": "float",
+      "required": false,
       "default": 0
     }
   }
