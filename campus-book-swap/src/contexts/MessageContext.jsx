@@ -151,28 +151,18 @@ export const MessageProvider = ({ children }) => {
     } finally {
       setLoading(prev => ({ ...prev, conversations: false }));
     }
-  }, [isAuthenticated, user, conversations]);
+  }, [isAuthenticated]);
 
-  // Fetch unread message count function
-  const fetchUnreadCountRef = useCallback(async () => {
-    if (!isAuthenticated || !user?.id) return;
+  const fetchUnreadCount = useCallback(async () => {
+    if (!isAuthenticated || !userRef.current?.id) return;
     
     try {
-      const count = await messageAPI.getUnreadMessageCount(user.id);
+      const count = await messageAPI.getUnreadMessageCount(userRef.current.id);
       setUnreadCount(count);
     } catch (err) {
       console.error('Error fetching unread count:', err);
     }
-  }, [isAuthenticated, user]);
-  
-  // Save these functions to refs to avoid dependency cycles
-  const fetchConversations = useCallback(() => {
-    fetchConversationsRef();
-  }, [fetchConversationsRef]);
-  
-  const fetchUnreadCount = useCallback(() => {
-    fetchUnreadCountRef();
-  }, [fetchUnreadCountRef]);
+  }, [isAuthenticated]);
   
   // Fetch conversations when user is authenticated
   useEffect(() => {
