@@ -456,12 +456,10 @@ export interface ApiCartItemCartItem extends Schema.CollectionType {
       'admin::user'
     > &
       Attribute.Private;
-    depositAmount: Attribute.Decimal;
-    dueDate: Attribute.Date;
     price: Attribute.Decimal;
     publishedAt: Attribute.DateTime;
     quantity: Attribute.Integer & Attribute.Required & Attribute.DefaultTo<1>;
-    transactionType: Attribute.Enumeration<['buy', 'borrow', 'swap']>;
+    transactionType: Attribute.Enumeration<['buy', 'swap']>;
     updatedAt: Attribute.DateTime;
     updatedBy: Attribute.Relation<
       'api::cart-item.cart-item',
