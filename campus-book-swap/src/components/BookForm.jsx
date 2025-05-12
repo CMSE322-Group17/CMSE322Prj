@@ -35,15 +35,11 @@ const BookForm = ({ onSuccess, bookToEdit = null }) => {
   useEffect(() => {
     const fetchCategories = async () => {
       try {
-        const apiUrl = `${import.meta.env.VITE_API_URL}/api/categories`;
-        console.log("Fetching categories from:", apiUrl);
+        // Use our bookAPI service to get categories
+        const response = await bookAPI.getCategories();
         
-        const response = await axios.get(apiUrl);
-        console.log("Category response:", response.data);
-        
-        if (response.data && response.data.data) {
-          const processedCategories = response.data.data.map(cat => {
-            console.log("Category item:", cat);
+        if (response && response.data) {
+          const processedCategories = response.data.map(cat => {
             return {
               id: cat.id,
               // Try different possible property names for the category name
