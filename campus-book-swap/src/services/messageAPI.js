@@ -449,8 +449,9 @@ api.interceptors.response.use(
           localStorage.removeItem('token');
           window.location.href = '/signin';
         }
-      } catch (refreshError) {
+      } catch (_refreshError) {
         // Refresh token failed, redirect to login
+        console.error('Token refresh failed:', _refreshError);
         localStorage.removeItem('token');
         localStorage.removeItem('refreshToken');
         window.location.href = '/signin';
