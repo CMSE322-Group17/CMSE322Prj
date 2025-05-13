@@ -408,7 +408,6 @@ const BooksPage = () => {
         }
       }
       
-      // Case 4: Direct object with formats
       if (imageData.formats) {
         const format = 
           imageData.formats.medium || 
