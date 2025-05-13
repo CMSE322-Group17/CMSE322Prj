@@ -854,57 +854,60 @@ const messageAPI = {
    * Send a new message
    */
   sendMessage: async (messageData) => {
-    // Validate message data
-    const validation = messageValidator.validateMessage(messageData);
-    if (!validation.isValid) {
-      throw new Error(`Invalid message: ${validation.errors.join(', ')}`);
+    // Validate required fields
+    if (!messageData || !messageData.chatId || !messageData.senderId || !messageData.receiverId || !messageData.text) {
+      console.error("sendMessage validation failed: Missing required fields.", messageData);
+      throw new Error('Missing required message data: chatId, senderId, receiverId, and text are required.');
     }
+
+    // Ensure IDs are integers. bookId can be optional.
+    const senderId = parseInt(messageData.senderId, 10);
+    const receiverId = parseInt(messageData.receiverId, 10);
+    const bookId = messageData.bookId ? parseInt(messageData.bookId, 10) : null;
+
+    if (isNaN(senderId) || isNaN(receiverId) || (messageData.bookId && isNaN(bookId))) {
+      console.error("Invalid ID provided to sendMessage", { senderId, receiverId, bookId, originalData: messageData });
+      throw new Error("Invalid sender, receiver, or book ID. Ensure they are numbers.");
+    }
+
+    let encryptedText = messageData.text;
+
+    const payload = {
+      ChatId: messageData.chatId, // Ensure your Strapi 'messages' collection uses 'ChatId' (case-sensitive)
+      sender: senderId,
+      receiver: receiverId,
+      text: encryptedText,
+      messageType: messageData.messageType || 'general', // Default to 'general' if not 'text'
+      requestStatus: messageData.requestStatus, // Will be undefined if not set, which is fine
+      read: messageData.isRead === undefined ? false : messageData.isRead, // Corrected field name from isRead to read
+      timestamp: new Date().toISOString(), // Add timestamp for consistency
+      // Conditionally add book if it's not null
+      ...(bookId !== null && { book: bookId }),
+      // Ensure attachments are structured correctly if present
+      ...(messageData.attachments && { attachments: messageData.attachments }) // Assuming attachments are already in correct format or handled by Strapi
+    };
 
     const cancelToken = createCancelToken();
 
     try {
-      // Create chat ID if not provided
-      const chatId = messageData.chatId || messageAPI.createChatId(
-        messageData.senderId,
-        messageData.receiverId,
-        messageData.bookId
-      );
-
-      // Encrypt message text
-      const encryptedText = await messageEncryption.encrypt(messageData.text);
-
-      const response = await api.post('/api/messages', {
-        data: {
-          ChatId: chatId,
-          sender: messageData.senderId,
-          receiver: messageData.receiverId,
-          book: messageData.bookId,
-          text: encryptedText,
-          messageType: messageData.messageType || 'general',
-          timestamp: new Date().toISOString(),
-          read: false,
-          deleted: false,
-          requestStatus: messageData.requestStatus || (messageData.messageType === 'purchase_request' || messageData.messageType === 'swap_offer' ? 'pending' : undefined)
-        }
-      }, { 
+      // IMPORTANT: Ensure the payload is wrapped in a 'data' object for Strapi v4
+      const response = await api.post('/api/messages', { data: payload }, { 
         cancelToken: cancelToken.token,
-        retry: true
       });
 
       if (!response.data?.data) {
-        throw new Error('Invalid response from server');
+        console.error("Invalid response from server after sending message:", response);
+        throw new Error('Invalid response from server when sending message.');
       }
 
-      // Clear cache for this chat
-      cache.delete(`chat_${chatId}`);
+      cache.delete(`chat_${messageData.chatId}`);
 
-      // Notify via WebSocket
       wsManager.send({
         type: 'new_message',
         data: {
           id: response.data.data.id,
           ...response.data.data.attributes,
-          text: messageData.text // Send decrypted text
+          text: messageData.text // Send original text for WebSocket
         }
       });
 
