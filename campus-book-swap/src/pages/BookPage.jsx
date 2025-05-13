@@ -418,29 +418,24 @@ const BooksPage = () => {
           return `${baseUrl}${path}`;
         }
         
-        // Fallback to main URL if formats don't have URLs
         if (imageData.url) {
           const path = imageData.url.startsWith('/') ? imageData.url : `/${imageData.url}`;
           return `${baseUrl}${path}`;
         }
       }
       
-      // Case 5: Direct URL property
       if (imageData.url) {
         const path = imageData.url.startsWith('/') ? imageData.url : `/${imageData.url}`;
         return `${baseUrl}${path}`;
       }
       
-      // Case 6: Array in data
       if (imageData.data) {
         const data = Array.isArray(imageData.data) ? imageData.data[0] : imageData.data;
         if (data) {
-          // With attributes (Strapi v4)
           if (data.attributes && data.attributes.url) {
             const path = data.attributes.url.startsWith('/') ? data.attributes.url : `/${data.attributes.url}`;
             return `${baseUrl}${path}`;
           }
-          // Direct URL
           if (data.url) {
             const path = data.url.startsWith('/') ? data.url : `/${data.url}`;
             return `${baseUrl}${path}`;
