@@ -420,6 +420,28 @@ export const MessageProvider = ({ children }) => {
     }
   }, [isAuthenticated, activeConversation, fetchConversations]);
 
+  // Function to start a swap offer
+  const startSwapOffer = useCallback(async ({ chatId, offerBookIds }) => {
+    if (!isAuthenticated || !userRef.current?.id || !chatId || !offerBookIds?.length) return;
+    // Indicate sending state
+    setLoading(prev => ({ ...prev, sending: true }));
+    try {
+      // Parse IDs from chatId: buyer_seller_book
+      const [buyerId, sellerId, bookId] = chatId.split('_');
+      // Create swap-offer record
+      await swapOfferAPI.createOffer({ chatId, buyerId, sellerId, bookId, offerBookIds });
+      // Send a swap_offer message
+      await messageAPI.sendMessage({ chatId, senderId: buyerId, receiverId: sellerId, bookId, text: 'Swap offer sent', messageType: 'swap_offer' });
+      // Refresh conversations
+      fetchConversations();
+    } catch (err) {
+      console.error('Error starting swap offer:', err);
+    } finally {
+      // Reset sending state
+      setLoading(prev => ({ ...prev, sending: false }));
+    }
+  }, [isAuthenticated, fetchConversations]);
+
   // The exported context value
   const contextValue = {
     conversations,
