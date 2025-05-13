@@ -483,11 +483,9 @@ const BooksPage = () => {
         ];
         setCategories(processedCategories);
         
-        // Check if we're on the category route
         let booksData;
         
         if (categoryName && categoryName !== 'all') {
-          // Find category ID if we're browsing by URL slug
           const category = processedCategories.find(cat => 
             cat.name.toLowerCase().replace(/\s+/g, '-') === categoryName
           );
