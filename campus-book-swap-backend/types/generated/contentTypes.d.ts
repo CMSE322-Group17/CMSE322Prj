@@ -434,6 +434,11 @@ export interface ApiBookBook extends Schema.CollectionType {
       'manyToOne',
       'plugin::users-permissions.user'
     >;
+    wishlists: Attribute.Relation<
+      'api::book.book',
+      'oneToMany',
+      'api::wishlist.wishlist'
+    >;
   };
 }
 
