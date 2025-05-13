@@ -741,7 +741,6 @@ const Dashboard = () => {
                           </div>
                         ))}
 
-                        {/* Show Purchase Requests that require user's action */}
                         {pendingPurchaseRequests.map(request => (
                           <div key={`purchase-${request.id}`} className="p-3 hover:bg-gray-50">
                             <div className="flex justify-between items-start">
