@@ -49,13 +49,15 @@ const Wishlist = () => {
       setLoading(false);
     }
   };
-
+  
   const handleSearch = (e) => {
     setSearchQuery(e.target.value);
+    setCurrentPage(0); // Reset to first page on new search
   };
 
   const handleSortChange = (e) => {
     setSortOption(e.target.value);
+    setCurrentPage(0); // Reset to first page on sort change
   };
 
   const handlePageClick = (event) => {
