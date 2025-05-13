@@ -107,6 +107,24 @@ const BookForm = ({ onSuccess, bookToEdit = null }) => {
   const handleImageChange = (e) => {
     const file = e.target.files[0];
     if (file) {
+      // Clear any previous errors
+      setError('');
+      
+      // Validate file size (5MB max)
+      if (file.size > 5 * 1024 * 1024) {
+        setError('Image too large. Please select an image smaller than 5MB.');
+        e.target.value = ''; // Reset the input
+        return;
+      }
+      
+      // Validate file type (only accept common image formats)
+      const validTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
+      if (!validTypes.includes(file.type)) {
+        setError('Unsupported file type. Please use JPG, PNG, GIF or WEBP images.');
+        e.target.value = ''; // Reset the input
+        return;
+      }
+      
       setCoverImage(file);
       setCoverPreview(URL.createObjectURL(file));
     }
