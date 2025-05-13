@@ -405,6 +405,22 @@ export const bookAPI = {
       console.error(`Error deleting book ${id}:`, error);
       throw error;
     }
+  },
+
+  // Search books by query
+  searchBooks: async (query) => {
+    try {
+      return await fetchFromAPI('/api/books', {
+        method: 'GET',
+        params: {
+          populate: '*',
+          'filters[title][$containsi]': query
+        }
+      });
+    } catch (error) {
+      console.error('Error searching books:', error);
+      throw error;
+    }
   }
 };
 
