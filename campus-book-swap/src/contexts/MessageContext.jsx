@@ -220,10 +220,10 @@ export const MessageProvider = ({ children }) => {
                   url: attachment.attributes?.url || null,
                   ...attachment.attributes
                 }))
-              : [{
+              : [{ // This is the single attachment case
                   id: msg.attachments.data.id,
-                  url: msg.attachments.data.attributes?.url || null,
-                  ...msg.attachments.data.attributes
+                  url: msg.attachments.data.attributes?.url || null, // Corrected: use msg.attachments.data.attributes
+                  ...(msg.attachments.data.attributes || {}) // Corrected: use msg.attachments.data.attributes and spread safely
                 }];
           }
         }
