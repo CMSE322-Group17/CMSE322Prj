@@ -606,7 +606,7 @@ const Home = () => {
       );
     }
     
-    if (books.length === 0) {
+    if (!books || books.length === 0) {
       return (
         <div className="py-8 px-4">
           <div className="max-w-6xl mx-auto">
