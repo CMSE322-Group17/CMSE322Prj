@@ -935,12 +935,21 @@ const Dashboard = () => {
                               </div>
                               
                               <div className="mt-2 bg-white p-3 rounded-lg border border-gray-200">
+                                <p className="text-sm text-gray-600 mb-1">
+                                  {swap.isUserRequester ? 'You offered:' : `${swap.otherUser?.username || 'User'} offered:`}
+                                </p>
+                                <p className="font-medium text-gray-800 truncate" title={swap.offeredBooksSummary}>
+                                  {swap.offeredBooksSummary}
+                                </p>
+                                <p className="text-sm text-gray-600 mt-2 mb-1">
+                                  {swap.isUserRequester ? 'For their book:' : 'For your book:'}
+                                </p>
                                 <div className="flex items-center">
                                   <div className="w-12 h-16 bg-gray-200 rounded overflow-hidden flex-shrink-0">
-                                    {swap.book?.attributes?.cover?.data ? (
+                                    {swap.requestedBookDetails?.cover ? (
                                       <img 
-                                        src={`${import.meta.env.VITE_API_URL}${swap.book.attributes.cover.data.attributes.url}`} 
-                                        alt={swap.book.attributes.title}
+                                        src={swap.requestedBookDetails.cover} 
+                                        alt={swap.requestedBookDetails.title}
                                         className="w-full h-full object-cover"
                                       />
                                     ) : (
