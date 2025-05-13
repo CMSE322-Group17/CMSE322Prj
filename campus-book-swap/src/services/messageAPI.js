@@ -915,28 +915,29 @@ const messageAPI = {
         data: {
           id: response.data.data.id,
           ...response.data.data.attributes,
-          text: messageData.text // Return decrypted text
+          text: messageData.text // Return original text
         }
       };
     } catch (error) {
       if (axios.isCancel(error)) {
-        console.log('Request cancelled:', error.message);
+        console.log('Request cancelled: sendMessage', error.message);
         throw new Error('Message sending was cancelled');
       }
       
-      // If offline, add to queue
+      // Offline queuing logic
       if (!navigator.onLine) {
         const queuedMessage = {
-          ...messageData,
-          id: Date.now().toString(),
-          chatId: messageData.chatId || messageAPI.createChatId(
-            messageData.senderId,
-            messageData.receiverId,
-            messageData.bookId
-          )
+          ...messageData, // Original data
+          id: Date.now().toString(), // Temporary ID for queue
+          // Ensure all necessary fields for queuing are present
+          senderId: senderId, // Use parsed IDs
+          receiverId: receiverId,
+          bookId: bookId,
+          chatId: messageData.chatId, 
         };
-        messageQueue.add(queuedMessage);
-        return {
+        messageQueue.add(queuedMessage); // `messageQueue.add` should handle validation
+        console.log("Message queued due to network offline:", queuedMessage);
+        return { // Return a structure indicating it's queued
           data: {
             id: queuedMessage.id,
             ...queuedMessage,
