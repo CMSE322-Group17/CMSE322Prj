@@ -380,9 +380,9 @@ export interface ApiBookBook extends Schema.CollectionType {
     bookType: Attribute.Enumeration<['For Sale', 'For Swap']> &
       Attribute.Required &
       Attribute.DefaultTo<'For Sale'>;
-    category: Attribute.Relation<
+    categories: Attribute.Relation<
       'api::book.book',
-      'oneToOne',
+      'oneToMany',
       'api::category.category'
     >;
     condition: Attribute.Enumeration<
