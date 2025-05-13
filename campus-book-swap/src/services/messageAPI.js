@@ -943,9 +943,9 @@ const messageAPI = {
       const response = await api.post('/api/messages', {
         data: {
           ChatId: chatId,
-          sender: { id: messageData.senderId.toString() },
-          receiver: { id: messageData.receiverId.toString() },
-          book: { id: messageData.bookId.toString() },
+          sender: messageData.senderId,
+          receiver: messageData.receiverId,
+          book: messageData.bookId,
           text: encryptedText,
           messageType: messageData.messageType || 'general',
           timestamp: new Date().toISOString(),
