@@ -28,16 +28,6 @@ const BooksPage = () => {
     const { addToCart } = useCart();
     const navigate = useNavigate();
     
-    // Status styles
-    // Use the utility function for book type styles
-    const getStatusStyle = (bookType) => getBookTypeStyles(bookType);
-    
-    // Generate random price (for demo purposes)
-    const price = book.bookType === 'For Sale' ? book.price : null;
-    
-    // Generate a course code (for demo purposes)
-    const courseCode = `${['CS', 'MATH', 'BIO', 'CHEM', 'ENG'][book.id % 5]}${101 + (book.id % 400)}`;
-    
     // Generate seller details (for demo purposes)
     const seller = {
       id: book.id % 100 + 1, // Random ID for demo
