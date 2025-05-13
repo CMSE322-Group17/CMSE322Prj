@@ -1156,6 +1156,11 @@ export interface PluginUsersPermissionsUser extends Schema.CollectionType {
       'oneToMany',
       'api::message.message'
     >;
+    receivedSwapOffers: Attribute.Relation<
+      'plugin::users-permissions.user',
+      'oneToMany',
+      'api::swap-offer.swap-offer'
+    >;
     resetPasswordToken: Attribute.String & Attribute.Private;
     role: Attribute.Relation<
       'plugin::users-permissions.user',
