@@ -903,14 +903,13 @@ const Dashboard = () => {
               </div>
             ) : (
               <div className="space-y-6">
-                {/* Pending Swap Requests Section */}
                 {pendingSwaps.length > 0 && (
                   <div>
                     <h3 className="text-md font-medium mb-3 text-blue-800 flex items-center">
                       <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
                       </svg>
-                      Swap Requests
+                      Swap Offers
                     </h3>
                     
                     <div className="space-y-4">
