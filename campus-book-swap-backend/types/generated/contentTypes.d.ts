@@ -749,7 +749,7 @@ export interface ApiWishlistWishlist extends Schema.CollectionType {
     singularName: 'wishlist';
   };
   options: {
-    draftAndPublish: false;
+    draftAndPublish: true;
   };
   attributes: {
     book: Attribute.Relation<
