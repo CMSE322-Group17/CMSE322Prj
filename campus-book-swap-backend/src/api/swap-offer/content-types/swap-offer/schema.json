@@ -45,11 +45,19 @@
         "accepted",
         "declined",
         "completed"
-      ]
+      ],
+      "default": "pending",
+      "required": true
     },
     "timestamp": {
       "type": "datetime",
       "required": true
+    },
+    "messageToOwner": {
+      "type": "text"
+    },
+    "messageToRequester": {
+      "type": "text"
     }
   }
 }
