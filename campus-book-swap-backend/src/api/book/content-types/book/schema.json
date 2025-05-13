@@ -126,6 +126,22 @@
       "relation": "oneToMany",
       "target": "api::wishlist.wishlist",
       "mappedBy": "book"
+    },
+    "Display": {
+      "type": "boolean",
+      "default": false
+    },
+    "swapOffersAsRequested": {
+      "type": "relation",
+      "relation": "oneToMany",
+      "target": "api::swap-offer.swap-offer",
+      "mappedBy": "requestedBook"
+    },
+    "swapOffersAsOffered": {
+      "type": "relation",
+      "relation": "oneToMany",
+      "target": "api::swap-offer.swap-offer",
+      "mappedBy": "offeredBooks"
     }
   }
 }
