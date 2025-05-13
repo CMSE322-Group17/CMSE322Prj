@@ -9,27 +9,21 @@ import MessageList from '../components/Message/MessageList';
 import MessageInput from '../components/Message/MessageInput';
 import ChatHeader from '../components/Message/ChatHeader';
 import messageAPI from '../services/messageAPI';
+import { bookAPI } from '../services/api';
 
-const SellerChat = () => {  const { sellerId, bookId } = useParams();
+const SellerChat = () => {  
+  const { sellerId, bookId } = useParams();
   const { user, authAxios, isAuthenticated } = useAuth();
   // We might need cart functionality later but we're not using it now
   // const { addToCart } = useCart();
-  const { 
-    messages, 
-    sendMessage, 
-    fetchMessages, 
-    loading,
-    error: messageError,
-    setError: setMessageError
-  } = useMessage();
+  const { messages, sendMessage, fetchMessages, loading, startSwapOffer } = useMessage();
   
   const [seller, setSeller] = useState(null);
   const [book, setBook] = useState(null);
-  // For future features - keeping these state variables commented for potential future implementation
-  // const [userBooks, setUserBooks] = useState([]);
-  // const [showSwapModal, setShowSwapModal] = useState(false);
-  // const [selectedUserBooks, setSelectedUserBooks] = useState([]);
-  // const [swapStatus, setSwapStatus] = useState('none'); // none, pending, accepted, declined
+  const [userBooks, setUserBooks] = useState([]);
+  const [showSwapModal, setShowSwapModal] = useState(false);
+  const [selectedOfferBookIds, setSelectedOfferBookIds] = useState([]);
+  const [offerSent, setOfferSent] = useState(false);
   
   const navigate = useNavigate();
 
