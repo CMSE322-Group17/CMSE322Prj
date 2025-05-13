@@ -1,8 +1,10 @@
-import { useState, useEffect } from 'react';
+// filepath: /Users/forlary/Desktop/Projects/CMSE322Project/campus-book-swap/src/pages/Home.jsx
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import { bookAPI } from '../services/api';
 import { useAuth } from '../contexts/AuthContext';
 import BookCard from '../components/BookCard';
+import BookDetails from '../components/BookDetails'; // Added import
 
 const Home = () => {
   // Auth hook must be called at the top level of your function component
