@@ -831,7 +831,6 @@ const BooksPage = () => {
               </div>
             )}
             
-            {/* Pagination */}
             {filteredBooks.length > 0 && (
               <div className="flex justify-center mt-8">
                 <nav className="relative z-0 inline-flex rounded-md shadow-sm -space-x-px" aria-label="Pagination">
