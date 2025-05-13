@@ -12,8 +12,6 @@ const Messages = () => {
   const { 
     conversations, 
     messages, 
-    activeConversation,
-    unreadCount,
     loading, 
     error,
     fetchConversations,
