@@ -692,7 +692,7 @@ const Home = () => {
           
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {popularBooks.slice(0, 6).map(book => (
-              <BookCard key={book.id} book={book} onClick={() => setSelectedBook(book)} />
+              <BookCard key={book.id} book={book} onClick={() => handleSelectBook(book)} />
             ))}
           </div>
           
