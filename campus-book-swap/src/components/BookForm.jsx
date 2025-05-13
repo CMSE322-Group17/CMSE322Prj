@@ -463,13 +463,14 @@ const BookForm = ({ onSuccess, bookToEdit = null }) => {
               onChange={handleImageChange}
               accept="image/*"
               className="w-full p-2 border border-gray-300 rounded"
-              required={!bookToEdit}
+              required={false}
             />
             {coverPreview && (
               <div className="mt-2">
                 <img src={coverPreview} alt="Cover preview" className="h-32 object-contain" />
               </div>
             )}
+            <p className="text-sm text-gray-500 mt-1">Optional: You can upload a cover image for your book</p>
           </div>
           
 {/*          <div className="md:col-span-2">
