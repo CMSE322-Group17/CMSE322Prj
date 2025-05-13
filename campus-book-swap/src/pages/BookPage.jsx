@@ -20,26 +20,6 @@ const BooksPage = () => {
   });
   const [selectedBook, setSelectedBook] = useState(null);
 
-  // Style map for book type badges
-  const typeStyles = {
-    'For Sale': 'bg-green-100 text-green-800 border-green-200',
-    'For Swap': 'bg-blue-100 text-blue-800 border-blue-200'
-  };
-  
-  // Icons for book types
-  const typeIcons = {
-    'For Sale': (
-      <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-      </svg>
-    ),
-    'For Swap': (
-      <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
-      </svg>
-    )
-  };
-
   // 2. BookDetails popup component 
   const BookDetails = ({ book, onClose }) => {
     // State for active tab
