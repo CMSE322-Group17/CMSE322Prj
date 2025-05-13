@@ -925,9 +925,9 @@ const Dashboard = () => {
                             <div className="ml-4 flex-grow">
                               <div className="flex justify-between">
                                 <h4 className="font-medium text-gray-800">
-                                  {swap.isUserBuyer ? 
-                                    `You requested to swap with ${swap.otherUser?.username}` : 
-                                    `${swap.otherUser?.username} wants to swap with you`}
+                                  {swap.isUserRequester ? 
+                                    `Your offer to ${swap.otherUser?.username || 'user'}` : 
+                                    `Offer from ${swap.otherUser?.username || 'user'}`}
                                 </h4>
                                 <span className="text-xs text-gray-500">
                                   {formatDate(swap.timestamp)}
