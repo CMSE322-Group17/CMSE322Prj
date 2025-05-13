@@ -253,7 +253,6 @@ const Dashboard = () => {
         role: 'buyer'
       })) || [];
       
-      // Process swaps data (minimal processing - we'll do full processing later)
       const swaps = swapsResponse.data.data?.map(swap => ({
         id: `swap-${swap.id}`,
         type: 'swap',
