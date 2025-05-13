@@ -49,7 +49,10 @@
       "type": "string"
     },
     "seller": {
-      "type": "string"
+      "type": "relation",
+      "relation": "manyToOne",
+      "target": "plugin::users-permissions.user",
+      "inversedBy": "books"
     },
     "featured": {
       "type": "boolean",
