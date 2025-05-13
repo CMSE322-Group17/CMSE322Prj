@@ -500,8 +500,8 @@ const Dashboard = () => {
         });
       }
     } catch (err) {
-      console.error('Error responding to purchase request:', err);
-      setError('Failed to respond to purchase request');
+      console.error('Error responding to purchase request:', err.response ? err.response.data : err.message);
+      setError('Failed to respond to purchase request. ' + (err.response?.data?.error?.message || ''));
     }
   };
 
