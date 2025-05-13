@@ -655,12 +655,34 @@ export interface ApiSwapOfferSwapOffer extends Schema.CollectionType {
       'admin::user'
     > &
       Attribute.Private;
-    offerBookIds: Attribute.JSON & Attribute.Required;
+    messageToOwner: Attribute.Text;
+    messageToRequester: Attribute.Text;
+    offeredBooks: Attribute.Relation<
+      'api::swap-offer.swap-offer',
+      'manyToMany',
+      'api::book.book'
+    >;
+    owner: Attribute.Relation<
+      'api::swap-offer.swap-offer',
+      'manyToOne',
+      'plugin::users-permissions.user'
+    >;
     publishedAt: Attribute.DateTime;
-    sellerId: Attribute.String & Attribute.Required;
+    requestedBook: Attribute.Relation<
+      'api::swap-offer.swap-offer',
+      'manyToOne',
+      'api::book.book'
+    >;
+    requester: Attribute.Relation<
+      'api::swap-offer.swap-offer',
+      'manyToOne',
+      'plugin::users-permissions.user'
+    >;
     status: Attribute.Enumeration<
       ['pending', 'accepted', 'declined', 'completed']
-    >;
+    > &
+      Attribute.Required &
+      Attribute.DefaultTo<'pending'>;
     timestamp: Attribute.DateTime & Attribute.Required;
     updatedAt: Attribute.DateTime;
     updatedBy: Attribute.Relation<
