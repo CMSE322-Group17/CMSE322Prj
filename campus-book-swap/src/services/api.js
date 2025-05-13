@@ -472,3 +472,66 @@ export const transactionAPI = {
     }
   }
 };
+
+/**
+ * Swap Offer API endpoints
+ */
+export const swapOfferAPI = {
+  // Create a new swap offer record
+  createOffer: async ({ chatId, buyerId, sellerId, bookId, offerBookIds }) => {
+    return await fetchFromAPI('/api/swap-offers', {
+      method: 'POST',
+      data: { data: { chatId, buyerId, sellerId, bookId, offerBookIds, timestamp: new Date() } }
+    });
+  }
+};
+
+/**
+ * Wishlist API endpoints
+ */
+export const wishlistAPI = {
+  // Add a book to user's wishlist
+  addToWishlist: async (bookId) => {
+    const token = localStorage.getItem('token');
+    if (!token) {
+      throw new Error('User is not authenticated');
+    }
+    const payload = { data: { book: bookId } };
+    const response = await fetchFromAPI('/api/wishlists', {
+      method: 'POST',
+      data: payload,
+    });
+    // response.data is the created entry
+    const entry = response.data;
+    return { id: entry.id, book: entry.attributes.book.data.attributes };
+  },
+
+  // Get user's wishlist
+  getUserWishlist: async () => {
+    const token = localStorage.getItem('token');
+    if (!token) {
+      return [];
+    }
+    // include book relation
+    const response = await fetchFromAPI('/api/wishlists', {
+      method: 'GET',
+      params: { populate: 'book' }
+    });
+    const entries = response.data || [];
+    return entries.map(entry => ({
+      id: entry.id,
+      book: entry.attributes.book.data.attributes,
+    }));
+  },
+
+  // Remove a wishlist entry by ID
+  removeWishlistEntry: async (entryId) => {
+    const token = localStorage.getItem('token');
+    if (!token) {
+      throw new Error('User is not authenticated');
+    }
+    await fetchFromAPI(`/api/wishlists/${entryId}`, {
+      method: 'DELETE',
+    });
+  },
+};
