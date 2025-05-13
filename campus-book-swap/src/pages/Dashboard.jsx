@@ -363,7 +363,6 @@ const Dashboard = () => {
     try {
       await authAxios.delete(`${import.meta.env.VITE_API_URL}/api/books/${bookId}`);
       setMyBooks(myBooks.filter(book => book.id !== bookId));
-      // Refresh dashboard data to update statistics
       calculateStats();
     } catch (err) {
       console.error('Error deleting book:', err);
