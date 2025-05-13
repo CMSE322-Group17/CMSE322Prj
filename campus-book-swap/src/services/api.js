@@ -328,6 +328,15 @@ export const bookAPI = {
             error.response.data?.error?.message?.includes('users_permissions_user')) {
           console.error('User ID error detected. Make sure user is logged in and ID is valid.');
         }
+        
+        // Better logging for file upload issues
+        if (coverImage && error.response.status === 400) {
+          console.error('Possible file upload issue. Check file size and type:', coverImage.name, coverImage.type, coverImage.size);
+          // If this is a file issue, try to provide more details
+          if (error.response.data?.error?.details?.errors) {
+            console.error('File validation errors:', error.response.data.error.details.errors);
+          }
+        }
       }
       throw error;
     }
