@@ -45,8 +45,6 @@ const Dashboard = () => {
       await Promise.all([
         fetchMyBooks(),
         fetchPendingSwaps(),
-        fetchPendingBorrows(),
-        fetchBorrowedBooks(), // Keeping as a placeholder that returns empty array
         fetchTransactionHistory(),
         fetchPendingPurchaseRequests(),
         calculateStats()
