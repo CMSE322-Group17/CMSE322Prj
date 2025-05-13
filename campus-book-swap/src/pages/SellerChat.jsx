@@ -255,6 +255,55 @@ const SellerChat = () => {
           onMessageSent={handleSendMessage}
         />
       </div>
+
+      {/* Swap Offer Modal */}
+      {showSwapModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white p-6 rounded shadow-lg w-96">
+            {/* Show target book info */}
+            <div className="flex mb-4 items-center">
+              {book && book.attributes?.cover?.data && (
+                <img
+                  src={`${import.meta.env.VITE_API_URL}${book.attributes.cover.data.attributes.url}`}
+                  alt={book.attributes.title}
+                  className="w-12 h-16 object-cover rounded mr-3"
+                />
+              )}
+              <h3 className="text-lg font-bold">Offer your books for "{book?.attributes?.title}"</h3>
+            </div>
+            <div className="space-y-2 max-h-60 overflow-y-auto mb-4">
+              {userBooks.map(bookItem => (
+                <label key={bookItem.id} className="flex items-center">
+                  <input
+                    type="checkbox"
+                    value={bookItem.id}
+                    onChange={e => {
+                      const id = bookItem.id;
+                      setSelectedOfferBookIds(prev =>
+                        e.target.checked ? [...prev, id] : prev.filter(x => x !== id)
+                      );
+                    }}
+                  />
+                  <span className="ml-2">{bookItem.attributes?.title || bookItem.title}</span>
+                </label>
+              ))}
+            </div>
+            <div className="flex justify-end space-x-2">
+              <button onClick={() => setShowSwapModal(false)} className="px-3 py-1">Cancel</button>
+              <button
+                disabled={loading.sending || selectedOfferBookIds.length === 0}
+                onClick={async () => {
+                  await startSwapOffer({ chatId, offerBookIds: selectedOfferBookIds });
+                  setShowSwapModal(false);
+                  setOfferSent(true);
+                  setTimeout(() => setOfferSent(false), 3000);
+                }}
+                className={`px-3 py-1 rounded ${loading.sending || selectedOfferBookIds.length === 0 ? 'bg-gray-400 cursor-not-allowed' : 'bg-green-600 text-white hover:bg-green-700'}`}
+              >{loading.sending ? 'Sending...' : 'Send Offer'}</button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
