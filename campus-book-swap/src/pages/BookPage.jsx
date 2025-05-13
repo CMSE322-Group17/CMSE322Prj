@@ -523,14 +523,14 @@ const BooksPage = () => {
             exchange: bookData.exchange,
             subject: bookData.subject || "General",
             course: bookData.course,
-            seller: bookData.seller || "Campus BookShop",
+            actualSellerId: actualSellerId,
+            sellerName: sellerName,
             cover: coverUrl,
-            // Only set price for "For Sale" books
-            price: bookType === 'For Sale' ? Math.floor(Math.random() * 25) + 5 + 0.99 : null,
+            price: bookType === 'For Sale' ? (bookData.price !== undefined ? parseFloat(bookData.price) : (Math.floor(Math.random() * 25) + 5 + 0.99)) : null,
             categoryId: bookData.category?.data?.id || null,
-            inStock: Math.floor(Math.random() * 10) + 1,
-            isNew: Math.random() > 0.5,
-            bookType: bookType // Add the book type
+            inStock: bookData.inStock !== undefined ? bookData.inStock : (Math.floor(Math.random() * 10) + 1),
+            isNew: bookData.isNew !== undefined ? bookData.isNew : (Math.random() > 0.5),
+            bookType: bookType 
           };
         });
         
