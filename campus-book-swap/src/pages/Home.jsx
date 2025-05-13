@@ -778,7 +778,17 @@ const Home = () => {
       
       {/* Book Details Modal */}
       {selectedBook && (
-        <BookDetails book={selectedBook} onClose={() => setSelectedBook(null)} />
+        <div 
+          className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50 p-4"
+          onClick={handleCloseBookDetails} // Close on overlay click
+        >
+          <div 
+            className="bg-white p-6 rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto animate-fadeIn"
+            onClick={(e) => e.stopPropagation()} // Prevent closing when clicking inside the modal
+          >
+            <BookDetails book={selectedBook} onClose={handleCloseBookDetails} />
+          </div>
+        </div>
       )}
     </div>
   );
