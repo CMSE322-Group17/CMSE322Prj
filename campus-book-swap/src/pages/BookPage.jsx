@@ -887,7 +887,6 @@ const BooksPage = () => {
         </div>
       </div>
       
-      {/* Book Details Popup */}
       {selectedBook && (
         <BookDetails book={selectedBook} onClose={() => setSelectedBook(null)} />
       )}
