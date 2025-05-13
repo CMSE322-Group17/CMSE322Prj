@@ -166,16 +166,23 @@ const BooksPage = () => {
                     onClick={() => handleActionClick('primary')}
                     className="w-full py-2 px-4 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
                   >
-                    {actions[book.bookType].primary}
+                    {book.bookType === 'For Sale' ? 'Add to Cart' : 'Propose Swap'}
                   </button>
                   <button 
                     onClick={() => handleActionClick('secondary')}
                     className="w-full py-2 px-4 bg-gray-100 text-gray-800 rounded-lg hover:bg-gray-200 transition-colors"
                   >
-                    {actions[book.bookType].secondary}
+                    {book.bookType === 'For Sale' ? 'Make Offer' : 'View Wishlist'}
                   </button>
                   <button 
-                    onClick={() => navigate(`/chat/${seller.id}/${book.id}`)}
+                    onClick={() => {
+                      if (book.actualSellerId) {
+                        navigate(`/chat/${book.actualSellerId}/${book.id}`);
+                      } else {
+                        console.error("Actual Seller ID is missing for this book.");
+                        alert("Cannot message seller: Seller information is missing.");
+                      }
+                    }}
                     className="w-full py-2 px-4 border border-gray-300 text-gray-600 rounded-lg hover:bg-gray-50 transition-colors flex items-center justify-center gap-2"
                   >
                     <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
