@@ -483,6 +483,16 @@ const NavBar = () => {
                 >
                   Messages {unreadCount > 0 && `(${unreadCount})`}
                 </Link>
+                <Link
+                  to="/wishlist"
+                  className={`block px-3 py-2 text-base font-medium rounded-md ${
+                    location.pathname === "/wishlist"
+                      ? "bg-blue-50 text-blue-600"
+                      : "text-gray-700 hover:bg-gray-100"
+                  }`}
+                >
+                  Wishlist
+                </Link>
                 <button
                   onClick={handleLogout}
                   className="block w-full text-left px-3 py-2 text-base font-medium text-red-600 hover:bg-gray-100 rounded-md"
