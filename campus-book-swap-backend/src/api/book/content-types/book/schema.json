@@ -77,10 +77,11 @@
         "images"
       ]
     },
-    "category": {
+    "categories": {
       "type": "relation",
-      "relation": "oneToOne",
-      "target": "api::category.category"
+      "relation": "oneToMany",
+      "target": "api::category.category",
+      "mappedBy": "book"
     },
     "likes": {
       "type": "relation",
