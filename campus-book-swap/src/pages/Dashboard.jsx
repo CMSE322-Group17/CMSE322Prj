@@ -384,44 +384,83 @@ const Dashboard = () => {
     calculateStats();
   };
 
-  // Handle responding to a swap request
-  const handleSwapResponse = async (swapId, accept) => {
+  // Handle responding to a swap request (accept, decline, or cancel)
+  const handleSwapResponse = async (swapId, action) => {
+    const swap = pendingSwaps.find(s => s.id === swapId);
+    if (!swap) {
+      console.error('Swap offer not found in local state');
+      setError('Could not process swap response: offer not found.');
+      return;
+    }
+
+    let payload = { status: action };
+    let notificationMessage = '';
+    let targetUserId = null;
+
+    if (action === 'accepted') {
+      if (swap.isUserRequester) return;
+      payload.messageToRequester = "I've accepted your swap offer! Let's coordinate the exchange.";
+      notificationMessage = payload.messageToRequester;
+      targetUserId = swap.requester?.id;
+    } else if (action === 'declined') {
+      if (swap.isUserRequester) return;
+      payload.messageToRequester = "I'm sorry, but I have to decline your swap offer at this time.";
+      notificationMessage = payload.messageToRequester;
+      targetUserId = swap.requester?.id;
+    } else if (action === 'cancelled') {
+      if (!swap.isUserRequester) return;
+      payload.messageToOwner = "I've cancelled my swap offer.";
+      notificationMessage = payload.messageToOwner;
+      targetUserId = swap.owner?.id;
+    }
+
     try {
-      // Update the swap offer status
-      await authAxios.put(`${import.meta.env.VITE_API_URL}/api/swap-offers/${swapId}`, {
-        data: {
-          status: accept ? 'accepted' : 'declined'
-        }
-      });
+      console.log(`Updating swap offer ${swapId} with status: ${action}`);
+      console.log('Payload:', payload);
       
-      // Refresh pending swaps
-      fetchPendingSwaps();
+      // Update the swap offer status via API
+      const response = await swapOfferAPI.updateSwapOfferStatus(swapId, payload);
+      console.log('Update response:', response);
       
-      // Update the stats
-      calculateStats();
+      // Refresh the UI
+      await fetchPendingSwaps();
+      await calculateStats();
       
-      // Send a message notification
-      const swap = pendingSwaps.find(s => s.id === swapId);
-      if (swap) {
-        const message = accept
-          ? "I've accepted your swap offer! Let's coordinate to exchange the books."
-          : "I'm sorry, but I've declined your swap offer.";
+      // Send notification message if there's a chat
+      if (notificationMessage && targetUserId && swap.chatId && swap.requestedBookDetails?.id) {
+        console.log('Sending notification message to chat:', {
+          chatId: swap.chatId,
+          senderId: user.id,
+          receiverId: targetUserId,
+          bookId: swap.requestedBookDetails.id,
+          text: notificationMessage,
+          messageType: `swap_${action}`
+        });
         
+        // Create a notification message in the chat
         await authAxios.post(`${import.meta.env.VITE_API_URL}/api/messages`, {
           data: {
-            chatId: `${swap.buyerId}_${swap.sellerId}_${swap.bookId}`,
-            senderId: user.id,
-            receiverId: swap.isUserBuyer ? swap.sellerId : swap.buyerId,
-            bookId: swap.bookId,
-            text: message,
+            ChatId: swap.chatId, // Make sure the field name matches the schema
+            sender: { id: user.id },
+            receiver: { id: targetUserId },
+            book: { id: swap.requestedBookDetails.id },
+            text: notificationMessage,
             timestamp: new Date().toISOString(),
-            messageType: accept ? 'swap_accepted' : 'swap_declined'
+            messageType: `swap_${action}`,
+            read: false
           }
         });
+        
+        // Show success message to the user
+        alert(`Swap offer ${action}. A notification has been sent to the other user.`);
+      } else {
+        // Show basic success message
+        alert(`Swap offer ${action} successfully.`);
       }
     } catch (err) {
-      console.error('Error responding to swap request:', err);
-      setError('Failed to respond to swap request');
+      console.error(`Error ${action} swap request:`, err.response ? err.response.data : err.message);
+      setError(`Failed to ${action} swap request. ` + (err.response?.data?.error?.message || ''));
+      alert(`Failed to ${action} swap request. Please try again.`);
     }
   };
 
