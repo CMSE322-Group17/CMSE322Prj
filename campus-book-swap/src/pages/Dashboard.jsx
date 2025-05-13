@@ -960,43 +960,50 @@ const Dashboard = () => {
                                   </div>
                                   
                                   <div className="ml-3">
-                                    <h5 className="font-medium text-gray-800">{swap.book?.attributes?.title}</h5>
-                                    <p className="text-sm text-gray-500">{swap.book?.attributes?.author}</p>
+                                    <h5 className="font-medium text-gray-800">{swap.requestedBookDetails?.title}</h5>
+                                    <p className="text-sm text-gray-500">by {swap.requestedBookDetails?.author}</p>
                                   </div>
                                 </div>
                               </div>
                               
-                              {swap.isUserBuyer ? (
-                                <div className="mt-2 flex space-x-2">
-                                  <Link
-                                    to={`/chat/${swap.sellerId}/${swap.bookId}`}
-                                    className="px-3 py-1.5 bg-blue-600 text-white text-sm rounded hover:bg-blue-700"
-                                  >
-                                    View in Messages
-                                  </Link>
-                                </div>
-                              ) : (
-                                <div className="mt-2 flex space-x-2">
-                                  <button 
-                                    onClick={() => handleSwapResponse(swap.id, true)}
-                                    className="px-3 py-1.5 bg-blue-600 text-white text-sm rounded hover:bg-blue-700"
-                                  >
-                                    Accept Swap
-                                  </button>
-                                  <button 
-                                    onClick={() => handleSwapResponse(swap.id, false)}
-                                    className="px-3 py-1.5 bg-white border border-gray-300 text-gray-700 text-sm rounded hover:bg-gray-50"
-                                  >
-                                    Decline
-                                  </button>
+                              <div className="mt-3 flex space-x-2 items-center">
+                                {swap.isUserRequester ? (
+                                  <>
+                                    <button 
+                                      onClick={() => handleSwapResponse(swap.id, 'cancelled')}
+                                      className="px-3 py-1.5 bg-red-500 text-white text-sm rounded hover:bg-red-600"
+                                    >
+                                      Cancel Offer
+                                    </button>
+                                    <span className="text-xs text-gray-500 italic">Waiting for response</span>
+                                  </>
+                                ) : (
+                                  <>
+                                    <button 
+                                      onClick={() => handleSwapResponse(swap.id, 'accepted')}
+                                      className="px-3 py-1.5 bg-blue-600 text-white text-sm rounded hover:bg-blue-700"
+                                    >
+                                      Accept Offer
+                                    </button>
+                                    <button 
+                                      onClick={() => handleSwapResponse(swap.id, 'declined')}
+                                      className="px-3 py-1.5 bg-white border border-gray-300 text-gray-700 text-sm rounded hover:bg-gray-50"
+                                    >
+                                      Decline
+                                    </button>
+                                  </>
+                                )}
+                                {swap.chatId ? (
                                   <Link 
-                                    to={`/chat/${swap.buyerId}/${swap.bookId}`}
+                                    to={`/messages?chatId=${swap.chatId}`}
                                     className="px-3 py-1.5 bg-gray-100 text-gray-700 text-sm rounded hover:bg-gray-200 ml-auto"
                                   >
                                     View Chat
                                   </Link>
-                                </div>
-                              )}
+                                ) : (
+                                  <span className="text-xs text-gray-500 ml-auto">No chat available</span>
+                                )}
+                              </div>
                             </div>
                           </div>
                         </div>
