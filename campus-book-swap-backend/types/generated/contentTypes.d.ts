@@ -531,6 +531,7 @@ export interface ApiCategoryCategory extends Schema.CollectionType {
 export interface ApiMessageMessage extends Schema.CollectionType {
   collectionName: 'messages';
   info: {
+    description: '';
     displayName: 'Message';
     pluralName: 'messages';
     singularName: 'message';
