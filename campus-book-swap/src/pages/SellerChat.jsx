@@ -248,10 +248,15 @@ const SellerChat = () => {
 
         {/* Chat messages and input */}
         <div className="chat-actions mb-4 flex justify-between">
-          <button
-            onClick={() => setShowSwapModal(true)}
-            className="px-3 py-1 bg-indigo-600 text-white rounded hover:bg-indigo-700"
-          >Propose Swap</button>
+          {!isCurrentUserBookOwner && book?.attributes?.bookType === 'For Swap' && (
+            <button
+              onClick={() => setShowSwapModal(true)}
+              className="px-3 py-1 bg-indigo-600 text-white rounded hover:bg-indigo-700"
+            >
+              Propose Swap
+            </button>
+          )}
+          {/* Placeholder for future actions like accept/decline if isCurrentUserBookOwner */}
         </div>
         <MessageList 
           messages={messages}
