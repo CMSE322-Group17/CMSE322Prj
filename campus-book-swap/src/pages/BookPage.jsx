@@ -257,24 +257,23 @@ const BooksPage = () => {
                 </div>
               )}
               
-              {/* Seller Information Tab */}
               {activeTab === 'seller' && (
                 <div>
                   <div className="flex items-center mb-6">
                     <div className="bg-blue-100 rounded-full w-16 h-16 flex items-center justify-center text-blue-600 text-xl font-bold">
-                      {seller.name.substring(0, 1)}
+                      {(sellerDetails?.name || book.sellerName || "S").substring(0, 1)}
                     </div>
                     <div className="ml-4">
-                      <h3 className="font-medium text-lg">{seller.name}</h3>
+                      <h3 className="font-medium text-lg">{sellerDetails?.name || book.sellerName || "Seller"}</h3>
                       <div className="flex items-center">
                         <div className="flex">
                           {[1, 2, 3, 4, 5].map(star => (
-                            <span key={star} className={star <= Math.floor(seller.rating) ? "text-yellow-400" : "text-gray-300"}>★</span>
+                            <span key={star} className={star <= Math.floor(sellerDetails?.rating || book.sellerRating || 0) ? "text-yellow-400" : "text-gray-300"}>★</span>
                           ))}
                         </div>
-                        <span className="text-gray-500 text-xs ml-2">{seller.rating.toFixed(1)} ({seller.transactions} transactions)</span>
+                        <span className="text-gray-500 text-xs ml-2">{(sellerDetails?.rating || book.sellerRating || 0).toFixed(1)} ({(sellerDetails?.transactions || book.sellerTransactions || 0)} transactions)</span>
                       </div>
-                      <p className="text-sm text-gray-500">Member since {seller.joinedDate}</p>
+                      <p className="text-sm text-gray-500">Member since {sellerDetails?.joinedDate || book.sellerJoinedDate || "N/A"}</p>
                     </div>
                   </div>
                   
