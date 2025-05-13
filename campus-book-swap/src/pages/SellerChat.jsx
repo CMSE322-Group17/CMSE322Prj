@@ -27,6 +27,9 @@ const SellerChat = () => {
   
   const navigate = useNavigate();
 
+  // Determine if the current user is the owner of the book in context
+  const isCurrentUserBookOwner = user?.id && book?.attributes?.user?.data?.id && user.id === book.attributes.user.data.id;
+
   // Create a chat ID
   const chatId = user && user.id ? messageAPI.createChatId(user.id, sellerId, bookId) : null;
 
