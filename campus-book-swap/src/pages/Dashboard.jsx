@@ -262,26 +262,20 @@ const Dashboard = () => {
         role: swap.attributes.buyerId === user.id ? 'requester' : 'provider'
       })) || [];
       
-      // Combine all transactions and sort by date
       const allTransactions = [...sales, ...swaps].sort((a, b) => 
         new Date(b.date) - new Date(a.date)
       );
       
-      // Now enrich the transactions with full details
       const enrichedTransactions = await Promise.all(allTransactions.map(async (transaction) => {
         try {
           if (transaction.type === 'purchase') {
-            // For purchases, we already have most details
-            // We could fetch more book details here if needed
             return transaction;
           } 
           else if (transaction.type === 'swap') {
-            // For swaps, fetch the main book details
             const bookResponse = await authAxios.get(
               `${import.meta.env.VITE_API_URL}/api/books/${transaction.bookId}?populate=*`
             );
             
-            // Determine the other user
             const otherUserId = transaction.role === 'requester' ? 
               transaction.sellerId : transaction.buyerId;
             
