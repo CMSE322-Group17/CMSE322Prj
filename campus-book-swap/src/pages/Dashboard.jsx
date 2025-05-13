@@ -346,8 +346,6 @@ const Dashboard = () => {
         pendingSwapsResponse.data.meta.pagination.total + 
         pendingPurchasesResponse.data.meta.pagination.total;
       
-      // For earnings and savings, we would need more detailed calculation
-      // Using mock values for demonstration
       mockStats.totalEarnings = 142.50;
       mockStats.savedBySwapping = 87.25;
       
