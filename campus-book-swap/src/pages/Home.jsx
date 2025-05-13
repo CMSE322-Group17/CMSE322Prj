@@ -314,28 +314,28 @@ const Home = () => {
                 <div className="absolute bottom-0 right-8 w-40 h-56 bg-blue-600 rounded-lg shadow-xl transform rotate-3 z-20"></div>
                 <div className="absolute bottom-0 right-4 w-40 h-56 bg-indigo-500 rounded-lg shadow-xl transform -rotate-3 z-30"></div>
                 <div className="absolute bottom-0 right-0 w-40 h-56 bg-blue-400 rounded-lg shadow-2xl z-40 overflow-hidden">
-                  {featuredBooks && featuredBooks.length > 0 && featuredBooks[0].cover ? (
+                  {featuredBooks && featuredBooks.length > 0 && featuredBooks[currentSlide] && featuredBooks[currentSlide].cover ? (
                     <img 
-                      src={featuredBooks[0].cover} 
-                      alt={featuredBooks[0].title || "Featured Book"} 
+                      src={featuredBooks[currentSlide].cover} 
+                      alt={featuredBooks[currentSlide].title || "Featured Book"} 
                       className="w-full h-full object-cover"
                       onError={(e) => {
                         e.target.onerror = null;
-                        e.target.src = null;
-                        e.target.parentElement.classList.add('bg-gradient-to-br', 'from-blue-400', 'to-blue-600');
+                        e.target.src = null; // Prevent infinite loop if fallback also fails
+                        e.target.parentElement.classList.add('bg-gradient-to-br', 'from-blue-400', 'to-blue-600', 'flex', 'items-center', 'justify-center');
                         e.target.parentElement.innerHTML = `
-                          <div class="font-serif text-white text-center">
+                          <div class="font-serif text-white text-center p-4">
                             <div class="text-lg font-bold">Featured</div>
-                            <div class="text-sm mt-2">Book</div>
+                            <div class="text-sm mt-2">Book Image Unavailable</div>
                           </div>
                         `;
                       }}
                     />
                   ) : (
                     <div className="w-full h-full bg-gradient-to-br from-blue-400 to-blue-600 flex items-center justify-center">
-                      <div className="font-serif text-white text-center">
+                      <div className="font-serif text-white text-center p-4">
                         <div className="text-lg font-bold">Featured</div>
-                        <div className="text-sm mt-2">Book</div>
+                        <div className="text-sm mt-2">{ (featuredBooks && featuredBooks.length > 0) ? "Book" : "Loading..."}</div>
                       </div>
                     </div>
                   )}
