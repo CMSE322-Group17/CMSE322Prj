@@ -438,10 +438,10 @@ const Home = () => {
         </div>
       </div>
     );
-  };
+  }, []);
   
   // Campus Stats Component
-  const CampusStatsSection = () => {
+  const CampusStatsSection = useCallback(() => {
     return (
       <div className="py-10 px-4 bg-blue-600 text-white">
         <div className="max-w-6xl mx-auto">
