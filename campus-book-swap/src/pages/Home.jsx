@@ -97,61 +97,85 @@ const Home = () => {
           return `${baseUrl}${path}`;
         }
       }
-      
       // Case 4: Direct object with formats
       if (imageData.formats) {
-        const format = 
-          imageData.formats.medium || 
-          imageData.formats.small || 
+        const format =
+          imageData.formats.medium ||
+          imageData.formats.small ||
           imageData.formats.thumbnail;
         if (format && format.url) {
           const path = format.url.startsWith('/') ? format.url : `/${format.url}`;
           return `${baseUrl}${path}`;
         }
-        
-        // Fallback to main URL if formats don't have URLs
-        if (imageData.url) {
+        if (imageData.url) { // Fallback to main URL if formats don't have URLs
           const path = imageData.url.startsWith('/') ? imageData.url : `/${imageData.url}`;
           return `${baseUrl}${path}`;
         }
       }
-      
       // Case 5: Direct URL property
       if (imageData.url) {
         const path = imageData.url.startsWith('/') ? imageData.url : `/${imageData.url}`;
         return `${baseUrl}${path}`;
       }
-      
       // Case 6: Array in data
       if (imageData.data) {
         const data = Array.isArray(imageData.data) ? imageData.data[0] : imageData.data;
         if (data) {
-          // With attributes (Strapi v4)
           if (data.attributes && data.attributes.url) {
             const path = data.attributes.url.startsWith('/') ? data.attributes.url : `/${data.attributes.url}`;
             return `${baseUrl}${path}`;
           }
-          // Direct URL
           if (data.url) {
             const path = data.url.startsWith('/') ? data.url : `/${data.url}`;
             return `${baseUrl}${path}`;
           }
         }
       }
-      
-      // Case 7: Handle direct hash/ext pattern
-      if (imageData.hash && imageData.ext) {
-        return `${baseUrl}/uploads/${imageData.hash}${imageData.ext}`;
-      }
-      
-      // Fallback
-      console.warn('Could not process image data:', imageData);
+      console.warn('Could not process image data in getStrapiMediaUrl:', imageData);
       return null;
     } catch (err) {
-      console.error('Error processing image URL:', err, imageData);
+      console.error('Error processing image URL in getStrapiMediaUrl:', err, imageData);
       return null;
     }
-  };
+  }, []);
+
+  // Book data mapping logic (aligned with BookPage.jsx for consistency)
+  const mapBooksData = useCallback((books) => {
+    if (!books || !Array.isArray(books)) return [];
+    return books.map(book => {
+      if (!book) return null;
+      const bookData = book.attributes || book;
+      let coverUrl = null;
+      if (bookData.cover) { // Assuming bookData.cover is the raw image data field
+        coverUrl = getStrapiMediaUrl(bookData.cover);
+      }
+      const bookType = bookData.bookType || (book.id % 2 === 0 ? 'For Sale' : 'For Swap');
+      const price = bookType === 'For Sale'
+        ? (bookData.price !== undefined ? bookData.price : (Math.floor(Math.random() * 25) + 5 + 0.99))
+        : null;
+      const isNew = bookData.isNew !== undefined ? bookData.isNew : (Math.random() > 0.5);
+
+      return {
+        id: book.id,
+        title: bookData.title,
+        author: bookData.author,
+        description: bookData.description,
+        rating: bookData.rating || (Math.random() * 2 + 3).toFixed(1),
+        voters: bookData.votersCount || Math.floor(Math.random() * 100) + 5, // Prefer votersCount
+        condition: bookData.condition || 'Good',
+        exchange: bookData.exchange,
+        subject: bookData.subject || 'General',
+        course: bookData.course,
+        seller: bookData.seller || 'Campus BookShop',
+        cover: coverUrl,
+        price: price,
+        // Aligning category structure with BookPage.jsx (using categoryName)
+        categoryName: bookData.category?.data?.attributes?.name || bookData.category?.name || "General",
+        isNew: isNew,
+        bookType,
+      };
+    }).filter(Boolean);
+  }, [getStrapiMediaUrl]);
 
   // Fetch all necessary data on component mount
   useEffect(() => {
