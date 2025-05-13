@@ -139,57 +139,25 @@ const messageSearch = {
   }
 };
 
-// Error recovery
+// Error recovery - Simplified: We will rely on Strapi's error responses primarily.
+// Specific recovery logic like token refresh is handled in interceptors.
 const errorRecovery = {
-  async recoverFromError(error, operation, retryData) {
-    console.error(`Error in ${operation}:`, error);
-
-    // Handle specific error cases
-    if (error.response?.status === 401) {
-      // Try to refresh token
-      try {
-        const refreshToken = localStorage.getItem('refreshToken');
-        if (refreshToken) {
-          const response = await axios.post(`${API_URL}/auth/refresh`, { refreshToken });
-          const { token } = response.data;
-          localStorage.setItem('token', token);
-          return true; // Retry the operation
-        }
-      } catch (refreshError) {
-        console.error('Token refresh failed:', refreshError);
-        return false;
-      }
-    }
-    
-    // Handle 400 errors (Bad Request) - may be due to malformed query parameters
-    if (error.response?.status === 400) {
-      console.error('Bad request error details:', error.response?.data);
-      // Don't retry automatically for bad request errors
-      return false;
-    }
-
-    // Handle network errors
+  async recoverFromError(_error, operationName) {
+    console.error(`Error in ${operationName}:`, _error.response ? _error.response.data : _error.message);
+    // Basic check for network error
     if (!navigator.onLine) {
-      if (operation === 'sendMessage' && retryData) {
-        messageQueue.add(retryData);
-        return true;
-      }
-      return false;
+      console.warn(`Network offline during ${operationName}. Message might be queued if applicable.`);
+      // For sendMessage, queuing is handled within the function itself.
+      return operationName === 'sendMessage'; // Indicate if queuing might have occurred
     }
-
-    // Handle server errors
-    if (error.response?.status >= 500) {
-      // Wait and retry
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      return true;
-    }
-
-    return false;
+    // For 401, interceptor handles refresh. For 400, it's usually a payload issue.
+    // For 5xx, interceptor handles retries.
+    return false; // Default to no automatic retry from here.
   }
 };
 
 // Message encryption
-const messageEncryption = {
+const _messageEncryption = {
   async encrypt(text) {
     try {
       // In a real app, you would use a proper encryption library
