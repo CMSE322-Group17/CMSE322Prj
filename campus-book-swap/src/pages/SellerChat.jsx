@@ -55,14 +55,16 @@ const SellerChat = () => {
         );
         setBook(bookResponse.data.data);
         
+        // Fetch buyer's own books for swap offers
+        if (user?.id) {
+          const res = await bookAPI.getUserBooks(user.id);
+          // res is Strapi wrapper: { data: [ ... ] }
+          setUserBooks(res.data || []);
+        }
+        
         // Fetch chat messages
         if (chatId) {
           fetchMessages(chatId);
-        }
-        
-        // Clear any message errors if needed
-        if (setMessageError) {
-          setMessageError(null);
         }
       } catch (err) {
         console.error('Error fetching chat data:', err);
