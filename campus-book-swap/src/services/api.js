@@ -42,19 +42,19 @@ export const fetchFromAPI = async (endpoint, options = {}) => {
 
     return response.data;
   } catch (error) {
+    // Fallback for missing wishlist endpoint
+    if (error.response && error.response.status === 404 && endpoint.includes('wishlists')) {
+      console.warn('Wishlist service returned 404, returning fallback data');
+      return { data: [] };
+    }
+
     console.error('API fetch error:', error);
-    
-    // Enhance error with details
     if (error.response) {
-      // The request was made and the server responded with a status code
-      // that falls out of the range of 2xx
       console.error('Error response status:', error.response.status);
       console.error('Error response data:', error.response.data);
     } else if (error.request) {
-      // The request was made but no response was received
       console.error('No response received:', error.request);
     }
-    
     throw error;
   }
 };
