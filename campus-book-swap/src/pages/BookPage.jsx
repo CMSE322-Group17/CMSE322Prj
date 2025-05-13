@@ -348,16 +348,13 @@ const BooksPage = () => {
         return true;
       })
       .sort((a, b) => {
-        // Sort books based on selected option
         switch (filters.sort) {
           case 'priceLow':
-            // Handle null prices (books that are not for sale)
             if (a.price === null && b.price === null) return 0;
             if (a.price === null) return 1;
             if (b.price === null) return -1;
             return a.price - b.price;
           case 'priceHigh':
-            // Handle null prices (books that are not for sale)
             if (a.price === null && b.price === null) return 0;
             if (a.price === null) return 1;
             if (b.price === null) return -1;
