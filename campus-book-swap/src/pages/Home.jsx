@@ -215,132 +215,33 @@ const Home = () => {
         setError(prev => ({ ...prev, booksOfWeek: err.message }));
         setLoading(prev => ({ ...prev, booksOfWeek: false }));
       }
-
-      try {
-        // Fetch books of the year
-        setLoading(prev => ({ ...prev, booksOfYear: true }));
-        const yearBooksData = await bookAPI.getBooksOfYear();
-        setBooksOfYear(mapBooksData(yearBooksData.data));
-        setLoading(prev => ({ ...prev, booksOfYear: false }));
-      } catch (err) {
-        console.error('Error fetching books of the year:', err);
-        setError(prev => ({ ...prev, booksOfYear: err.message }));
-        setLoading(prev => ({ ...prev, booksOfYear: false }));
-      }
     };
 
     fetchData();
-  }, []);
+  }, [mapBooksData]); // Only include mapBooksData in dependency array
 
   // Auto slide effect for featured books
   useEffect(() => {
     if (featuredBooks.length === 0 || selectedBook) return;
     
     const interval = setInterval(() => {
-      setCurrentSlide((prev) => (prev === featuredBooks.length - 1 ? 0 : prev + 1));
+      setCurrentSlide(prev => (prev === featuredBooks.length - 1 ? 0 : prev + 1));
     }, 5000);
     return () => clearInterval(interval);
   }, [featuredBooks.length, selectedBook]);
 
-  // Helper function to map Strapi data structure to component data structure
-  const mapBooksData = (books) => {
-    if (!books || !Array.isArray(books)) {
-      console.error('Invalid books data:', books);
-      return [];
-    }
+  // Handle setting selected book
+  const handleSelectBook = useCallback((book) => {
+    setSelectedBook(book);
+  }, []);
 
-    return books.map(book => {
-      if (!book) {
-        console.error('Invalid book data:', book);
-        return null;
-      }
-
-      // Handle both Strapi v4 format and flat structure
-      const bookData = book.attributes || book;
-      
-      // Process cover image with proper error handling
-      let coverUrl = null;
-      if (bookData.cover) {
-        coverUrl = getStrapiMediaUrl(bookData.cover);
-      }
-      
-      // Map book data
-      const mappedBook = {
-        id: book.id,
-        title: bookData.title,
-        author: bookData.author,
-        summary: bookData.description,
-        rating: bookData.rating,
-        voters: bookData.votersCount || 0,
-        condition: bookData.condition,
-        exchange: bookData.exchange,
-        subject: bookData.subject,
-        course: bookData.course,
-        seller: bookData.seller,
-        cover: coverUrl,
-        // Also use the same URL for img property
-        img: coverUrl,
-      };
-      
-      // Map display title for featured books
-      if (bookData.displayTitle) {
-        try {
-          // Try parsing if stored as JSON string
-          mappedBook.displayTitle = JSON.parse(bookData.displayTitle);
-        } catch (err) {
-          // Fallback: split by space if not valid JSON
-          console.log('Display title parse error:', err);
-          const parts = bookData.displayTitle.split(' ');
-          // If we have multiple parts, use first two, otherwise duplicate
-          if (parts.length > 1) {
-            mappedBook.displayTitle = [parts[0], parts.slice(1).join(' ')];
-          } else {
-            mappedBook.displayTitle = [bookData.displayTitle, bookData.displayTitle];
-          }
-        }
-      } else {
-        // Fallback display title from book title
-        const titleParts = bookData.title.split(' ');
-        if (titleParts.length > 1) {
-          mappedBook.displayTitle = [titleParts[0], titleParts.slice(1).join(' ')];
-        } else {
-          mappedBook.displayTitle = [bookData.title, 'Book'];
-        }
-      }
-      
-      // Map likes - handling both formats
-      mappedBook.likes = [];
-      if (bookData.likes) {
-        const likesData = bookData.likes.data || bookData.likes;
-        if (Array.isArray(likesData)) {
-          mappedBook.likes = likesData.map(like => {
-            // Handle both formats
-            const likeData = like.attributes || like;
-            const avatar = likeData.avatar?.data || likeData.avatar;
-            let avatarUrl = '';
-            
-            if (avatar) {
-              avatarUrl = getStrapiMediaUrl(avatar);
-            }
-              
-            return {
-              id: like.id,
-              name: likeData.username || 'User',
-              img: avatarUrl || null
-            };
-          });
-        }
-      }
-      
-      // For books of year/week - add name property for consistency
-      mappedBook.name = bookData.title;
-      
-      return mappedBook;
-    }).filter(Boolean); // Remove any null entries
-  };
+  // Handle closing book details
+  const handleCloseBookDetails = useCallback(() => {
+    setSelectedBook(null);
+  }, []);
 
   // COMPONENT: Hero Section with Centered Information
-  const HeroSection = () => {
+  const HeroSection = useCallback(() => {
     // Skip if no featured books or loading
     if (loading.featured) {
       return (
