@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react';
-import { Link, useParams } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import { bookAPI } from '../services/api';
 import { useAuth } from '../contexts/AuthContext';
+import BookCard from '../components/BookCard';
 
 const Home = () => {
   // Auth hook must be called at the top level of your function component
