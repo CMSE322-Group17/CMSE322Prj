@@ -431,26 +431,97 @@ export const MessageProvider = ({ children }) => {
   }, [isAuthenticated, activeConversation, fetchConversations]);
 
   // Function to start a swap offer
-  const startSwapOffer = useCallback(async ({ chatId, offerBookIds }) => {
-    if (!isAuthenticated || !userRef.current?.id || !chatId || !offerBookIds?.length) return;
-    // Indicate sending state
+  const startSwapOffer = useCallback(async ({ chatId, offerBookIds, messageToOwner }) => {
+    if (!isAuthenticated || !user?.id || !chatId || !offerBookIds?.length) {
+      console.error('Swap offer prerequisites not met:', { isAuthenticated, userId: user?.id, chatId, offerBookIds });
+      setError('Cannot start swap offer: missing required information.');
+      return null;
+    }
+
     setLoading(prev => ({ ...prev, sending: true }));
     try {
-      // Parse IDs from chatId: buyer_seller_book
-      const [buyerId, sellerId, bookId] = chatId.split('_');
-      // Create swap-offer record
-      await swapOfferAPI.createOffer({ chatId, buyerId, sellerId, bookId, offerBookIds });
-      // Send a swap_offer message
-      await messageAPI.sendMessage({ chatId, senderId: buyerId, receiverId: sellerId, bookId, text: 'Swap offer sent', messageType: 'swap_offer' });
-      // Refresh conversations
-      fetchConversations();
+      const parts = chatId.split('_');
+      if (parts.length < 3) {
+        console.error('Invalid chatId format for swap offer:', chatId);
+        setError('Cannot start swap offer: invalid chat ID format. Expected senderId_receiverId_bookId.');
+        return null;
+      }
+
+      const userId1 = parts[0];
+      const userId2 = parts[1];
+      const bookIdFromChat = parts[2];
+
+      let ownerId;
+      // The owner of the requestedBook is the other participant in the chat.
+      // The current user (user.id) is the requester of the swap.
+      if (user.id.toString() === userId1) {
+        ownerId = parseInt(userId2, 10);
+      } else if (user.id.toString() === userId2) {
+        ownerId = parseInt(userId1, 10);
+      } else {
+        console.error('Current user is not part of this chat:', { currentUserId: user.id, chatId });
+        setError('Cannot start swap offer: user not in chat.');
+        return null;
+      }
+
+      const requestedBookId = parseInt(bookIdFromChat, 10);
+
+      if (isNaN(ownerId) || isNaN(requestedBookId)) {
+          console.error('Failed to parse ownerId or requestedBookId from chatId:', { chatId, ownerId, requestedBookId });
+          setError('Cannot start swap offer: invalid participant or book ID in chat.');
+          return null;
+      }
+
+      // Log individual parts before constructing swapOfferData
+      console.log('Swap Offer Data Components:', {
+        owner: ownerId, // Corrected key to 'owner'
+        requestedBook: requestedBookId, // Corrected key to 'requestedBook'
+        offeredBooks: offerBookIds, // Corrected key to 'offeredBooks'
+        chatId: chatId, // Corrected key to 'chatId'
+        messageToOwner
+      });
+
+      const swapOfferData = {
+        owner: ownerId, 
+        requestedBook: requestedBookId, 
+        offeredBooks: offerBookIds.map(id => parseInt(id, 10)).filter(id => !isNaN(id)), 
+        chatId: chatId, 
+        ...(messageToOwner && { messageToOwner }), 
+      };
+
+      // This log helps verify the payload before sending
+      console.log('Attempting to create swap offer with payload:', JSON.stringify({ data: swapOfferData }, null, 2));
+
+      const response = await swapOfferAPI.createSwapOffer(swapOfferData);
+
+      if (response.data) {
+        // After successful swap offer creation, send a system message
+        await sendMessage({
+          chatId: swapOfferData.chatId,
+          senderId: userRef.current.id, // System message, but sender is the proposer
+          receiverId: swapOfferData.owner, // The owner of the requested book is the receiver
+          text: `Swap offer proposed for book ID ${swapOfferData.requestedBook}. You offered ${swapOfferData.offeredBooks.length} book(s).`,
+          messageType: 'swap_offer', // Changed from 'system_swap_offer'
+          swapOfferId: response.data.id,
+          isRead: false
+        });
+
+        await fetchConversations(); // Refresh conversations to show the new system message
+        return response.data;
+      }
+      
+      console.warn('Swap offer API call returned success but no data in response.');
+      return null; 
+
     } catch (err) {
-      console.error('Error starting swap offer:', err);
+      const errorMessage = err.response?.data?.error?.message || err.message || 'An unknown error occurred';
+      console.error('Error starting swap offer:', err.response ? err.response.data : err.message);
+      setError(`Failed to start swap offer: ${errorMessage}`);
+      return null;
     } finally {
-      // Reset sending state
       setLoading(prev => ({ ...prev, sending: false }));
     }
-  }, [isAuthenticated, fetchConversations]);
+  }, [isAuthenticated, user, fetchConversations, sendMessage, setError, setLoading]);
 
   // The exported context value
   const contextValue = {
