@@ -478,11 +478,50 @@ export const transactionAPI = {
  */
 export const swapOfferAPI = {
   // Create a new swap offer record
-  createOffer: async ({ chatId, buyerId, sellerId, bookId, offerBookIds }) => {
-    return await fetchFromAPI('/api/swap-offers', {
-      method: 'POST',
-      data: { data: { chatId, buyerId, sellerId, bookId, offerBookIds, timestamp: new Date() } }
-    });
+  createSwapOffer: async (swapOfferData) => {
+    // The backend controller expects data under a 'data' key in the body.
+    // It also automatically sets requester, status, and timestamp.
+    // Fields expected: owner (ID), requestedBook (ID), offeredBooks (array of IDs), chatId.
+    // Optional: messageToOwner.
+    try {
+      return await fetchFromAPI('/api/swap-offers', {
+        method: 'POST',
+        data: { data: swapOfferData } // Ensure payload is wrapped in { data: ... }
+      });
+    } catch (error) {
+      console.error('Error creating swap offer:', error.response ? error.response.data : error.message);
+      throw error;
+    }
+  },
+
+  // Get swap offers for the current authenticated user (both initiated and received)
+  getUserSwapOffers: async () => {
+    try {
+      // The backend controller's find method is customized to filter by current user
+      // and populate necessary relations.
+      return await fetchFromAPI('/api/swap-offers', {
+        method: 'GET',
+        // Params for populate are handled by the backend controller's find method by default
+        // if specific population is needed beyond default, it can be added here.
+      });
+    } catch (error) {
+      console.error('Error fetching user swap offers:', error.response ? error.response.data : error.message);
+      throw error;
+    }
+  },
+
+  // Update the status of a swap offer
+  updateSwapOfferStatus: async (offerId, statusUpdateData) => {
+    // statusUpdateData should be an object like { status: 'accepted', messageToRequester: '...' } or { status: 'cancelled', messageToOwner: '...' }
+    try {
+      return await fetchFromAPI(`/api/swap-offers/${offerId}/status`, {
+        method: 'PUT',
+        data: { data: statusUpdateData } // Ensure payload is wrapped in { data: ... }
+      });
+    } catch (error) {
+      console.error(`Error updating swap offer ${offerId} status:`, error.response ? error.response.data : error.message);
+      throw error;
+    }
   }
 };
 
