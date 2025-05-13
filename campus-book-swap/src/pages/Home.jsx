@@ -60,27 +60,23 @@ const Home = () => {
     .animate-slideInRight {
       animation: slideInRight 0.4s ease-out forwards;
     }
-  `;    // Helper function to get image URL from Strapi data
-  const getStrapiMediaUrl = (imageData) => {
+  `;
+  
+  // Helper function to get image URL from Strapi data (aligned with BookPage.jsx for consistency)
+  const getStrapiMediaUrl = useCallback((imageData) => {
     if (!imageData) return null;
-    
-    // Base URL (ensure it doesn't end with a slash)
-    const baseUrl = (import.meta.env.VITE_API_URL || 'http://localhost:1337').replace(/\/$/, '');
-    
+    // Using VITE_STRAPI_API_URL for consistency with the more robust function from BookPage.jsx
+    const baseUrl = (import.meta.env.VITE_STRAPI_API_URL || 'http://localhost:1337').replace(/\/$/, '');
     try {
       // Case 1: String URL
       if (typeof imageData === 'string') {
-        // Check if it's already an absolute URL
         if (imageData.startsWith('http')) return imageData;
-        // Make sure the path starts with a slash
         const path = imageData.startsWith('/') ? imageData : `/${imageData}`;
         return `${baseUrl}${path}`;
       }
-      
-      // Case 2: Plain array 
+      // Case 2: Plain array
       if (Array.isArray(imageData) && imageData.length > 0) {
         const firstImage = imageData[0];
-        // If the array item has a formats property
         if (firstImage.formats) {
           const format = firstImage.formats.medium || firstImage.formats.small || firstImage.formats.thumbnail;
           if (format && format.url) {
