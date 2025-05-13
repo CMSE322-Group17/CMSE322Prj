@@ -413,7 +413,8 @@ const NavBar = () => {
                   />
                 </svg>
               </div>
-            </div>
+              {isLoading && <div className="absolute right-3 top-3 text-gray-400">Loading...</div>}
+            </form>
           </div>
 
           {/* Mobile navigation links */}
