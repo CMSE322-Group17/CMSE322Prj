@@ -764,6 +764,7 @@ export interface ApiWishlistWishlist extends Schema.CollectionType {
       'admin::user'
     > &
       Attribute.Private;
+    publishedAt: Attribute.DateTime;
     updatedAt: Attribute.DateTime;
     updatedBy: Attribute.Relation<
       'api::wishlist.wishlist',
