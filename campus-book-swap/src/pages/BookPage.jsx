@@ -323,18 +323,15 @@ const BooksPage = () => {
     );
   };
 
-  // Filter and sort books based on user selections
   const getFilteredBooks = () => {
     if (!books || books.length === 0) return [];
     
     return books
       .filter(book => {
-        // Filter by condition
         if (filters.condition !== 'all' && book.condition !== filters.condition) {
           return false;
         }
         
-        // Filter by price range - only apply to "For Sale" books
         if (filters.priceRange !== 'all' && book.bookType === 'For Sale') {
           const price = book.price;
           if (!price) return false;
