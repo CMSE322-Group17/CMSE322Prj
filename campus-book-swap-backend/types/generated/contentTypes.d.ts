@@ -1135,6 +1135,11 @@ export interface PluginUsersPermissionsUser extends Schema.CollectionType {
       Attribute.SetMinMaxLength<{
         minLength: 6;
       }>;
+    initiatedSwapOffers: Attribute.Relation<
+      'plugin::users-permissions.user',
+      'oneToMany',
+      'api::swap-offer.swap-offer'
+    >;
     likedBooks: Attribute.Relation<
       'plugin::users-permissions.user',
       'manyToMany',
