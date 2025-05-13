@@ -31,7 +31,6 @@ const Home = () => {
     featured: null,
     popular: null,
     booksOfWeek: null,
-    booksOfYear: null
   });
 
   // Add scrollbar hiding and animations
