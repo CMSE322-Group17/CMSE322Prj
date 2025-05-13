@@ -1166,6 +1166,7 @@ declare module '@strapi/types' {
       'api::order.order': ApiOrderOrder;
       'api::swap-offer.swap-offer': ApiSwapOfferSwapOffer;
       'api::transaction.transaction': ApiTransactionTransaction;
+      'api::wishlist.wishlist': ApiWishlistWishlist;
       'plugin::content-releases.release': PluginContentReleasesRelease;
       'plugin::content-releases.release-action': PluginContentReleasesReleaseAction;
       'plugin::upload.file': PluginUploadFile;
