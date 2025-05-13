@@ -49,17 +49,15 @@ const BookDetail = () => {
   // Generate a course code (for demo purposes)
   const courseCode = book ? `${['CS', 'MATH', 'BIO', 'CHEM', 'ENG'][book.id % 5]}${101 + (book.id % 400)}` : '';
   
-  // Generate seller details (for demo purposes)
-  const seller = book ? {
-    id: book.id % 100 + 1, // Random ID for demo
-    name: book.seller || 'John Doe',
-    rating: (3 + (book.id % 3)) + (book.id % 10) / 10,
-    transactions: 5 + (book.id % 20),
-    responseTime: '< 1 hour',
-    joinedDate: 'Jan 2023',
-    location: 'North Campus Library'
-  } : {};
-  
+  // Use actual seller relation from backend
+  const sellerRelation = book?.users_permissions_user;
+  const seller = sellerRelation?.data
+    ? {
+        id: sellerRelation.data.id,
+        username: sellerRelation.data.attributes.username || 'Unknown Seller',
+      }
+    : {};
+
   // Actions based on book type
   const actions = {
     'For Sale': {
