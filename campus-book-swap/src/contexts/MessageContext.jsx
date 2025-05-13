@@ -46,7 +46,17 @@ export const MessageProvider = ({ children }) => {
         setNotificationsEnabled(permissionGranted);
       };
       checkNotificationPermission();
+      
+      // Connect WebSocket when user is authenticated
+      messageAPI.wsManager.connect(); 
     }
+
+    // Optional: Add a cleanup function if wsManager had a disconnect method
+    // return () => {
+    //   if (messageAPI.wsManager.connection && messageAPI.wsManager.connection.readyState === WebSocket.OPEN) {
+    //     // messageAPI.wsManager.disconnect(); // Assuming a disconnect method exists
+    //   }
+    // };
   }, [isAuthenticated]);
 
   // Reset state when user logs out
