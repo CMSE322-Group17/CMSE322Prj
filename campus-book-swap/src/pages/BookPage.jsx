@@ -688,7 +688,6 @@ const BooksPage = () => {
                 </div>
               </div>
               
-              {/* Price Range Filter - Only show if "For Sale" books are not filtered out */}
               {(filters.bookType === 'all' || filters.bookType === 'For Sale') && (
                 <div className="mb-6">
                   <h3 className="font-medium text-gray-700 mb-2">Price Range</h3>
