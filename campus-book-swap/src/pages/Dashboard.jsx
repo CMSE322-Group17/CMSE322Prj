@@ -153,13 +153,6 @@ const Dashboard = () => {
     }
   };
 
-
-  // Placeholder for fetchPendingBorrows (removed - not needed)
-  const fetchPendingBorrows = async () => {
-    // This functionality has been removed since borrowing is not needed
-    setPendingBorrows([]);
-  };
-
   // Fetch pending purchase requests
   const fetchPendingPurchaseRequests = async () => {
     try {
