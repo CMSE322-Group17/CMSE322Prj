@@ -795,6 +795,39 @@ const readReceiptManager = {
 };
 
 /**
+ * Create message via Strapi REST API
+ * @param {Object} messageData - { ChatId, senderId, receiverId, bookId, text, messageType, requestStatus }
+ */
+export const createMessage = async ({ ChatId, senderId, receiverId, bookId, text, messageType = 'general', requestStatus = 'pending' }) => {
+  try {
+    const response = await axios.post(
+      `${API_URL}/api/messages`,
+      {
+        data: {
+          ChatId,
+          sender: senderId,
+          receiver: receiverId,
+          book: bookId,
+          text,
+          timestamp: new Date(),
+          messageType,
+          requestStatus
+        }
+      },
+      {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem('token')}`
+        }
+      }
+    );
+    return response.data;
+  } catch (error) {
+    console.error('Error creating message:', error);
+    throw error;
+  }
+};
+
+/**
  * Message API service with real Strapi implementation
  */
 const messageAPI = {
