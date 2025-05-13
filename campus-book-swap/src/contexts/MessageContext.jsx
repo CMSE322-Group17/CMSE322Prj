@@ -536,7 +536,7 @@ export const MessageProvider = ({ children }) => {
     setActiveConversation,
     fetchConversations,
     fetchMessages,
-    sendMessage,
+    sendMessage, // Ensure sendMessage is correctly passed
     startSwapOffer,
     startConversation,
     createPurchaseRequest,
