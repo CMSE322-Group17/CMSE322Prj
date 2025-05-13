@@ -595,15 +595,12 @@ const Dashboard = () => {
         </div>
       </div>
       
-      {/* Dashboard Content */}
       <div className="bg-white rounded-lg shadow-md p-6">
-        {/* Overview Tab */}
         {activeTab === 'overview' && (
           <div>
             <div className="mb-6">
               <h2 className="text-xl font-semibold mb-4">Welcome, {user.username}!</h2>
               
-              {/* Stats Grid */}
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
                 <div className="bg-blue-50 p-4 rounded-lg">
                   <p className="text-blue-800 text-sm font-medium uppercase">My Books</p>
