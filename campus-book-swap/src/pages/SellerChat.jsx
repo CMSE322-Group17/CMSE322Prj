@@ -231,13 +231,23 @@ const SellerChat = () => {
           <h2 className="font-medium">Messages</h2>
         </div>
         
-        {/* Messages container */}
+        {offerSent && (
+          <div className="p-2 bg-green-100 text-green-800 text-center mb-4 rounded">
+            Swap offer sent successfully!
+          </div>
+        )}
+
+        {/* Chat messages and input */}
+        <div className="chat-actions mb-4 flex justify-between">
+          <button
+            onClick={() => setShowSwapModal(true)}
+            className="px-3 py-1 bg-indigo-600 text-white rounded hover:bg-indigo-700"
+          >Propose Swap</button>
+        </div>
         <MessageList 
           messages={messages}
           loading={loading.messages}
         />
-        
-        {/* Message input */}
         <MessageInput 
           chatId={chatId}
           receiverId={sellerId}
