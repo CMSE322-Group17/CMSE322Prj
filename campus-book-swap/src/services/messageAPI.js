@@ -373,10 +373,11 @@ const messageQueue = {
       await messageAPI.sendMessage(message);
       this.remove(message.id);
     } catch (error) {
+      console.error('Error processing message queue:', error);
       message.retryCount++;
       if (message.retryCount >= 3) {
         this.remove(message.id);
-        console.error('Message failed after 3 retries:', message);
+        console.error('Message failed after 3 retries and removed from queue:', message);
       }
     } finally {
       this.processing = false;
