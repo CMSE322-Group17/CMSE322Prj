@@ -419,8 +419,22 @@ export interface ApiBookBook extends Schema.CollectionType {
         number
       > &
       Attribute.DefaultTo<0>;
-    seller: Attribute.String;
+    seller: Attribute.Relation<
+      'api::book.book',
+      'manyToOne',
+      'plugin::users-permissions.user'
+    >;
     subject: Attribute.String;
+    swapOffersAsOffered: Attribute.Relation<
+      'api::book.book',
+      'oneToMany',
+      'api::swap-offer.swap-offer'
+    >;
+    swapOffersAsRequested: Attribute.Relation<
+      'api::book.book',
+      'oneToMany',
+      'api::swap-offer.swap-offer'
+    >;
     title: Attribute.String & Attribute.Required;
     transactions: Attribute.Relation<
       'api::book.book',
