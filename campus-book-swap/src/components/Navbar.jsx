@@ -130,12 +130,17 @@ const NavBar = () => {
             </div>
           </div>
 
-          {/* Search bar - can be toggled in responsive design */}
-          <div className="hidden md:flex flex-1 justify-center max-w-xs mx-4">
+          {/* Search bar - Desktop */}
+          <form
+            onSubmit={handleSearch}
+            className="hidden md:flex flex-1 justify-center max-w-xs mx-4"
+          >
             <div className="relative w-full">
               <input
                 type="text"
-                placeholder="Search books, courses..."
+                placeholder="Search books..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
                 className="w-full px-4 py-1 pl-10 pr-4 rounded-full bg-gray-100 border border-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
               />
               <div className="absolute left-3 top-2 text-gray-400">
