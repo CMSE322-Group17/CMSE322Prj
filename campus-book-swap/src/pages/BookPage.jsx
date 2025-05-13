@@ -134,7 +134,6 @@ const BooksPage = () => {
                     </div>
                   )}
                   
-                  {/* Rating badge */}
                   {book.rating && (
                     <div className="absolute -bottom-3 -right-3 bg-yellow-400 rounded-full h-10 w-10 flex items-center justify-center text-gray-800 font-bold text-sm shadow-md">
                       {typeof book.rating === 'number' ? book.rating.toFixed(1) : book.rating}
