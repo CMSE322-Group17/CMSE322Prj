@@ -14,21 +14,29 @@
       "type": "string",
       "required": true
     },
-    "buyerId": {
-      "type": "string",
-      "required": true
+    "requester": {
+      "type": "relation",
+      "relation": "manyToOne",
+      "target": "plugin::users-permissions.user",
+      "inversedBy": "initiatedSwapOffers"
     },
-    "sellerId": {
-      "type": "string",
-      "required": true
+    "owner": {
+      "type": "relation",
+      "relation": "manyToOne",
+      "target": "plugin::users-permissions.user",
+      "inversedBy": "receivedSwapOffers"
     },
-    "bookId": {
-      "type": "string",
-      "required": true
+    "requestedBook": {
+      "type": "relation",
+      "relation": "manyToOne",
+      "target": "api::book.book",
+      "inversedBy": "swapOffersAsRequested"
     },
-    "offerBookIds": {
-      "type": "json",
-      "required": true
+    "offeredBooks": {
+      "type": "relation",
+      "relation": "manyToMany",
+      "target": "api::book.book",
+      "inversedBy": "swapOffersAsOffered"
     },
     "status": {
       "type": "enumeration",
