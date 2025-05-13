@@ -81,7 +81,7 @@ const SellerChat = () => {
     }, 15000); // Poll every 15 seconds
     
     return () => clearInterval(intervalId);
-  }, [isAuthenticated, sellerId, bookId, user, chatId, fetchMessages, setMessageError, authAxios]);
+  }, [isAuthenticated, sellerId, bookId, user, chatId, fetchMessages, authAxios]);
 
   // Send a new message
   const handleSendMessage = async (text) => {
