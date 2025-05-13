@@ -13,14 +13,16 @@ const BookCard = ({ book, onClick }) => {
   useEffect(() => {
     let isMounted = true;
     const checkWishlist = async () => {
-      if (!isAuthenticated) return;
+      // Ensure book object and book.id exist before checking wishlist
+      if (!isAuthenticated || !book || typeof book.id === 'undefined') return;
       try {
         const wishlist = await wishlistAPI.getUserWishlist();
         if (isMounted) {
+          // Ensure item.book exists before trying to access item.book.id
           setIsInWishlist(wishlist.some(item => item.book?.id === book.id));
         }
       } catch (error) {
-        console.error('Error checking wishlist:', error);
+        console.error('Error checking wishlist for book:', book?.id, error);
       }
     };
 
