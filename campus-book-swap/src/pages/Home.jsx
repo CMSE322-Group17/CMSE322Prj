@@ -351,10 +351,10 @@ const Home = () => {
         </div>
       </div>
     );
-  };
+  }, [loading.featured, featuredBooks, currentSlide]); // Added currentSlide to dependency array
 
-  // Add this after the hero section in Home.jsx
-  const ActionHeader = () => {
+  // Action Header Component
+  const ActionHeader = useCallback(() => {
     return (
       <div className="bg-white shadow-md rounded-xl mx-4 -mt-6 relative z-20 mb-8">
         <div className="max-w-6xl mx-auto px-4">
