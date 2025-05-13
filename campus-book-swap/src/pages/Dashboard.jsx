@@ -1096,7 +1096,6 @@ const Dashboard = () => {
           </div>
         )}
         
-        {/* Transaction History Tab */}
         {activeTab === 'history' && (
           <div>
             <h2 className="text-lg font-medium mb-4">Transaction History</h2>
