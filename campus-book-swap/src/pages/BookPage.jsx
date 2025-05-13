@@ -20,49 +20,28 @@ const BooksPage = () => {
   });
   const [selectedBook, setSelectedBook] = useState(null);
 
-  // 2. BookDetails popup component 
   const BookDetails = ({ book, onClose }) => {
-    // State for active tab
     const [activeTab, setActiveTab] = useState('details');
     const { isAuthenticated } = useAuth();
     const { addToCart } = useCart();
     const navigate = useNavigate();
-    
-    // Generate seller details (for demo purposes)
-    const seller = {
-      id: book.id % 100 + 1, // Random ID for demo
-      name: book.seller || 'John Doe',
-      rating: (3 + (book.id % 3)) + (book.id % 10) / 10,
-      transactions: 5 + (book.id % 20),
-      responseTime: '< 1 hour',
-      joinedDate: 'Jan 2023',
-      location: 'North Campus Library'
-    };
-    
-    // Actions based on book type
-    const actions = {
-      'For Sale': {
-        primary: 'Add to Cart',
-        secondary: 'Make Offer'
-      },
-      'For Swap': {
-        primary: 'Propose Swap',
-        secondary: 'View Wishlist'
+    const [sellerDetails, setSellerDetails] = useState(null);
+
+    useEffect(() => {
+      if (book && book.actualSellerId) {
+        setSellerDetails({ name: book.sellerName || "Seller" });
       }
-    };
-  
-    // Handle action button click
+    }, [book]);
+
     const handleActionClick = async (actionType) => {
       if (!isAuthenticated) {
         alert("Please sign in to continue.");
         navigate('/signin?redirectTo=' + encodeURIComponent(window.location.pathname));
         return;
       }
-  
+
       if (book.bookType === 'For Sale' && actionType === 'primary') {
-        // Add to cart
         const result = await addToCart(book);
-        
         if (result.success) {
           alert("Book added to cart!");
           onClose();
