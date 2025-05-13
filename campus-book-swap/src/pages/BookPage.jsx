@@ -3,7 +3,8 @@ import { Link, useParams, useNavigate } from 'react-router-dom';
 import { bookAPI } from '../services/api';
 import { useAuth } from '../contexts/AuthContext';
 import { useCart } from '../contexts/CartContext';
-import { processBookData, getBookTypeStyles } from '../utils/bookFormatters';
+import { getBookTypeStyles } from '../utils/bookFormatters';
+import BookCard from '../components/BookCard';
 
 const BooksPage = () => {
   const { categoryName } = useParams();
