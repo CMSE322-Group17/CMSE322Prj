@@ -689,7 +689,6 @@ const Dashboard = () => {
                   </div>
                 </div>
                 
-                {/* Pending Actions */}
                 <div>
                   <h3 className="font-medium text-gray-800 mb-3 flex items-center">
                     <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2 text-yellow-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
