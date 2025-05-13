@@ -427,7 +427,7 @@ const Home = () => {
               <div key={category.name} className="category-card bg-white rounded-xl p-4 shadow-sm transition-all hover:shadow-md cursor-pointer">
                 <div className="flex items-center mb-3">
                   <div className={`rounded-full p-2 ${category.color}`}>
-                    {renderIcon(category.icon)}
+                    {renderIcon()}
                   </div>
                   <h3 className="font-medium ml-3 text-gray-800">{category.name}</h3>
                 </div>
