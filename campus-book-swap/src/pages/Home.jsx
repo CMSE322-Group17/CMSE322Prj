@@ -632,16 +632,16 @@ const Home = () => {
           
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
             {books.map(book => (
-              <BookCard key={book.id} book={book} onClick={() => setSelectedBook(book)} />
+              <BookCard key={book.id} book={book} onClick={() => handleSelectBook(book)} />
             ))}
           </div>
         </div>
       </div>
     );
-  };
+  }, [handleSelectBook]);
 
   // Popular Books Section
-  const PopularBooksSection = () => {
+  const PopularBooksSection = useCallback(() => {
     if (loading.popular) {
       return (
         <div className="py-8 px-4">
