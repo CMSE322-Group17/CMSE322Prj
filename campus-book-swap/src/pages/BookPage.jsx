@@ -281,7 +281,7 @@ const BooksPage = () => {
                     <div className="bg-gray-50 p-4 rounded-lg">
                       <div className="flex justify-between items-center mb-2">
                         <h4 className="font-medium text-gray-700">Response Time</h4>
-                        <span className="text-green-600 font-medium">{seller.responseTime}</span>
+                        <span className="text-green-600 font-medium">{sellerDetails?.responseTime || book.sellerResponseTime || "N/A"}</span>
                       </div>
                       <p className="text-sm text-gray-500">Typically responds very quickly</p>
                     </div>
