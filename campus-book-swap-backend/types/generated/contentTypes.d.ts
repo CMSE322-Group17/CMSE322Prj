@@ -503,7 +503,11 @@ export interface ApiCategoryCategory extends Schema.CollectionType {
     draftAndPublish: true;
   };
   attributes: {
-    Book: Attribute.String;
+    book: Attribute.Relation<
+      'api::category.category',
+      'manyToOne',
+      'api::book.book'
+    >;
     Check: Attribute.Boolean & Attribute.Required & Attribute.DefaultTo<false>;
     createdAt: Attribute.DateTime;
     createdBy: Attribute.Relation<
