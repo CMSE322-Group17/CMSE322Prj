@@ -17,10 +17,7 @@ const Dashboard = () => {
   // User data state
   const [myBooks, setMyBooks] = useState([]);
   const [pendingSwaps, setPendingSwaps] = useState([]);
-  const [pendingBorrows, setPendingBorrows] = useState([]);
   const [pendingPurchaseRequests, setPendingPurchaseRequests] = useState([]);
-  // eslint-disable-next-line no-unused-vars
-  const [borrowedBooks, setBorrowedBooks] = useState([]);
   const [transactionHistory, setTransactionHistory] = useState([]);
   const [stats, setStats] = useState({
     totalListings: 0,
