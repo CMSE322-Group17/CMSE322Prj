@@ -632,7 +632,6 @@ const BooksPage = () => {
                 </div>
               </div>
               
-              {/* Condition Filter */}
               <div className="mb-6">
                 <h3 className="font-medium text-gray-700 mb-2">Condition</h3>
                 <div className="space-y-2">
