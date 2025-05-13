@@ -586,7 +586,7 @@ export interface ApiMessageMessage extends Schema.CollectionType {
       'plugin::users-permissions.user'
     >;
     text: Attribute.Text & Attribute.Required;
-    timestamp: Attribute.DateTime & Attribute.Required;
+    timestamp: Attribute.DateTime;
     updatedAt: Attribute.DateTime;
     updatedBy: Attribute.Relation<
       'api::message.message',
