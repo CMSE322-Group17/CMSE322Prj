@@ -314,7 +314,7 @@ const Dashboard = () => {
       mockStats.totalListings = booksResponse.data.meta.pagination.total;
       mockStats.activeListings = booksResponse.data.meta.pagination.total; // Assuming all are active for now
       
-      // Completed sales + swaps + borrows
+      // Completed sales + swaps
       const completedSalesResponse = await authAxios.get(
         `${import.meta.env.VITE_API_URL}/api/orders?filters[userId][$eq]=${user.id}&filters[status][$eq]=completed&pagination[pageSize]=1&pagination[page]=1`
       );
