@@ -527,7 +527,7 @@ export interface ApiMessageMessage extends Schema.CollectionType {
       'manyToOne',
       'api::book.book'
     >;
-    ChatId: Attribute.String & Attribute.Required & Attribute.Unique;
+    ChatId: Attribute.String & Attribute.Required;
     createdAt: Attribute.DateTime;
     createdBy: Attribute.Relation<
       'api::message.message',
