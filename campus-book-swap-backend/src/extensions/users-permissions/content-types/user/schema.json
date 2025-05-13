@@ -104,6 +104,18 @@
       "relation": "oneToMany",
       "target": "api::wishlist.wishlist",
       "mappedBy": "user"
+    },
+    "initiatedSwapOffers": {
+      "type": "relation",
+      "relation": "oneToMany",
+      "target": "api::swap-offer.swap-offer",
+      "mappedBy": "requester"
+    },
+    "receivedSwapOffers": {
+      "type": "relation",
+      "relation": "oneToMany",
+      "target": "api::swap-offer.swap-offer",
+      "mappedBy": "owner"
     }
   }
 }
