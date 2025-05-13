@@ -451,20 +451,17 @@ const BooksPage = () => {
     }
   };
 
-  // Get current category name for display
   const getCurrentCategoryName = () => {
     if (!categoryName || categoryName === 'all') {
       return 'All Books';
     }
     
-    // Convert URL slug back to display name
     return categoryName
       .split('-')
       .map(word => word.charAt(0).toUpperCase() + word.slice(1))
       .join(' ');
   };
 
-  // Handle filter changes
   const handleFilterChange = (filterType, value) => {
     setFilters(prev => ({
       ...prev,
