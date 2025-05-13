@@ -365,7 +365,6 @@ const BooksPage = () => {
             return b.voters - a.voters;
           case 'newest':
           default:
-            // For demo purposes, use ID as a proxy for "newest"
             return b.id - a.id;
         }
       });
