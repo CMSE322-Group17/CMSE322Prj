@@ -154,7 +154,6 @@ const BooksPage = () => {
                 <span className="text-gray-500 text-xs ml-2">{book.voters || 0} voters</span>
               </div>
               
-              {/* Price and transaction section */}
               <div className="border-t border-gray-200 pt-4 mt-4">
                 {book.bookType === 'For Sale' && book.price !== null && (
                   <div className="text-center mb-4">
