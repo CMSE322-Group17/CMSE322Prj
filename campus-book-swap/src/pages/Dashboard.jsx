@@ -323,8 +323,6 @@ const Dashboard = () => {
         `${import.meta.env.VITE_API_URL}/api/swap-offers?filters[$or][0][buyerId][$eq]=${user.id}&filters[$or][1][sellerId][$eq]=${user.id}&filters[status][$eq]=completed&pagination[pageSize]=1&pagination[page]=1`
       );
       
-      // Borrow functionality removed
-      
       mockStats.completedTransactions = 
         completedSalesResponse.data.meta.pagination.total + 
         completedSwapsResponse.data.meta.pagination.total;
