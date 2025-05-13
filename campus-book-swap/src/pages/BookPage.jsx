@@ -499,21 +499,19 @@ const BooksPage = () => {
           booksData = await bookAPI.getPopularBooks();
         }
         
-        // Process book data
         const processedBooks = booksData.data.map(book => {
           const bookData = book.attributes || book;
           
-          // Process cover image
           let coverUrl = null;
           if (bookData.cover) {
             coverUrl = getStrapiMediaUrl(bookData.cover);
           }
           
-          // Determine book transaction type (For Sale, For Swap)
-          // Removing For Borrowing type
           const bookType = bookData.bookType || (book.id % 2 === 0 ? 'For Sale' : 'For Swap');
           
-          // Map the book data
+          const actualSellerId = bookData.users_permissions_user?.data?.id;
+          const sellerName = bookData.users_permissions_user?.data?.attributes?.username || "Campus BookShop";
+
           return {
             id: book.id,
             title: bookData.title,
