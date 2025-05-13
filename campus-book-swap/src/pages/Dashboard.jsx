@@ -334,12 +334,10 @@ const Dashboard = () => {
         completedSalesResponse.data.meta.pagination.total + 
         completedSwapsResponse.data.meta.pagination.total;
       
-      // Pending transactions
       const pendingSwapsResponse = await authAxios.get(
         `${import.meta.env.VITE_API_URL}/api/swap-offers?filters[$or][0][buyerId][$eq]=${user.id}&filters[$or][1][sellerId][$eq]=${user.id}&filters[status][$eq]=pending&pagination[pageSize]=1&pagination[page]=1`
       );
       
-      // Get pending purchase requests count
       const pendingPurchasesResponse = await authAxios.get(
         `${import.meta.env.VITE_API_URL}/api/messages?filters[receiver][id][$eq]=${user.id}&filters[messageType][$eq]=purchase_request&filters[requestStatus][$eq]=pending&pagination[pageSize]=1&pagination[page]=1`
       );
