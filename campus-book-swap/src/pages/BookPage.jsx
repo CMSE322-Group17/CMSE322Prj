@@ -248,7 +248,6 @@ const BooksPage = () => {
                     </p>
                   </div>
                   
-                  {/* Additional book details like ISBN, publisher, etc */}
                   <div className="mt-6 text-sm text-gray-500">
                     <p>ISBN: 978-1234567890</p>
                     <p>Publisher: Academic Press</p>
