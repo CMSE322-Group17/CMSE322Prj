@@ -316,15 +316,12 @@ const Dashboard = () => {
         savedBySwapping: 0
       };
       
-      // Calculate based on API responses
-      // Using the correct format for Strapi v4 count endpoint
       const booksResponse = await authAxios.get(
         `${import.meta.env.VITE_API_URL}/api/books?filters[users_permissions_user][id][$eq]=${user.id}&pagination[pageSize]=1&pagination[page]=1`
       );
       mockStats.totalListings = booksResponse.data.meta.pagination.total;
-      mockStats.activeListings = booksResponse.data.meta.pagination.total; // Assuming all are active for now
+      mockStats.activeListings = booksResponse.data.meta.pagination.total;
       
-      // Completed sales + swaps
       const completedSalesResponse = await authAxios.get(
         `${import.meta.env.VITE_API_URL}/api/orders?filters[userId][$eq]=${user.id}&filters[status][$eq]=completed&pagination[pageSize]=1&pagination[page]=1`
       );
