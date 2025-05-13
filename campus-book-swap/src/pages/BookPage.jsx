@@ -760,9 +760,7 @@ const BooksPage = () => {
             </div>
           </div>
           
-          {/* Books Grid */}
           <div className="w-full md:w-3/4">
-            {/* Sort Options */}
             <div className="bg-white rounded-lg shadow-sm p-4 mb-6">
               <div className="flex flex-wrap items-center justify-between">
                 <div className="mb-2 md:mb-0">
