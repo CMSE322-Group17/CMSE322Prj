@@ -89,7 +89,6 @@ const BooksPage = () => {
             </div>
           </div>
           
-          {/* Navigation tabs */}
           <div className="border-b border-gray-200">
             <nav className="flex">
               <button
