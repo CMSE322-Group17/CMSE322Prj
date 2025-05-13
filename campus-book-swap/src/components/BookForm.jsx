@@ -204,6 +204,13 @@ const BookForm = ({ onSuccess, bookToEdit = null }) => {
           setError('There was an issue with the data format. Please try again.');
         } else if (err.response.status === 401 || err.response.status === 403) {
           setError('Authentication error: Please sign in again to create a book.');
+        } else if (coverImage && err.response.status === 400) {
+          // Handle image upload errors more specifically
+          if (coverImage.size > 5 * 1024 * 1024) { // 5MB limit check
+            setError('The cover image is too large. Please use an image smaller than 5MB.');
+          } else {
+            setError('There was an issue with the cover image. Please try a different image or format (JPG, PNG recommended).');
+          }
         } else {
           setError(`Server error: ${err.response.data?.error?.message || 'Failed to submit book'}`);
         }
