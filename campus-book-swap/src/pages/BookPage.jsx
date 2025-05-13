@@ -746,7 +746,6 @@ const BooksPage = () => {
                 </div>
               )}
               
-              {/* Reset Filters Button */}
               <button 
                 onClick={() => setFilters({
                   sort: 'newest',
