@@ -529,38 +529,75 @@ export const swapOfferAPI = {
  * Wishlist API endpoints
  */
 export const wishlistAPI = {
-  // Add a book to user's wishlist
+  // Add a book to the user's wishlist
   addToWishlist: async (bookId) => {
-    const token = localStorage.getItem('token');
-    if (!token) {
-      throw new Error('User is not authenticated');
+    try {
+      // Ensure the payload is correctly formatted for Strapi v4
+      const response = await fetchFromAPI('/api/wishlists', {
+        method: 'POST',
+        data: { data: { book: bookId } }, // Corrected payload
+      });
+      // For Strapi v4, the created entity is usually in response.data
+      return response.data; 
+    } catch (error) {
+      console.error('Error adding to wishlist:', error);
+      throw error;
     }
-    const payload = { data: { book: bookId } };
-    const response = await fetchFromAPI('/api/wishlists', {
-      method: 'POST',
-      data: payload,
-    });
-    // response.data is the created entry
-    const entry = response.data;
-    return { id: entry.id, book: entry.attributes.book.data.attributes };
   },
 
-  // Get user's wishlist
+  // Get the user's wishlist
   getUserWishlist: async () => {
-    const token = localStorage.getItem('token');
-    if (!token) {
-      return [];
+    try {
+      const response = await fetchFromAPI('/api/wishlists', {
+        method: 'GET',
+        params: { populate: 'book' }, 
+      });
+
+      if (!response || !Array.isArray(response.data)) {
+        console.error('Invalid response from getUserWishlist API (expected array):', response);
+        return []; 
+      }
+
+      return response.data.map((entry, index) => {
+        // Log the raw entry for debugging
+        console.log(`Processing wishlist entry ${index}:`, JSON.stringify(entry, null, 2));
+
+        if (!entry || !entry.attributes) {
+          console.warn(`Invalid wishlist entry found (missing entry or attributes) at index ${index}:`, entry);
+          return { id: entry?.id || `invalid-entry-${index}`, book: null };
+        }
+
+        // Log the book relation part specifically before trying to access .data
+        console.log(`Wishlist entry ${index} (ID: ${entry.id}), attributes.book:`, JSON.stringify(entry.attributes.book, null, 2));
+
+        const bookData = entry.attributes.book?.data;
+
+        if (bookData && typeof bookData.attributes === 'object' && bookData.attributes !== null && bookData.id !== undefined) {
+          return {
+            id: entry.id, // This is the wishlist entry ID
+            book: { 
+              id: bookData.id, 
+              ...bookData.attributes 
+            }
+          };
+        } else {
+          // This block will be hit if bookData is null/undefined, or if its attributes are not as expected.
+          console.warn(`Book data is not valid or missing for wishlist entry ${index} (ID: ${entry.id}). Book relation content:`, JSON.stringify(entry.attributes.book, null, 2));
+          return {
+            id: entry.id,
+            book: null 
+          };
+        }
+      });
+    } catch (error) {
+      if (error.response && error.response.status === 404) {
+        console.warn('User wishlist not found (404), returning empty array.');
+        return []; 
+      }
+      // Log the detailed error for other cases
+      console.error('Error fetching user wishlist:', error.response ? error.response.data : error.message, error);
+      throw error;
     }
-    // include book relation
-    const response = await fetchFromAPI('/api/wishlists', {
-      method: 'GET',
-      params: { populate: 'book' }
-    });
-    const entries = response.data || [];
-    return entries.map(entry => ({
-      id: entry.id,
-      book: entry.attributes.book.data.attributes,
-    }));
   },
 
   // Remove a wishlist entry by ID
