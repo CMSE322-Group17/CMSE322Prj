@@ -194,9 +194,7 @@ const BooksPage = () => {
               </div>
             </div>
             
-            {/* Right column - tab content */}
             <div className="w-full md:w-2/3 p-6 max-h-[calc(90vh-120px)] overflow-y-auto">
-              {/* Book Details Tab */}
               {activeTab === 'details' && (
                 <div>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
