@@ -3,6 +3,7 @@ import { useAuth } from './AuthContext';
 import messageAPI from '../services/messageAPI';
 import { requestNotificationPermission, showPurchaseRequestNotification, showRequestStatusNotification } from '../utils/notificationUtils';
 import { MessageContext } from './MessageContextDef';
+import { swapOfferAPI } from '../services/api';
 
 export const MessageProvider = ({ children }) => {
   const { user, isAuthenticated } = useAuth();
