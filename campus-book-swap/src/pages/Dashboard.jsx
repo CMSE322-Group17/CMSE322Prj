@@ -423,14 +423,6 @@ const Dashboard = () => {
     }
   };
 
-  // Placeholder for handleBorrowResponse (removed - not needed)
-  const handleBorrowResponse = async (borrowId, accept) => {
-    // This functionality has been removed since borrowing is not needed
-    console.log("Borrow response functionality has been removed", {borrowId, accept});
-    fetchPendingBorrows();
-    calculateStats();
-  };
-
   // Handle responding to a purchase request
   const handlePurchaseResponse = async (messageId, accept) => {
     try {
