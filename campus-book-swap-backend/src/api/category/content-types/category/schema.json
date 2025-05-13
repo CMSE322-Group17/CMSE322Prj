@@ -19,11 +19,11 @@
       "default": false,
       "required": true
     },
-    "Book": {
-      "type": "string"
-    },
-    "fieldName": {
-      "type": "string"
+    "book": {
+      "type": "relation",
+      "relation": "manyToOne",
+      "target": "api::book.book",
+      "inversedBy": "categories"
     }
   }
 }
