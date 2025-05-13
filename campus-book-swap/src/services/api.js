@@ -376,7 +376,8 @@ export const bookAPI = {
       
       // Add the cover image if it exists
       if (coverImage) {
-        formData.append('files.cover', coverImage);
+        // Use 'files.cover' for Strapi v4 media field syntax
+        formData.append('files.cover', coverImage, coverImage.name);
         console.log('Adding cover image to request:', coverImage.name);
       }
       
