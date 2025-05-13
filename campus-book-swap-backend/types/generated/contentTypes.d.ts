@@ -516,7 +516,6 @@ export interface ApiCategoryCategory extends Schema.CollectionType {
       'admin::user'
     > &
       Attribute.Private;
-    fieldName: Attribute.String;
     publishedAt: Attribute.DateTime;
     Type: Attribute.String;
     updatedAt: Attribute.DateTime;
