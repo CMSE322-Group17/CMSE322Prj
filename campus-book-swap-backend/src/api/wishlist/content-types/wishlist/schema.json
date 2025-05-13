@@ -7,20 +7,19 @@
     "displayName": "Wishlist"
   },
   "options": {
-    "draftAndPublish": false
+    "draftAndPublish": true
   },
-  "pluginOptions": {},
   "attributes": {
-    "book": {
-      "type": "relation",
-      "relation": "manyToOne",
-      "target": "api::book.book",
-      "inversedBy": "wishlists"
-    },
     "user": {
       "type": "relation",
       "relation": "manyToOne",
       "target": "plugin::users-permissions.user",
+      "inversedBy": "wishlists"
+    },
+    "book": {
+      "type": "relation",
+      "relation": "manyToOne",
+      "target": "api::book.book",
       "inversedBy": "wishlists"
     }
   }
