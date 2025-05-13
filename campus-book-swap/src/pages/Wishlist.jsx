@@ -32,11 +32,15 @@ const Wishlist = () => {
     fetchWishlist();
   }, []);
 
-  const handleRemoveFromWishlist = async (entryId) => {
+  const handleRemoveFromWishlist = async (wishlistEntryId) => {
+    if (!wishlistEntryId) {
+      toast.error('Cannot remove item: ID is missing.');
+      return;
+    }
+    setLoading(true);
     try {
-      setLoading(true);
-      await wishlistAPI.removeWishlistEntry(entryId);
-      setWishlistEntries((prev) => prev.filter((e) => e.id !== entryId));
+      await wishlistAPI.removeWishlistEntry(wishlistEntryId);
+      setWishlistEntries((prevEntries) => prevEntries.filter((e) => e.id !== wishlistEntryId));
       toast.success('Book removed from wishlist.');
     } catch (error) {
       console.error('Error removing book from wishlist:', error);
