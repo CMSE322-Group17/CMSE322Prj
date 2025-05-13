@@ -27,6 +27,15 @@ export const processBookData = (bookData, apiUrl) => {
   if (bookAttributes.cover?.data) {
     coverUrl = `${apiUrl}${bookAttributes.cover.data.attributes.url}`;
   }
+
+  // Extract seller relation
+  const sellerData = bookData.attributes.users_permissions_user?.data;
+  const seller = sellerData
+    ? {
+        id: sellerData.id,
+        username: sellerData.attributes.username || 'Unknown Seller',
+      }
+    : null;
   
   return {
     id: bookData.id,
