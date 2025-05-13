@@ -160,7 +160,7 @@ const Messages = () => {
               </div>
               
               <div className="overflow-y-auto max-h-[calc(100vh-250px)]">
-                {getFilteredConversations().map(conversation => (
+                {conversations.map(conversation => (
                   <ConversationItem
                     key={conversation.id || conversation.chatId}
                     conversation={conversation}
