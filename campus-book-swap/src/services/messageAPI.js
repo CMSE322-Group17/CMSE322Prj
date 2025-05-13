@@ -414,12 +414,10 @@ api.interceptors.request.use(
       rateLimiter.canMakeRequest(endpoint);
     } catch (error) {
       if (error.message.includes('Rate limit exceeded')) {
-        // Wait for the specified time before retrying
         await new Promise(resolve => setTimeout(resolve, rateLimiter.retryAfter));
-        // Reset the rate limit for this endpoint
-        rateLimiter.reset(endpoint);
+        rateLimiter.reset(endpoint); // Reset after waiting
       }
-      throw error;
+      return Promise.reject(error); 
     }
 
     return config;
