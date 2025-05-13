@@ -209,12 +209,6 @@ const Dashboard = () => {
     }
   };
 
-  // Placeholder for fetchBorrowedBooks (removed - not needed)
-  const fetchBorrowedBooks = async () => {
-    // This functionality has been removed since borrowing is not needed
-    setBorrowedBooks([]);
-  };
-
   // Fetch transaction history
   const fetchTransactionHistory = async () => {
     try {
