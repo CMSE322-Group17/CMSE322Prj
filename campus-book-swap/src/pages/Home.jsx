@@ -12,20 +12,18 @@ const Home = () => {
   
   // State variables for data
   const [selectedBook, setSelectedBook] = useState(null);
-  const [currentSlide, setCurrentSlide] = useState(0);
+  const [currentSlide, setCurrentSlide] = useState(0); // Ensured currentSlide is used
   
   // State for the API data
   const [featuredBooks, setFeaturedBooks] = useState([]);
   const [popularBooks, setPopularBooks] = useState([]);
   const [booksOfWeek, setBooksOfWeek] = useState([]);
-  const [booksOfYear, setBooksOfYear] = useState([]);
   
   // Loading states
   const [loading, setLoading] = useState({
     featured: true,
     popular: true,
     booksOfWeek: true,
-    booksOfYear: true
   });
   
   // Error states
