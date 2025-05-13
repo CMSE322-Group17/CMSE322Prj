@@ -98,6 +98,12 @@
       "relation": "oneToMany",
       "target": "api::message.message",
       "mappedBy": "receiver"
+    },
+    "wishlists": {
+      "type": "relation",
+      "relation": "oneToMany",
+      "target": "api::wishlist.wishlist",
+      "mappedBy": "user"
     }
   }
 }
