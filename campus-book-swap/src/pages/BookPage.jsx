@@ -227,7 +227,7 @@ const BooksPage = () => {
                       <div className="space-y-2 text-sm">
                         <p className="flex justify-between">
                           <span className="font-medium text-gray-700">Pick-up Location:</span> 
-                          <span className="text-gray-600">{seller.location}</span>
+                          <span className="text-gray-600">{sellerDetails?.location || book.location || 'N/A'}</span>
                         </p>
                         <p className="flex justify-between">
                           <span className="font-medium text-gray-700">Payment Methods:</span> 
