@@ -946,16 +946,28 @@ const messageAPI = {
         };
       }
 
-      // Try to recover from error
-      const shouldRetry = await errorRecovery.recoverFromError(error, 'sendMessage', messageData);
-      if (shouldRetry) {
-        return messageAPI.sendMessage(messageData);
+      const attemptedRecovery = await errorRecovery.recoverFromError(error, 'sendMessage', payload); 
+      if (attemptedRecovery && error.config && !error.config.__isRetryRequest) { 
+         console.warn("errorRecovery.recoverFromError suggested a retry, but interceptors should handle this.", error);
       }
-
-      console.error('Error sending message:', error);
-      throw error;
+      
+      // Enhanced logging for Strapi error details
+      if (error.response) {
+        console.error('Error sending message - Status:', error.response.status);
+        if (error.response.data && error.response.data.error) {
+          console.error('Error sending message - Strapi Error Details:', JSON.stringify(error.response.data.error, null, 2));
+        } else {
+          console.error('Error sending message - Strapi Response Data:', JSON.stringify(error.response.data, null, 2));
+        }
+        console.error('Error sending message - Request Payload Sent:', error.config.data);
+      } else if (error.request) {
+        console.error('Error sending message - No response received (Network Error?):', error.request);
+      } else {
+        console.error('Error sending message - General Error:', error.message);
+      }
+      throw error; 
     } finally {
-      cancelToken.cancel('Operation cancelled due to new request');
+      cancelToken.cancel('Operation (sendMessage) finished or cancelled.');
     }
   },
 
