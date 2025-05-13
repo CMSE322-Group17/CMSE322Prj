@@ -1141,6 +1141,11 @@ export interface PluginUsersPermissionsUser extends Schema.CollectionType {
       Attribute.SetMinMaxLength<{
         minLength: 3;
       }>;
+    wishlists: Attribute.Relation<
+      'plugin::users-permissions.user',
+      'oneToMany',
+      'api::wishlist.wishlist'
+    >;
   };
 }
 
