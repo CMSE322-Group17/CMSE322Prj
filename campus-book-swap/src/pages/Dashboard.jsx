@@ -235,7 +235,6 @@ const Dashboard = () => {
   // Fetch transaction history
   const fetchTransactionHistory = async () => {
     try {
-      // Fetch completed transactions (sales, swaps)
       const salesResponse = await authAxios.get(
         `${import.meta.env.VITE_API_URL}/api/orders?filters[userId][$eq]=${user.id}&sort[0]=timestamp:desc&populate=*`
       );
