@@ -109,6 +109,12 @@ const SellerChat = () => {
         }
       }, 10000);
       
+      // Add these logs:
+      console.log("Current logged-in user ID (sender):", user?.id);
+      console.log("Seller ID from URL (receiver):", sellerId);
+      console.log("Book ID from URL:", bookId);
+      console.log("Chat ID being used:", chatId);
+
       // Send the message
       await sendMessage({
         chatId,
