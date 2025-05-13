@@ -341,7 +341,6 @@ const BooksPage = () => {
           if (filters.priceRange === 'over30' && price <= 30) return false;
         }
         
-        // Filter by book type
         if (filters.bookType !== 'all' && book.bookType !== filters.bookType) {
           return false;
         }
