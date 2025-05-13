@@ -221,7 +221,7 @@ const BooksPage = () => {
                       <div className="space-y-2 text-sm">
                         <p className="flex justify-between">
                           <span className="font-medium text-gray-700">Course:</span> 
-                          <span className="text-gray-600">{courseCode}</span>
+                          <span className="text-gray-600">{book.course || "N/A"}</span>
                         </p>
                         <p className="flex justify-between">
                           <span className="font-medium text-gray-700">Subject:</span> 
