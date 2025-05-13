@@ -548,12 +548,10 @@ const BooksPage = () => {
 
   return (
     <div className="bg-gray-50 min-h-screen">
-      {/* Page Header */}
       <div className="bg-gray-900 text-white py-10">
         <div className="max-w-6xl mx-auto px-4">
           <h1 className="text-3xl font-bold">{getCurrentCategoryName()}</h1>
           
-          {/* Breadcrumb Navigation */}
           <div className="flex text-sm text-gray-400 mt-2">
             <Link to="/" className="hover:text-blue-300">Home</Link>
             <span className="mx-2">/</span>
