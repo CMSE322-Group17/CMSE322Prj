@@ -30,7 +30,7 @@ const BookForm = ({ onSuccess, bookToEdit = null }) => {
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   
-  const { user, authAxios } = useAuth();
+  const { user } = useAuth();
 
   // Fetch categories on component mount
   useEffect(() => {
