@@ -349,26 +349,24 @@ export const bookAPI = {
       const formData = new FormData();
       
       // For Strapi REST API, we need to format data correctly
-      // The data field must be a JSON string containing a data object with the actual content
+      // The data field must be a JSON string containing the actual content attributes
       const bookDataJson = JSON.stringify({
-        data: {
-          title: bookData.title,
-          author: bookData.author,
-          description: bookData.description,
-          price: bookData.price,
-          condition: bookData.condition,
-          exchange: bookData.exchange,
-          subject: bookData.subject,
-          course: bookData.course,
-          seller: bookData.seller,
-          featured: bookData.featured,
-          bookOfWeek: bookData.bookOfWeek,
-          bookOfYear: bookData.bookOfYear,
-          displayTitle: bookData.displayTitle,
-          category: bookData.category,
-          bookType: bookData.bookType,
-          users_permissions_user: bookData.users_permissions_user
-        }
+        title: bookData.title,
+        author: bookData.author,
+        description: bookData.description,
+        price: bookData.price,
+        condition: bookData.condition,
+        exchange: bookData.exchange,
+        subject: bookData.subject,
+        course: bookData.course,
+        seller: bookData.seller,
+        featured: bookData.featured,
+        bookOfWeek: bookData.bookOfWeek,
+        bookOfYear: bookData.bookOfYear,
+        displayTitle: bookData.displayTitle,
+        category: bookData.category,
+        bookType: bookData.bookType,
+        users_permissions_user: bookData.users_permissions_user
       });
       
       formData.append('data', bookDataJson);
