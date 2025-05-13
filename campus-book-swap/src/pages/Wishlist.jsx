@@ -65,7 +65,7 @@ const Wishlist = () => {
   };
 
   const handleShareWishlist = () => {
-    const shareUrl = `${window.location.origin}/wishlist`;
+    const shareUrl = window.location.href; // Shares the current page URL
     navigator.clipboard.writeText(shareUrl)
       .then(() => {
         toast.success('Wishlist link copied to clipboard!');
