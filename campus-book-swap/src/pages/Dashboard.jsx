@@ -1012,7 +1012,6 @@ const Dashboard = () => {
                   </div>
                 )}
 
-                {/* Pending Purchase Requests Section */}
                 {pendingPurchaseRequests.length > 0 && (
                   <div>
                     <h3 className="text-md font-medium mb-3 text-green-800 flex items-center">
