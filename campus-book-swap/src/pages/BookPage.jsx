@@ -566,15 +566,12 @@ const BooksPage = () => {
         </div>
       </div>
       
-      {/* Main Content */}
       <div className="max-w-6xl mx-auto px-4 py-8">
         <div className="flex flex-col md:flex-row gap-8">
-          {/* Sidebar Filters */}
           <div className="w-full md:w-1/4">
             <div className="bg-white rounded-lg shadow-sm p-6 sticky top-4">
               <h2 className="text-lg font-bold mb-4 text-gray-800">Filters</h2>
               
-              {/* Categories */}
               <div className="mb-6">
                 <h3 className="font-medium text-gray-700 mb-2">Categories</h3>
                 <div className="space-y-2 max-h-48 overflow-y-auto">
