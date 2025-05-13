@@ -35,6 +35,11 @@ const BookCard = ({ book, onClick }) => {
     };
   }, [book, isAuthenticated]);
 
+  // If book is null or undefined, render nothing or a placeholder
+  if (!book) {
+    return <div className="book-card-placeholder">Book data is not available.</div>; // Or return null;
+  }
+
   // Styles and icons for book types
   const typeStyles = {
     'For Sale': 'bg-green-100 text-green-800 border-green-200',
