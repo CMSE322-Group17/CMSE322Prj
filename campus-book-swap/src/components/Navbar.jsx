@@ -63,6 +63,21 @@ const NavBar = () => {
     if (isCartOpen) setIsCartOpen(false);
   };
 
+  const handleSearch = async (e) => {
+    e.preventDefault();
+    if (searchQuery.trim() === "") return;
+
+    setIsLoading(true);
+    try {
+      const response = await bookAPI.searchBooks(searchQuery);
+      console.log("Search Results:", response.data);
+    } catch (error) {
+      console.error("Error searching books:", error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   return (
     <nav className="bg-white shadow-md sticky top-0 z-50">
       <div className="max-w-6xl mx-auto px-4">
