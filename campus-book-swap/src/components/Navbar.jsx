@@ -159,8 +159,9 @@ const NavBar = () => {
                   />
                 </svg>
               </div>
+              {isLoading && <div className="absolute right-3 top-2 text-gray-400">Loading...</div>}
             </div>
-          </div>
+          </form>
 
           {/* User Navigation */}
           <div className="flex items-center">
