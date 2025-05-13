@@ -115,7 +115,6 @@ const BooksPage = () => {
           </div>
           
           <div className="flex flex-col md:flex-row">
-            {/* Left column - consistent across tabs */}
             <div className="w-full md:w-1/3 border-r border-gray-200 p-6">
               <div className="flex justify-center">
                 <div className="relative">
