@@ -10,9 +10,7 @@ API_URL = API_URL.endsWith('/') ? API_URL.slice(0, -1) : API_URL;
 // Create a preconfigured axios instance
 export const api = axios.create({
   baseURL: API_URL,
-  headers: {
-    'Content-Type': 'application/json',
-  },
+  // Removed global Content-Type header to allow FormData to set its own boundary
   timeout: 10000, // 10 seconds
 });
 
