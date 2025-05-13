@@ -243,7 +243,6 @@ const Dashboard = () => {
         `${import.meta.env.VITE_API_URL}/api/swap-offers?filters[$or][0][buyerId][$eq]=${user.id}&filters[$or][1][sellerId][$eq]=${user.id}&filters[status][$eq]=completed&sort[0]=timestamp:desc&populate=*`
       );
       
-      // Process sales data
       const sales = salesResponse.data.data?.map(order => ({
         id: `sale-${order.id}`,
         type: 'purchase',
