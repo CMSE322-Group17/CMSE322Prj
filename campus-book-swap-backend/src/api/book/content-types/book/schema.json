@@ -116,6 +116,12 @@
       "type": "float",
       "required": false,
       "default": 0
+    },
+    "wishlists": {
+      "type": "relation",
+      "relation": "oneToMany",
+      "target": "api::wishlist.wishlist",
+      "mappedBy": "book"
     }
   }
 }
