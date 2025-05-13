@@ -23,34 +23,21 @@ const ChatHeader = ({
 
   return (
     <div className="bg-white border-b border-gray-200 p-3 flex items-center">
-      <button 
-        onClick={onBack}
-        className="mr-2 text-gray-500 hover:text-gray-700 focus:outline-none"
-      >
-        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
-        </svg>
-      </button>
-      
       <div className="flex items-center flex-grow">
         {/* User info */}
         <div className="flex items-center mr-4">
-          {otherUserData?.avatar ? (
+          {otherUserData?.avatar && (
             <img 
               src={otherUserData.avatar} 
-              alt={otherUserData.username}
+              alt={otherUserData.username || 'User avatar'}
               className="w-10 h-10 rounded-full mr-3 object-cover" 
             />
-          ) : (
-            <div className="w-10 h-10 bg-blue-100 rounded-full mr-3 flex items-center justify-center text-blue-600 font-semibold">
-              {otherUserData?.username ? otherUserData.username.charAt(0).toUpperCase() : '?'}
-            </div>
           )}
           
           <div>
-            <h3 className="font-medium text-gray-800">{otherUserData?.username || 'User'}</h3>
+            <h3 className="font-medium text-gray-800">{otherUserData?.username || ''}</h3>
             <p className="text-xs text-gray-500">
-              {otherUserData?.isOnline ? 'Online' : 'Last seen recently'}
+              {otherUserData?.isOnline ? 'Online' : ''}
             </p>
           </div>
         </div>
