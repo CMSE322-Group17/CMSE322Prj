@@ -46,7 +46,8 @@ export const processBookData = (bookData, apiUrl) => {
     // Ensure price is a number
     price: typeof bookAttributes.price === 'string' 
       ? parseFloat(bookAttributes.price) 
-      : (bookAttributes.price || 0)
+      : (bookAttributes.price || 0),
+    seller, // include seller data
   };
 };
 
