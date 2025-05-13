@@ -307,10 +307,6 @@ const Dashboard = () => {
   // Calculate dashboard stats
   const calculateStats = async () => {
     try {
-      // This would normally come from API aggregation endpoints
-      // For now, we'll calculate based on the data we've fetched
-      
-      // Mock implementation - in a real app, this would be more sophisticated
       const mockStats = {
         totalListings: 0,
         activeListings: 0,
