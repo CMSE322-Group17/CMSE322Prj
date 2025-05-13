@@ -647,8 +647,6 @@ export interface ApiSwapOfferSwapOffer extends Schema.CollectionType {
     draftAndPublish: true;
   };
   attributes: {
-    bookId: Attribute.String & Attribute.Required;
-    buyerId: Attribute.String & Attribute.Required;
     chatId: Attribute.String & Attribute.Required;
     createdAt: Attribute.DateTime;
     createdBy: Attribute.Relation<
