@@ -400,10 +400,9 @@ const api = axios.create({
   }
 });
 
-// Add request interceptor for rate limiting
+// Add request interceptor for auth token and rate limiting
 api.interceptors.request.use(
   async (config) => {
-    // Add auth token (this is redundant with the shared API but kept for safety)
     const token = localStorage.getItem('token');
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
