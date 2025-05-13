@@ -16,6 +16,7 @@ import AboutPage from './components/AboutPage';
 import NotFound from './pages/NotFound';
 import ProtectedRoute from './components/ProtectedRoute';
 import Footer from './components/Footer';
+import Wishlist from './pages/Wishlist';
 
 {/* App Area */}
 function App() {
