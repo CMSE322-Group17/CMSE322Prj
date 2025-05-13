@@ -298,7 +298,6 @@ const BooksPage = () => {
                   <div className="mt-6">
                     <h4 className="font-medium text-gray-800 mb-3">Seller's Other Books</h4>
                     <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                      {/* Sample other books */}
                       {[1, 2, 3].map(i => (
                         <div key={i} className="bg-gray-50 p-3 rounded-lg cursor-pointer hover:bg-gray-100 transition-colors">
                           <div className="flex items-center">
