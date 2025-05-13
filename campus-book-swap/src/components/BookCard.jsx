@@ -105,6 +105,12 @@ const BookCard = ({ book, onClick }) => {
       navigate(`/signin?redirectTo=${encodeURIComponent(window.location.pathname)}`);
       return;
     }
+    // Ensure book and book.id are valid
+    if (!book || typeof book.id === 'undefined') {
+      console.error('Book data is invalid for adding to wishlist.');
+      alert('Cannot add to wishlist: Book data is missing.');
+      return;
+    }
 
     try {
       await wishlistAPI.addToWishlist(book.id);
