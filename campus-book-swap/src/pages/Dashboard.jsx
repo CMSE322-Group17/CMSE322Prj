@@ -489,7 +489,7 @@ const Dashboard = () => {
         
         await authAxios.post(`${import.meta.env.VITE_API_URL}/api/messages`, {
           data: {
-            ChatId: request.chatId,
+            chatId: request.chatId, 
             sender: { id: user.id },
             receiver: { id: request.buyer.id },
             book: { id: request.book.id },
