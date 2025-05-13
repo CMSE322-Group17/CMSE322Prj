@@ -543,7 +543,6 @@ const Dashboard = () => {
         </div>
       )}
       
-      {/* Dashboard Navigation */}
       <div className="bg-white rounded-lg shadow-md mb-6">
         <div className="border-b border-gray-200">
           <nav className="flex -mb-px">
