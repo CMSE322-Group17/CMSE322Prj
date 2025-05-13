@@ -743,42 +743,6 @@ const Dashboard = () => {
                             </div>
                           </div>
                         ))}
-                        
-                        {/* Show Borrow Requests that require user's action */}
-                        {pendingBorrows.filter(borrow => !borrow.isUserBorrower).map(borrow => (
-                          <div key={`borrow-${borrow.id}`} className="p-3 hover:bg-gray-50">
-                            <div className="flex justify-between items-start">
-                              <div>
-                                <p className="font-medium text-gray-800">
-                                  <span className="text-purple-600">{borrow.otherUser?.username}</span> requested to borrow your book
-                                </p>
-                                <p className="text-sm text-gray-600 font-medium mt-1">
-                                  Book: {borrow.book?.attributes?.title}
-                                </p>
-                                <p className="text-xs text-gray-500 mt-1">
-                                  Duration: {borrow.duration} • Return by: {formatDate(borrow.returnDate)}
-                                </p>
-                                <div className="mt-2 flex space-x-2">
-                                  <button 
-                                    onClick={() => handleBorrowResponse(borrow.id, true)}
-                                    className="px-3 py-1 bg-purple-600 text-white text-xs rounded hover:bg-purple-700"
-                                  >
-                                    Accept
-                                  </button>
-                                  <button 
-                                    onClick={() => handleBorrowResponse(borrow.id, false)}
-                                    className="px-3 py-1 bg-gray-100 text-gray-700 text-xs rounded hover:bg-gray-200"
-                                  >
-                                    Decline
-                                  </button>
-                                </div>
-                              </div>
-                              <span className="bg-purple-100 text-purple-800 px-2 py-1 rounded text-xs font-medium">
-                                Borrow Request
-                              </span>
-                            </div>
-                          </div>
-                        ))}
 
                         {/* Show Purchase Requests that require user's action */}
                         {pendingPurchaseRequests.map(request => (
