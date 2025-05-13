@@ -790,7 +790,6 @@ const Dashboard = () => {
           </div>
         )}
         
-        {/* My Books Tab */}
         {activeTab === 'myBooks' && (
           <div>
             <div className="flex justify-between items-center mb-4">
