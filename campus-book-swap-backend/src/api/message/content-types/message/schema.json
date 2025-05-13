@@ -39,7 +39,7 @@
     },
     "timestamp": {
       "type": "datetime",
-      "required": true
+      "required": false
     },
     "messageType": {
       "type": "enumeration",
