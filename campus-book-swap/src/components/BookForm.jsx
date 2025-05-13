@@ -455,7 +455,7 @@ const BookForm = ({ onSuccess, bookToEdit = null }) => {
           </div>
           
           <div className="md:col-span-2">
-            <label htmlFor="cover" className="block mb-1 font-medium">Cover Image <span className="text-red-500">*</span></label>
+            <label htmlFor="cover" className="block mb-1 font-medium">Cover Image</label>
             <input
               type="file"
               id="cover"
