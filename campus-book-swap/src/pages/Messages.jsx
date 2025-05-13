@@ -26,9 +26,6 @@ const Messages = () => {
   });
   const navigate = useNavigate();
 
-  // Active tab state for filtering conversations
-  const [activeTab, setActiveTab] = useState('all');
-
   // Redirect if not authenticated
   useEffect(() => {
     if (!isAuthenticated) {
