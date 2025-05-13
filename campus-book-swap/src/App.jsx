@@ -93,6 +93,14 @@ function App() {
               </ProtectedRoute>
             } 
           />
+          <Route 
+            path="/wishlist" 
+            element={
+              <ProtectedRoute>
+                <Wishlist />
+              </ProtectedRoute>
+            } 
+          />
           
           {/* 404 Page */}
           <Route path="*" element={<NotFound />} />
