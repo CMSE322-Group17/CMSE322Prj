@@ -97,90 +97,114 @@ const Dashboard = () => {
     }
   };
 
-  // Fetch pending swap requests
+  // Fetch pending swap requests using the new API service
   const fetchPendingSwaps = async () => {
+    if (!user || !user.id) return;
     try {
-      const response = await authAxios.get(
-        `${import.meta.env.VITE_API_URL}/api/swap-offers?filters[$or][0][buyerId][$eq]=${user.id}&filters[$or][1][sellerId][$eq]=${user.id}&filters[status][$eq]=pending&populate=*`
-      );
+      const response = await swapOfferAPI.getUserSwapOffers();
+      const swapsData = response.data || []; 
       
-      const swaps = response.data.data || [];
+      // Log swap data for debugging
+      console.log('Raw swap data from API:', swapsData);
       
-      // Process the data
-      const processedSwaps = await Promise.all(swaps.map(async (swap) => {
-        try {
-          // Determine if the user is the buyer or seller
-          const isUserBuyer = swap.attributes.buyerId === user.id;
+      const processedSwaps = swapsData
+        .filter(swap => swap.status === 'pending')
+        .map(swap => {
+        const isUserRequester = swap.requester && swap.requester.id === user.id;
+        const otherUser = isUserRequester ? swap.owner : swap.requester;
+        
+        // Process requested book with proper error handling
+        let requestedBookDetails = { id: null, title: 'Unknown Book', author: 'Unknown Author', cover: null };
+        if (swap.requestedBook) {
+          let coverUrl = null;
+          // Handle cover image
+          if (swap.requestedBook.cover?.data?.attributes?.url) {
+            coverUrl = `${import.meta.env.VITE_API_URL}${swap.requestedBook.cover.data.attributes.url}`;
+          } else if (swap.requestedBook.cover?.url) {
+            coverUrl = `${import.meta.env.VITE_API_URL}${swap.requestedBook.cover.url}`;
+          }
           
-          // Fetch the book details
-          const bookResponse = await authAxios.get(
-            `${import.meta.env.VITE_API_URL}/api/books/${swap.attributes.bookId}?populate=*`
-          );
-          
-          // Fetch the other user's details
-          const otherUserId = isUserBuyer ? swap.attributes.sellerId : swap.attributes.buyerId;
-          const userResponse = await authAxios.get(
-            `${import.meta.env.VITE_API_URL}/api/users/${otherUserId}`
-          );
-          
-          // Return processed swap data
-          return {
-            id: swap.id,
-            ...swap.attributes,
-            isUserBuyer,
-            book: bookResponse.data.data,
-            otherUser: userResponse.data,
-            type: 'swap'
-          };
-        } catch (err) {
-          console.error('Error processing swap data:', err);
-          return {
-            id: swap.id,
-            ...swap.attributes,
-            isUserBuyer: swap.attributes.buyerId === user.id,
-            book: { attributes: { title: 'Unknown Book' } },
-            otherUser: { username: 'Unknown User' },
-            type: 'swap'
+          requestedBookDetails = {
+            id: swap.requestedBook.id,
+            title: swap.requestedBook.title || 'Unknown Book',
+            author: swap.requestedBook.author || 'Unknown Author',
+            cover: coverUrl
           };
         }
-      }));
+        
+        // Process offered books with proper error handling
+        let offeredBooksSummary = 'Book(s) offered by requester';
+        let offeredBooks = [];
+        if (Array.isArray(swap.offeredBooks) && swap.offeredBooks.length > 0) {
+          // Process each offered book
+          offeredBooks = swap.offeredBooks.map(book => {
+            let coverUrl = null;
+            if (book.cover?.data?.attributes?.url) {
+              coverUrl = `${import.meta.env.VITE_API_URL}${book.cover.data.attributes.url}`;
+            } else if (book.cover?.url) {
+              coverUrl = `${import.meta.env.VITE_API_URL}${book.cover.url}`;
+            }
+            
+            return {
+              id: book.id,
+              title: book.title || 'Unknown Book',
+              author: book.author || 'Unknown Author',
+              cover: coverUrl
+            };
+          });
+          
+          offeredBooksSummary = `${swap.offeredBooks[0].title || 'Unnamed Book'}${swap.offeredBooks.length > 1 ? ` (+${swap.offeredBooks.length - 1} more)` : ''}`;
+        }
+        
+        // Ensure we have a chatId
+        const chatId = swap.chatId || 
+          (swap.requester?.id && swap.owner?.id && swap.requestedBook?.id ? 
+            `${swap.requester.id}_${swap.owner.id}_${swap.requestedBook.id}` : 
+            null);
+
+        return {
+          id: swap.id,
+          ...swap,
+          isUserRequester,
+          otherUser: otherUser ? { id: otherUser.id, username: otherUser.username || 'Unknown User' } : { id: null, username: 'Unknown User' },
+          requestedBookDetails,
+          offeredBooksSummary,
+          offeredBooks,
+          type: 'swap',
+          timestamp: swap.timestamp || new Date().toISOString(),
+          chatId
+        };
+      });
       
+      console.log('Processed swap offers:', processedSwaps);
       setPendingSwaps(processedSwaps);
     } catch (err) {
-      console.error('Error fetching pending swaps:', err);
-      throw err;
+      console.error('Error fetching pending swaps:', err.response ? err.response.data : err.message);
+      setError(prev => prev + ' Failed to fetch pending swaps.');
     }
   };
 
   // Fetch pending purchase requests
   const fetchPendingPurchaseRequests = async () => {
     try {
-      // Get all messages where:
-      // 1. This user is the receiver (seller)
-      // 2. Message type is purchase_request
-      // 3. Request status is pending
       const response = await authAxios.get(
         `${import.meta.env.VITE_API_URL}/api/messages?filters[receiver][id][$eq]=${user.id}&filters[messageType][$eq]=purchase_request&filters[requestStatus][$eq]=pending&populate=*`
       );
       
       const purchaseRequests = response.data.data || [];
       
-      // Process the data
       const processedRequests = await Promise.all(purchaseRequests.map(async (request) => {
         try {
-          // Fetch the book details
           const bookId = request.attributes.book?.data?.id || request.attributes.bookId;
           const bookResponse = await authAxios.get(
             `${import.meta.env.VITE_API_URL}/api/books/${bookId}?populate=*`
           );
           
-          // Fetch the buyer's details
           const senderId = request.attributes.sender?.data?.id || request.attributes.senderId;
           const userResponse = await authAxios.get(
             `${import.meta.env.VITE_API_URL}/api/users/${senderId}`
           );
           
-          // Return processed request data
           return {
             id: request.id,
             ...request.attributes,
