@@ -84,14 +84,11 @@ const Home = () => {
             return `${baseUrl}${path}`;
           }
         }
-        
-        // If the array item has a url property
         if (firstImage.url) {
           const path = firstImage.url.startsWith('/') ? firstImage.url : `/${firstImage.url}`;
           return `${baseUrl}${path}`;
         }
       }
-      
       // Case 3: Strapi v4 format with data.attributes
       if (imageData.data && imageData.data.attributes) {
         const { url } = imageData.data.attributes;
