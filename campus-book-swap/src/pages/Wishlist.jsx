@@ -15,12 +15,15 @@ const Wishlist = () => {
 
   useEffect(() => {
     const fetchWishlist = async () => {
+      setLoading(true); // Start loading
       try {
         const entries = await wishlistAPI.getUserWishlist();
-        setWishlistEntries(entries);
+        // Filter out entries where book is null immediately after fetching
+        const validEntries = entries.filter(entry => entry && entry.book);
+        setWishlistEntries(validEntries);
       } catch (error) {
         console.error('Error fetching wishlist:', error);
-        alert('An error occurred. Please try again later.');
+        toast.error('An error occurred while fetching your wishlist. Please try again later.');
       } finally {
         setLoading(false);
       }
