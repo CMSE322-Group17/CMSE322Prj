@@ -469,14 +469,11 @@ const BooksPage = () => {
     }));
   };
 
-  // Fetch data when component mounts or category changes
   useEffect(() => {
     const fetchData = async () => {
       try {
         setLoading(true);
-        // Fetch categories first
         const categoriesData = await bookAPI.getCategories();
-        // Add "All" option
         const processedCategories = [
           { id: 'all', name: 'All Categories' },
           ...categoriesData.data.map(cat => ({
