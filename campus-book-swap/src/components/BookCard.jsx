@@ -64,17 +64,38 @@ const BookCard = ({ book, onClick }) => {
       navigate(`/signin?redirectTo=${encodeURIComponent(window.location.pathname)}`);
       return;
     }
+    // Ensure book and book.id are valid before proceeding
+    if (!book || typeof book.id === 'undefined') {
+      console.error('Book data is invalid for primary action.');
+      alert('Cannot perform action: Book data is missing.');
+      return;
+    }
 
     if (isInWishlist) {
-      await wishlistAPI.removeWishlistEntry(book.wishlistEntryId || book.id);
-      setIsInWishlist(false);
-      alert('Book removed from wishlist!');
+      try {
+        // Let's find the wishlist entry ID first
+        const userWishlist = await wishlistAPI.getUserWishlist();
+        const wishlistItem = userWishlist.find(item => item.book?.id === book.id);
+        if (wishlistItem) {
+          await wishlistAPI.removeWishlistEntry(wishlistItem.id);
+          setIsInWishlist(false);
+          alert('Book removed from wishlist!');
+        } else {
+          alert('Could not find book in wishlist to remove.');
+        }
+      } catch (error) {
+        console.error('Error removing from wishlist:', error);
+        alert('Failed to remove book from wishlist.');
+      }
     } else {
-      const entry = await wishlistAPI.addToWishlist(book.id);
-      // store entry id for removal
-      book.wishlistEntryId = entry.data.id;
-      setIsInWishlist(true);
-      alert('Book added to wishlist!');
+      try {
+        const entry = await wishlistAPI.addToWishlist(book.id);
+        setIsInWishlist(true);
+        alert('Book added to wishlist!');
+      } catch (error) {
+        console.error('Error adding to wishlist:', error);
+        alert('Failed to add book to wishlist.');
+      }
     }
   };
 
