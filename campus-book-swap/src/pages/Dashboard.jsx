@@ -61,13 +61,11 @@ const Dashboard = () => {
   // Fetch user's books
   const fetchMyBooks = async () => {
     try {
-      // Get books where users_permissions_user matches current user ID
       const response = await authAxios.get(
         `${import.meta.env.VITE_API_URL}/api/books?filters[users_permissions_user][id][$eq]=${user.id}&populate=*`
       );
       
       const books = response.data.data.map(book => {
-        // Safe access to cover URL with proper fallback
         let coverUrl = null;
         try {
           if (book.attributes?.cover?.data?.attributes?.url) {
