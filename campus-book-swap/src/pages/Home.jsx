@@ -477,10 +477,10 @@ const Home = () => {
         </div>
       </div>
     );
-  };
+  }, []);
   
   // Testimonials Component
-  const TestimonialsSection = () => {
+  const TestimonialsSection = useCallback(() => {
     const testimonials = [
       {
         id: 1,
