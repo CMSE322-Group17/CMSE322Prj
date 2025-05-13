@@ -395,6 +395,7 @@ export interface ApiBookBook extends Schema.CollectionType {
     createdBy: Attribute.Relation<'api::book.book', 'oneToOne', 'admin::user'> &
       Attribute.Private;
     description: Attribute.Text;
+    Display: Attribute.Boolean & Attribute.DefaultTo<false>;
     displayTitle: Attribute.String;
     exchange: Attribute.String;
     featured: Attribute.Boolean & Attribute.DefaultTo<false>;
