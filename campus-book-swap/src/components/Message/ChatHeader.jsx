@@ -3,20 +3,11 @@ import { Link } from 'react-router-dom';
 const ChatHeader = ({ 
   bookData, 
   otherUserData, 
-  onBack, 
   loading = false 
 }) => {
   if (loading) {
     return (
       <div className="bg-white border-b border-gray-200 p-3 flex items-center">
-        <button 
-          onClick={onBack}
-          className="mr-2 text-gray-500 hover:text-gray-700 focus:outline-none"
-        >
-          <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
-          </svg>
-        </button>
         <div className="flex-grow">
           <div className="animate-pulse flex space-x-4 items-center">
             <div className="rounded-full bg-gray-200 h-10 w-10"></div>
