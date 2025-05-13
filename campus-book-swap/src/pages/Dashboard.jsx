@@ -890,7 +890,6 @@ const Dashboard = () => {
           </div>
         )}
         
-        {/* Pending Actions Tab */}
         {activeTab === 'actions' && (
           <div>
             <h2 className="text-lg font-medium mb-4">Pending Actions</h2>
