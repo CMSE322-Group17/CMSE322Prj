@@ -709,7 +709,6 @@ const Dashboard = () => {
                       </div>
                     ) : (
                       <div className="divide-y divide-gray-200">
-                        {/* Show Swap Requests that require user's action */}
                         {pendingSwaps.filter(swap => !swap.isUserBuyer).map(swap => (
                           <div key={`swap-${swap.id}`} className="p-3 hover:bg-gray-50">
                             <div className="flex justify-between items-start">
