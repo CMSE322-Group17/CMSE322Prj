@@ -432,9 +432,6 @@ const Dashboard = () => {
     });
   };
 
-  // Calculate total pending actions
-  const pendingActionsCount = pendingSwaps.length + pendingPurchaseRequests.length;
-
   if (isLoading) {
     return (
       <div className="max-w-6xl mx-auto p-4">
