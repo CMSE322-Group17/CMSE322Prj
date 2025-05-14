@@ -212,6 +212,9 @@ export interface AdminTransferToken extends Struct.CollectionTypeSchema {
     pluralName: 'transfer-tokens';
     singularName: 'transfer-token';
   };
+  options: {
+    draftAndPublish: false;
+  };
   pluginOptions: {
     'content-manager': {
       visible: false;
