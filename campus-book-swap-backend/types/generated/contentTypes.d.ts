@@ -470,30 +470,30 @@ export interface ApiCartItemCartItem extends Struct.CollectionTypeSchema {
     draftAndPublish: true;
   };
   attributes: {
-    bookId: Attribute.String & Attribute.Required;
-    createdAt: Attribute.DateTime;
-    createdBy: Attribute.Relation<
-      'api::cart-item.cart-item',
-      'oneToOne',
-      'admin::user'
+    bookId: Schema.Attribute.String & Schema.Attribute.Required;
+    createdAt: Schema.Attribute.DateTime;
+    createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+    locale: Schema.Attribute.String & Schema.Attribute.Private;
+    localizations: Schema.Attribute.Relation<
+      'oneToMany',
+      'api::cart-item.cart-item'
     > &
-      Attribute.Private;
-    price: Attribute.Decimal;
-    publishedAt: Attribute.DateTime;
-    quantity: Attribute.Integer & Attribute.Required & Attribute.DefaultTo<1>;
-    transactionType: Attribute.Enumeration<['buy', 'swap']>;
-    updatedAt: Attribute.DateTime;
-    updatedBy: Attribute.Relation<
-      'api::cart-item.cart-item',
-      'oneToOne',
-      'admin::user'
-    > &
-      Attribute.Private;
-    userId: Attribute.String & Attribute.Required;
+      Schema.Attribute.Private;
+    price: Schema.Attribute.Decimal;
+    publishedAt: Schema.Attribute.DateTime;
+    quantity: Schema.Attribute.Integer &
+      Schema.Attribute.Required &
+      Schema.Attribute.DefaultTo<1>;
+    transactionType: Schema.Attribute.Enumeration<['buy', 'swap']>;
+    updatedAt: Schema.Attribute.DateTime;
+    updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+    userId: Schema.Attribute.String & Schema.Attribute.Required;
   };
 }
 
-export interface ApiCategoryCategory extends Schema.CollectionType {
+export interface ApiCategoryCategory extends Struct.CollectionTypeSchema {
   collectionName: 'categories';
   info: {
     description: '';
