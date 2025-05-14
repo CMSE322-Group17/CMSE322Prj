@@ -22,7 +22,7 @@ const BooksPage = () => {
 
   const BookDetails = ({ book, onClose }) => {
     const [activeTab, setActiveTab] = useState('details');
-    const { isAuthenticated } = useAuth();
+    const { isAuthenticated, authAxios } = useAuth(); // Added authAxios
     const { addToCart } = useCart();
     const navigate = useNavigate();
     const [sellerDetails, setSellerDetails] = useState(null);
