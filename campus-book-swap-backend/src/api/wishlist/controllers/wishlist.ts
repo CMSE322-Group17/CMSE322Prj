@@ -33,7 +33,7 @@ export default factories.createCoreController('api::wishlist.wishlist', ({ strap
     ctx.query = {
       ...ctx.query,
       filters: {
-        ...(ctx.query.filters || {}),
+        ...(typeof ctx.query.filters === 'object' && ctx.query.filters !== null ? ctx.query.filters : {}),
         user: { id: userId },
       },
       populate: ['book'],
