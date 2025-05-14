@@ -3,9 +3,8 @@
  */
 
 import { factories } from '@strapi/strapi';
-import { Strapi } from '@strapi/strapi';
 
-export default factories.createCoreController('api::swap-offer.swap-offer', ({ strapi }: { strapi: Strapi }) => ({
+export default factories.createCoreController('api::swap-offer.swap-offer', ({ strapi }) => ({
   async create(ctx) {
     const { user } = ctx.state; // Authenticated user
     const bodyData = ctx.request.body?.data;
