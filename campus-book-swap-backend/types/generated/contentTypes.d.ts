@@ -632,54 +632,42 @@ export interface ApiSwapOfferSwapOffer extends Struct.CollectionTypeSchema {
     draftAndPublish: true;
   };
   attributes: {
-    chatId: Attribute.String & Attribute.Required;
-    createdAt: Attribute.DateTime;
-    createdBy: Attribute.Relation<
-      'api::swap-offer.swap-offer',
-      'oneToOne',
-      'admin::user'
+    chatId: Schema.Attribute.String & Schema.Attribute.Required;
+    createdAt: Schema.Attribute.DateTime;
+    createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+    locale: Schema.Attribute.String & Schema.Attribute.Private;
+    localizations: Schema.Attribute.Relation<
+      'oneToMany',
+      'api::swap-offer.swap-offer'
     > &
-      Attribute.Private;
-    messageToOwner: Attribute.Text;
-    messageToRequester: Attribute.Text;
-    offeredBooks: Attribute.Relation<
-      'api::swap-offer.swap-offer',
-      'manyToMany',
-      'api::book.book'
-    >;
-    owner: Attribute.Relation<
-      'api::swap-offer.swap-offer',
+      Schema.Attribute.Private;
+    messageToOwner: Schema.Attribute.Text;
+    messageToRequester: Schema.Attribute.Text;
+    offeredBooks: Schema.Attribute.Relation<'manyToMany', 'api::book.book'>;
+    owner: Schema.Attribute.Relation<
       'manyToOne',
       'plugin::users-permissions.user'
     >;
-    publishedAt: Attribute.DateTime;
-    requestedBook: Attribute.Relation<
-      'api::swap-offer.swap-offer',
-      'manyToOne',
-      'api::book.book'
-    >;
-    requester: Attribute.Relation<
-      'api::swap-offer.swap-offer',
+    publishedAt: Schema.Attribute.DateTime;
+    requestedBook: Schema.Attribute.Relation<'manyToOne', 'api::book.book'>;
+    requester: Schema.Attribute.Relation<
       'manyToOne',
       'plugin::users-permissions.user'
     >;
-    status: Attribute.Enumeration<
+    status: Schema.Attribute.Enumeration<
       ['pending', 'accepted', 'declined', 'completed']
     > &
-      Attribute.Required &
-      Attribute.DefaultTo<'pending'>;
-    timestamp: Attribute.DateTime & Attribute.Required;
-    updatedAt: Attribute.DateTime;
-    updatedBy: Attribute.Relation<
-      'api::swap-offer.swap-offer',
-      'oneToOne',
-      'admin::user'
-    > &
-      Attribute.Private;
+      Schema.Attribute.Required &
+      Schema.Attribute.DefaultTo<'pending'>;
+    timestamp: Schema.Attribute.DateTime & Schema.Attribute.Required;
+    updatedAt: Schema.Attribute.DateTime;
+    updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
   };
 }
 
-export interface ApiTransactionTransaction extends Schema.CollectionType {
+export interface ApiTransactionTransaction extends Struct.CollectionTypeSchema {
   collectionName: 'transactions';
   info: {
     displayName: 'Transaction';
