@@ -1,4 +1,4 @@
-// import type { Core } from '@strapi/strapi';
+import { initializeWebSocket } from './websockets/socket-server';
 
 export default {
   /**
