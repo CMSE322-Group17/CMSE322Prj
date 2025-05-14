@@ -113,21 +113,24 @@ const BookCard = ({ book, onClick }) => {
   };
 
   return (
-    <div onClick={onClick} className="group cursor-pointer">
+    <div onClick={!isSold ? onClick : undefined} className={`group ${!isSold ? 'cursor-pointer' : 'opacity-70'}`}>
       <div className="bg-white rounded-lg shadow-sm overflow-hidden transition-all duration-300 hover:shadow-md h-full flex flex-col relative">
-        {/* Book Type Badge */}
-        <div className={`absolute top-3 left-3 z-10 px-2 py-1 rounded-full text-xs font-semibold flex items-center gap-1 ${typeStyles[book.bookType]} border`}>
+        {isSold && (
+          <div className="absolute top-3 right-3 z-10 px-2 py-1 rounded-full text-xs font-semibold flex items-center gap-1 bg-red-500 text-white border border-red-600">
+            Sold
+          </div>
+        )}
+        <div className={`absolute top-3 left-3 z-10 px-2 py-1 rounded-full text-xs font-semibold flex items-center gap-1 ${typeStyles[book.bookType]} border ${isSold ? 'filter grayscale' : ''}`}>
           {typeIcons[book.bookType]}
           {book.bookType}
         </div>
 
-        {/* Cover Image */}
         <div className="relative aspect-w-2 aspect-h-3 bg-gray-100">
           {book.cover ? (
             <img 
               src={book.cover} 
               alt={book.title} 
-              className="w-full h-64 object-cover object-center transition-transform duration-300 group-hover:scale-105" 
+              className={`w-full h-64 object-cover object-center transition-transform duration-300 group-hover:scale-105 ${isSold ? 'filter grayscale' : ''}`}
               onError={(e) => {
                 e.target.onerror = null;
                 e.target.src = 'https://via.placeholder.com/300x450?text=No+Cover';
