@@ -203,7 +203,7 @@ const BookDetail = () => {
                   <img 
                     src={book.cover} 
                     alt={book.title} 
-                    className="w-64 h-80 object-cover rounded-xl shadow-md"
+                    className={`w-64 h-80 object-cover rounded-xl shadow-md ${isSold ? 'filter grayscale' : ''}`}
                     onError={(e) => {
                       e.target.onerror = null;
                       e.target.src = 'https://via.placeholder.com/160x224?text=Book+Cover';
