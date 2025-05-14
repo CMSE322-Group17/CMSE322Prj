@@ -656,7 +656,7 @@ const Dashboard = () => {
           <div>
             <h2 className="text-lg font-medium mb-4">Pending Actions</h2>
             
-            {pendingActionsCount === 0 ? (
+            {pendingSwaps.length === 0 && pendingPurchaseRequests.length === 0 ? (
               <div className="text-center py-8 bg-gray-50 rounded-lg">
                 <svg xmlns="http://www.w3.org/2000/svg" className="h-12 w-12 text-gray-400 mx-auto mb-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
