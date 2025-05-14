@@ -128,37 +128,33 @@ export interface AdminPermission extends Struct.CollectionTypeSchema {
     };
   };
   attributes: {
-    action: Attribute.String &
-      Attribute.Required &
-      Attribute.SetMinMaxLength<{
+    action: Schema.Attribute.String &
+      Schema.Attribute.Required &
+      Schema.Attribute.SetMinMaxLength<{
         minLength: 1;
       }>;
-    actionParameters: Attribute.JSON & Attribute.DefaultTo<{}>;
-    conditions: Attribute.JSON & Attribute.DefaultTo<[]>;
-    createdAt: Attribute.DateTime;
-    createdBy: Attribute.Relation<
-      'admin::permission',
-      'oneToOne',
-      'admin::user'
-    > &
-      Attribute.Private;
-    properties: Attribute.JSON & Attribute.DefaultTo<{}>;
-    role: Attribute.Relation<'admin::permission', 'manyToOne', 'admin::role'>;
-    subject: Attribute.String &
-      Attribute.SetMinMaxLength<{
+    actionParameters: Schema.Attribute.JSON & Schema.Attribute.DefaultTo<{}>;
+    conditions: Schema.Attribute.JSON & Schema.Attribute.DefaultTo<[]>;
+    createdAt: Schema.Attribute.DateTime;
+    createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+    locale: Schema.Attribute.String & Schema.Attribute.Private;
+    localizations: Schema.Attribute.Relation<'oneToMany', 'admin::permission'> &
+      Schema.Attribute.Private;
+    properties: Schema.Attribute.JSON & Schema.Attribute.DefaultTo<{}>;
+    publishedAt: Schema.Attribute.DateTime;
+    role: Schema.Attribute.Relation<'manyToOne', 'admin::role'>;
+    subject: Schema.Attribute.String &
+      Schema.Attribute.SetMinMaxLength<{
         minLength: 1;
       }>;
-    updatedAt: Attribute.DateTime;
-    updatedBy: Attribute.Relation<
-      'admin::permission',
-      'oneToOne',
-      'admin::user'
-    > &
-      Attribute.Private;
+    updatedAt: Schema.Attribute.DateTime;
+    updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
   };
 }
 
-export interface AdminRole extends Schema.CollectionType {
+export interface AdminRole extends Struct.CollectionTypeSchema {
   collectionName: 'admin_roles';
   info: {
     description: '';
