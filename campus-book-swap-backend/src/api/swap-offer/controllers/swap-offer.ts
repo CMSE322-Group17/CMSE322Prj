@@ -43,14 +43,16 @@ export default factories.createCoreController('api::swap-offer.swap-offer', ({ s
     }
 
     // Initialize filters if not present
-    if (!ctx.query.filters) {
+    if (!ctx.query.filters || typeof ctx.query.filters !== 'object') {
       ctx.query.filters = {};
     }
     // Add filter to fetch offers where the user is either requester or owner
-    ctx.query.filters.$or = [
-      { requester: user.id },
-      { owner: user.id },
-    ];
+    Object.assign(ctx.query.filters, {
+      $or: [
+        { requester: user.id },
+        { owner: user.id },
+      ]
+    });
     
     // Ensure populate is an object and merge existing populate queries
     const existingPopulate = typeof ctx.query.populate === 'object' && ctx.query.populate !== null ? ctx.query.populate : {};
