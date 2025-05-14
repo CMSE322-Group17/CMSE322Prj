@@ -1143,6 +1143,9 @@ export interface PluginUsersPermissionsRole
     pluralName: 'roles';
     singularName: 'role';
   };
+  options: {
+    draftAndPublish: false;
+  };
   pluginOptions: {
     'content-manager': {
       visible: false;
