@@ -575,68 +575,78 @@ const Dashboard = () => {
               </div>
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {myBooks.map(book => (
-                  <div key={book.id} className="bg-white rounded-lg shadow border border-gray-200 overflow-hidden">
-                    <div className="p-4 flex">
-                      <div className="w-24 h-32 bg-gray-200 rounded overflow-hidden flex-shrink-0">
-                        {book.cover ? (
-                          <img 
-                            src={book.cover} 
-                            alt={book.title} 
-                            className="w-full h-full object-cover"
-                          />
-                        ) : (
-                          <div className="w-full h-full bg-gray-300 flex items-center justify-center">
-                            <span className="text-gray-500 text-xs">No image</span>
+                {myBooks.map(book => {
+                  const isSold = book.status === 'sold';
+                  return (
+                    <div key={book.id} className={`bg-white rounded-lg shadow border border-gray-200 overflow-hidden ${isSold ? 'filter grayscale opacity-50' : ''}`}>
+                      <div className="p-4 flex">
+                        <div className="w-24 h-32 bg-gray-200 rounded overflow-hidden flex-shrink-0">
+                          {book.cover ? (
+                            <img 
+                              src={book.cover} 
+                              alt={book.title} 
+                              className="w-full h-full object-cover"
+                            />
+                          ) : (
+                            <div className="w-full h-full bg-gray-300 flex items-center justify-center">
+                              <span className="text-gray-500 text-xs">No image</span>
+                            </div>
+                          )}
+                        </div>
+                        
+                        <div className="ml-4 flex-grow">
+                          <div className="flex justify-between items-center">
+                            <h3 className="font-medium text-lg text-gray-800">{book.title}</h3>
+                            {isSold && (
+                              <span className="px-2 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800 ml-2">
+                                Sold
+                              </span>
+                            )}
+                            <span className={`
+                              px-2 py-0.5 rounded-full text-xs font-medium
+                              ${book.bookType === 'For Sale' ? 'bg-green-100 text-green-800' : 
+                                book.bookType === 'For Swap' ? 'bg-blue-100 text-blue-800' : 
+                                'bg-purple-100 text-purple-800'}
+                            `}>
+                              {book.bookType}
+                            </span>
                           </div>
-                        )}
+                          <p className="text-gray-500 text-sm">by {book.author}</p>
+                          <div className="mt-2 text-sm">
+                            <p><span className="font-medium">Condition:</span> {book.condition}</p>
+                            {book.subject && <p><span className="font-medium">Subject:</span> {book.subject}</p>}
+                            {book.category && <p><span className="font-medium">Category:</span> {book.category.name}</p>}
+                            
+                            {book.bookType === 'For Sale' && book.price && (
+                              <p><span className="font-medium">Price:</span> ${book.price.toFixed(2)}</p>
+                            )}
+                            
+                            {book.bookType === 'For Swap' && book.exchange && (
+                              <p><span className="font-medium">Swap For:</span> {book.exchange}</p>
+                            )}
+                          </div>
+                        </div>
                       </div>
                       
-                      <div className="ml-4 flex-grow">
-                        <div className="flex justify-between">
-                          <h3 className="font-medium text-lg text-gray-800">{book.title}</h3>
-                          <span className={`
-                            px-2 py-0.5 rounded-full text-xs font-medium
-                            ${book.bookType === 'For Sale' ? 'bg-green-100 text-green-800' : 
-                              book.bookType === 'For Swap' ? 'bg-blue-100 text-blue-800' : 
-                              'bg-purple-100 text-purple-800'}
-                          `}>
-                            {book.bookType}
-                          </span>
-                        </div>
-                        <p className="text-gray-500 text-sm">by {book.author}</p>
-                        <div className="mt-2 text-sm">
-                          <p><span className="font-medium">Condition:</span> {book.condition}</p>
-                          {book.subject && <p><span className="font-medium">Subject:</span> {book.subject}</p>}
-                          {book.category && <p><span className="font-medium">Category:</span> {book.category.name}</p>}
-                          
-                          {book.bookType === 'For Sale' && book.price && (
-                            <p><span className="font-medium">Price:</span> ${book.price.toFixed(2)}</p>
-                          )}
-                          
-                          {book.bookType === 'For Swap' && book.exchange && (
-                            <p><span className="font-medium">Swap For:</span> {book.exchange}</p>
-                          )}
-                        </div>
+                      <div className="border-t border-gray-100 p-3 bg-gray-50 flex justify-end space-x-2">
+                        <button 
+                          onClick={() => !isSold && handleEditBook(book)}
+                          disabled={isSold}
+                          className={`px-3 py-1 rounded ${isSold ? 'bg-gray-200 text-gray-500 cursor-not-allowed' : 'bg-blue-100 text-blue-600 hover:bg-blue-200'}`}
+                        >
+                          Edit
+                        </button>
+                        <button 
+                          onClick={() => !isSold && handleDeleteBook(book.id)}
+                          disabled={isSold}
+                          className={`px-3 py-1 rounded ${isSold ? 'bg-gray-200 text-gray-500 cursor-not-allowed' : 'bg-red-100 text-red-600 hover:bg-red-200'}`}
+                        >
+                          Delete
+                        </button>
                       </div>
                     </div>
-                    
-                    <div className="border-t border-gray-100 p-3 bg-gray-50 flex justify-end space-x-2">
-                      <button 
-                        onClick={() => handleEditBook(book)}
-                        className="px-3 py-1 bg-blue-100 text-blue-600 rounded hover:bg-blue-200"
-                      >
-                        Edit
-                      </button>
-                      <button 
-                        onClick={() => handleDeleteBook(book.id)}
-                        className="px-3 py-1 bg-red-100 text-red-600 rounded hover:bg-red-200"
-                      >
-                        Delete
-                      </button>
-                    </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             )}
           </div>
