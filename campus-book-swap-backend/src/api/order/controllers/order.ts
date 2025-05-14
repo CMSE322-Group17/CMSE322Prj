@@ -64,47 +64,52 @@ export default factories.createCoreController('api::order.order', ({ strapi }) =
   },
 
   async update(ctx) {
-    // Call the default core action
     const response = await super.update(ctx);
     // @ts-ignore
     const orderId = ctx.params.id;
     // @ts-ignore
-    const { status } = ctx.request.body.data; // Get status from request body
+    const { status } = ctx.request.body.data; // This is the new status of the order itself
 
     if (status === 'completed' && response.data) {
-      const updatedOrder = await strapi.entityService.findOne('api::order.order', orderId, {
-        // @ts-ignore
-        populate: { 
-          items: { 
-            populate: { 
-              book: { populate: ['seller', 'users_permissions_user'] } 
-            }
-          },
-          user: true // Buyer
-        },
-      });
+      // Fetch the order again to get its current state, including the JSON 'items' field
+      const updatedOrder = await strapi.entityService.findOne('api::order.order', orderId);
+
+      if (!updatedOrder) {
+        strapi.log.error(`Order with ID ${orderId} not found after update.`);
+        return response;
+      }
       
       // @ts-ignore
-      const orderItems = updatedOrder?.items;
+      const orderItems = updatedOrder.items; // 'items' is a JSON field on the order
       // @ts-ignore
-      const buyerId = updatedOrder?.user?.id || ctx.state.user?.id;
+      const buyerId = updatedOrder.userId; // 'userId' is a string field on the order
 
       if (!buyerId) {
-        strapi.log.error(`Buyer ID not found for order ${orderId} during update.`);
+        strapi.log.error(`Buyer ID (userId) not found for order ${orderId} during update.`);
         return response;
       }
 
       if (orderItems && Array.isArray(orderItems)) {
         for (const item of orderItems) {
           // @ts-ignore
-          const bookEntry = item.book;
-          if (!bookEntry || !bookEntry.id) {
-            strapi.log.warn(`Book details missing for an item in order ${orderId} during update.`);
+          const bookId = item.bookId; // Assuming each item in the JSON array has a bookId
+
+          if (!bookId) {
+            strapi.log.warn(`Book ID missing for an item in order ${orderId} during update.`);
             continue;
           }
-          const bookId = bookEntry.id;
 
           try {
+            // Fetch the book details separately since 'items' is JSON
+            const bookEntry = await strapi.entityService.findOne('api::book.book', bookId, {
+              populate: ['seller', 'users_permissions_user'], // Populate seller fields on the book
+            });
+
+            if (!bookEntry) {
+              strapi.log.warn(`Book with ID ${bookId} not found during order update.`);
+              continue;
+            }
+            
             // @ts-ignore
             const sellerId = bookEntry.seller?.id || bookEntry.users_permissions_user?.id;
 
