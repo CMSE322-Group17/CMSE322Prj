@@ -316,6 +316,9 @@ export interface AdminUser extends Struct.CollectionTypeSchema {
     pluralName: 'users';
     singularName: 'user';
   };
+  options: {
+    draftAndPublish: false;
+  };
   pluginOptions: {
     'content-manager': {
       visible: false;
