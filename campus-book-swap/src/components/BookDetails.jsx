@@ -69,6 +69,10 @@ const BookDetail = () => {
 
   // Handle action button click
   const handleActionClick = async (actionType) => {
+    if (isSold) {
+      alert("This book has been sold and is no longer available.");
+      return;
+    }
     if (!isAuthenticated) {
       alert("Please sign in to continue.");
       navigate('/signin?redirectTo=' + encodeURIComponent(window.location.pathname));
