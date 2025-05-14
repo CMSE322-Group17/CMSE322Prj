@@ -156,9 +156,14 @@ const BookDetail = () => {
           <div className="flex justify-between items-center">
             <div className="flex items-center">
               <h1 className="text-2xl font-bold text-gray-800">{book.title}</h1>
-              <div className={`ml-3 px-3 py-1 rounded-full text-xs font-medium ${getBookTypeStyles(book.bookType)}`}>
+              <div className={`ml-3 px-3 py-1 rounded-full text-xs font-medium ${getBookTypeStyles(book.bookType)} ${isSold ? 'filter grayscale' : ''}`}>
                 {book.bookType}
               </div>
+              {isSold && (
+                <div className="ml-3 px-3 py-1 rounded-full text-xs font-medium bg-red-500 text-white border border-red-600">
+                  Sold
+                </div>
+              )}
             </div>
           </div>
         </div>
