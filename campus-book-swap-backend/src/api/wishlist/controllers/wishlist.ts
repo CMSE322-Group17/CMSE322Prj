@@ -54,7 +54,7 @@ export default factories.createCoreController('api::wishlist.wishlist', ({ strap
     if (!entry) {
       return ctx.notFound('Wishlist item not found');
     }
-    if (entry.user?.id !== userId) {
+    if ((entry as any).user?.id !== userId) {
       return ctx.unauthorized('You can only remove your own wishlist items');
     }
 
