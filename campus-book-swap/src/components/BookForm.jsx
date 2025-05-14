@@ -146,7 +146,6 @@ const BookForm = ({ onSuccess, bookToEdit = null }) => {
         title: book.title,
         author: book.author,
         description: book.description,
-        price: book.bookType === 'For Sale' ? (parseFloat(book.price) || 0) : 0,
         condition: book.condition,
         exchange: book.exchange,
         subject: book.subject,
