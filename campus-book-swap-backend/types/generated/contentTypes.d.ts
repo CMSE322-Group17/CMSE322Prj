@@ -116,6 +116,9 @@ export interface AdminPermission extends Struct.CollectionTypeSchema {
     pluralName: 'permissions';
     singularName: 'permission';
   };
+  options: {
+    draftAndPublish: false;
+  };
   pluginOptions: {
     'content-manager': {
       visible: false;
