@@ -480,7 +480,7 @@ const Dashboard = () => {
             >
               My Books
             </button>
-            <button
+            {/* <button
               onClick={() => setActiveTab('actions')}
               className={`mr-8 py-4 px-1 relative ${
                 activeTab === 'actions'
