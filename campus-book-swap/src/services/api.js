@@ -418,7 +418,8 @@ export const bookAPI = {
         method: 'GET',
         params: {
           populate: '*',
-          'filters[title][$containsi]': query
+          'filters[title][$containsi]': query,
+          'filters[status][$ne]': 'sold' // Exclude sold books
         }
       });
     } catch (error) {
