@@ -38,6 +38,10 @@ const wsManager = {
     this.connection.onerror = (error) => {
       console.error('WebSocket error:', error);
       this.isConnecting = false;
+      // Attempt to reconnect if the connection is not open and not already in the process of connecting
+      if (this.connection?.readyState !== WebSocket.OPEN && this.connection?.readyState !== WebSocket.CONNECTING) {
+        this.handleReconnect();
+      }
     };
 
     this.connection.onmessage = (event) => {
