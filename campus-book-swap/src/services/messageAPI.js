@@ -49,7 +49,11 @@ const wsManager = {
         const message = JSON.parse(event.data);
         this.handleMessage(message);
       } catch (error) {
-        console.error('Error parsing WebSocket message:', error);
+        // Ignore non-JSON messages (e.g., plain strings from server)
+        if (typeof event.data === 'string' && event.data.trim().startsWith('{')) {
+          console.error('Error parsing WebSocket message:', error);
+        }
+        // else: ignore non-JSON message silently
       }
     };
   },
