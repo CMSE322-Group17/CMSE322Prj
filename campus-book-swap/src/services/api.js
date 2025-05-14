@@ -166,7 +166,8 @@ export const bookAPI = {
       return await fetchFromAPI('/api/books', {
         method: 'GET',
         params: {
-          populate: '*'
+          populate: '*',
+          'filters[status][$ne]': 'sold' // Exclude sold books
         }
       });
     } catch (error) {
