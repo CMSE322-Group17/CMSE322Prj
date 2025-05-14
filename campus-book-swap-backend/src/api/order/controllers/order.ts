@@ -124,12 +124,14 @@ export default factories.createCoreController('api::order.order', ({ strapi }) =
               },
             });
             
+            // Check for existing transactions to avoid duplicates
             const existingTransactions = await strapi.entityService.findMany('api::transaction.transaction', {
               filters: {
                 book: { id: bookId },
                 users_permissions_user: { id: buyerId },
                 seller: { id: sellerId },
                 type: 'sale',
+                // Consider adding order: { id: orderId } if your transaction schema links to orders
               },
             });
 
