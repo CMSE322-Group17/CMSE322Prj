@@ -121,6 +121,16 @@
       "required": false,
       "default": 0
     },
+    "status": {
+      "type": "enumeration",
+      "enum": [
+        "available",
+        "pending",
+        "sold"
+      ],
+      "default": "available",
+      "required": true
+    },
     "wishlists": {
       "type": "relation",
       "relation": "oneToMany",
