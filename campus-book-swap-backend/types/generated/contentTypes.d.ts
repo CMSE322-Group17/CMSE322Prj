@@ -1,6 +1,6 @@
-import type { Attribute, Schema } from '@strapi/strapi';
+import type { Schema, Struct } from '@strapi/strapi';
 
-export interface AdminApiToken extends Schema.CollectionType {
+export interface AdminApiToken extends Struct.CollectionTypeSchema {
   collectionName: 'strapi_api_tokens';
   info: {
     description: '';
