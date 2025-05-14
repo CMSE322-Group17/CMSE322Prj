@@ -424,6 +424,9 @@ export interface ApiBookBook extends Schema.CollectionType {
       'manyToOne',
       'plugin::users-permissions.user'
     >;
+    status: Attribute.Enumeration<['available', 'pending', 'sold']> &
+      Attribute.Required &
+      Attribute.DefaultTo<'available'>;
     subject: Attribute.String;
     swapOffersAsOffered: Attribute.Relation<
       'api::book.book',
