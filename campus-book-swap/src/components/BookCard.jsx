@@ -1,24 +1,23 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react'; // Removed useContext if not used elsewhere
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
-// import cart context if needed in future
+import { useCart } from '../contexts/CartContext'; // Correct: import useCart
 import { wishlistAPI } from '../services/api';
 
 // Unified BookCard component for displaying book items
 const BookCard = ({ book, onClick }) => {
   const navigate = useNavigate();
   const { isAuthenticated } = useAuth();
+  const { addToCart } = useCart(); // Correct: use useCart() hook
   const [isInWishlist, setIsInWishlist] = useState(false);
 
   useEffect(() => {
     let isMounted = true;
     const checkWishlist = async () => {
-      // Ensure book object and book.id exist before checking wishlist
       if (!isAuthenticated || !book || typeof book.id === 'undefined') return;
       try {
         const wishlist = await wishlistAPI.getUserWishlist();
         if (isMounted) {
-          // Ensure item.book exists before trying to access item.book.id
           setIsInWishlist(wishlist.some(item => item.book?.id === book.id));
         }
       } catch (error) {
