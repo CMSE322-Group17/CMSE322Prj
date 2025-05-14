@@ -16,5 +16,12 @@ export default {
    * This gives you an opportunity to set up your data model,
    * run jobs, or perform some special logic.
    */
-  bootstrap(/* { strapi }: { strapi: Core.Strapi } */) {},
+  bootstrap({ strapi }) {
+    // Ensure httpServer is available before initializing WebSockets
+    if (strapi.server && strapi.server.httpServer) {
+      initializeWebSocket(strapi.server.httpServer);
+    } else {
+      strapi.log.error('HTTP server is not available, WebSocket server cannot be started.');
+    }
+  },
 };
