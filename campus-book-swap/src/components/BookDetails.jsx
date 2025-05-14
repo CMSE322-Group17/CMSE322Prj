@@ -139,16 +139,6 @@ const BookDetail = () => {
       </div>
     );
   }
-
-  // Safe way to display book rating
-  const displayRating = (rating) => {
-    if (typeof rating === 'number') {
-      return rating.toFixed(1);
-    } else if (typeof rating === 'string') {
-      return rating;
-    }
-    return "N/A";
-  };
   
   return (
     <div className="container mx-auto p-4">
