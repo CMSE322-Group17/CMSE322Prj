@@ -227,7 +227,8 @@ export const bookAPI = {
         method: 'GET',
         params: {
           populate: '*',
-          'filters[category]': categoryId
+          'filters[category]': categoryId,
+          'filters[status][$ne]': 'sold' // Exclude sold books
         }
       });
     } catch (error) {
