@@ -207,7 +207,7 @@ const BooksPage = () => {
                     onClick={() => handleActionClick('secondary')}
                     className="w-full py-2 px-4 bg-gray-100 text-gray-800 rounded-lg hover:bg-gray-200 transition-colors"
                   >
-                    {book.bookType === 'For Sale' ? 'Make Offer' : 'View Wishlist'}
+                    Add to Wishlist
                   </button>
                   <button 
                     onClick={() => {
