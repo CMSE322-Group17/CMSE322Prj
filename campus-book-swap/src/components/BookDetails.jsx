@@ -43,11 +43,6 @@ const BookDetail = () => {
     fetchBookDetails();
   }, [id]);
   
-  // Get status style using the utility function
-  const getStatusStyle = (bookType) => {
-    return getBookTypeStyles(bookType).split(' ').slice(0, 2).join(' ');
-  };
-  
   // Generate a course code (for demo purposes)
   const courseCode = book ? `${['CS', 'MATH', 'BIO', 'CHEM', 'ENG'][book.id % 5]}${101 + (book.id % 400)}` : '';
   
