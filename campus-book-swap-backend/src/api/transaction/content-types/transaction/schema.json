@@ -40,7 +40,18 @@
       "type": "datetime"
     },
     "amount": {
-      "type": "biginteger"
+      "type": "float"
+    },
+    "type": {
+      "type": "enumeration",
+      "enum": [
+        "sale",
+        "swap",
+        "refund",
+        "other"
+      ],
+      "required": true,
+      "default": "sale"
     }
   }
 }
