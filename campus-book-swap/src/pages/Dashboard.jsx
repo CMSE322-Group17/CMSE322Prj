@@ -489,12 +489,7 @@ const Dashboard = () => {
               }`}
             >
               Pending Actions
-              {pendingActionsCount > 0 && (
-                <span className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-5 h-5 text-xs flex items-center justify-center">
-                  {pendingActionsCount}
-                </span>
-              )}
-            </button>
+            </button> */}
             <button
               onClick={() => setActiveTab('history')}
               className={`mr-8 py-4 px-1 ${
