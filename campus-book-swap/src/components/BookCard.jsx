@@ -171,26 +171,34 @@ const BookCard = ({ book, onClick }) => {
           </div>
         </div>
 
-        {/* Action Buttons */}
         <div className="p-4 bg-gray-50 border-t border-gray-100">
-          <button onClick={handlePrimaryAction} className="w-full py-2 px-4 bg-blue-600 text-white rounded font-medium hover:bg-blue-700 transition-colors text-sm flex items-center justify-center gap-1">
-            {book.bookType === 'For Sale' && (
-              <><svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
-              </svg>Add to Cart</>)
-            }
-            {book.bookType === 'For Swap' && (
-              <><svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
-              </svg>Propose Swap</>)
-            }
+          <button 
+            onClick={!isSold ? handlePrimaryAction : undefined}
+            className={`w-full py-2 px-4 ${isSold ? 'bg-gray-400 cursor-not-allowed' : 'bg-blue-600 hover:bg-blue-700'} text-white rounded font-medium transition-colors text-sm flex items-center justify-center gap-1`}
+            disabled={isSold}
+          >
+            {isSold ? 'Sold' : (book.bookType === 'For Sale' ? (
+              <>
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
+                </svg>
+                Add to Cart
+              </>
+            ) : (
+              <>
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
+                </svg>
+                Propose Swap
+              </>
+            ))}
           </button>
           <button
-            onClick={handleAddToWishlist}
-            className={`w-full py-2 px-4 ${isInWishlist ? 'bg-gray-400' : 'bg-green-600'} text-white rounded font-medium hover:${isInWishlist ? 'bg-gray-500' : 'bg-green-700'} transition-colors text-sm flex items-center justify-center gap-1 mt-2`}
-            disabled={isInWishlist}
+            onClick={!isSold ? handleAddToWishlist : undefined}
+            className={`w-full py-2 px-4 ${isSold ? 'bg-gray-300 cursor-not-allowed' : (isInWishlist ? 'bg-gray-400' : 'bg-green-600 hover:bg-green-700')} text-white rounded font-medium transition-colors text-sm flex items-center justify-center gap-1 mt-2`}
+            disabled={isSold || isInWishlist}
           >
-            {isInWishlist ? 'Added to Wishlist' : 'Add to Wishlist'}
+            {isSold ? 'Unavailable' : (isInWishlist ? 'Added to Wishlist' : 'Add to Wishlist')}
           </button>
         </div>
       </div>
