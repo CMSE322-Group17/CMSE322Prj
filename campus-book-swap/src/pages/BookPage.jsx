@@ -65,20 +65,30 @@ const BooksPage = () => {
         return;
       }
 
-      if (book.bookType === 'For Sale' && actionType === 'primary') {
-        const result = await addToCart(book);
-        if (result.success) {
-          alert("Book added to cart!");
-          onClose();
-        } else {
-          alert(result.error || "Failed to add book to cart.");
+      if (actionType === 'primary') { // Primary actions: Add to Cart or Propose Swap
+        if (book.bookType === 'For Sale') {
+          const result = await addToCart(book);
+          if (result.success) {
+            alert("Book added to cart!");
+            onClose();
+          } else {
+            alert(result.error || "Failed to add book to cart.");
+          }
+        } else if (book.bookType === 'For Swap') {
+          if (book.actualSellerId) {
+            navigate(`/chat/${book.actualSellerId}/${book.id}`);
+          } else {
+            console.error("Actual Seller ID is missing for this book.");
+            alert("Cannot start swap: Seller information is missing.");
+          }
         }
-      } else if (book.bookType === 'For Swap' && actionType === 'primary') {
-        if (book.actualSellerId) {
-          navigate(`/chat/${book.actualSellerId}/${book.id}`);
+      } else if (actionType === 'secondary') { // Secondary action: Add to Wishlist
+        const result = await addToWishlist(book);
+        if (result.success) {
+          alert("Book added to wishlist!");
+          // Optionally close modal or give other feedback
         } else {
-          console.error("Actual Seller ID is missing for this book.");
-          alert("Cannot start swap: Seller information is missing.");
+          alert(result.error || "Failed to add book to wishlist.");
         }
       } else {
         alert("Feature coming soon!");
