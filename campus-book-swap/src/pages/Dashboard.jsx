@@ -716,27 +716,28 @@ const Dashboard = () => {
                           <td className="px-6 py-4 whitespace-nowrap">
                             <span className={`px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full 
                               ${transaction.type === 'purchase' ? 'bg-green-100 text-green-800' : 
+                                transaction.type === 'sale' ? 'bg-yellow-100 text-yellow-800' :
                                 transaction.type === 'swap' ? 'bg-blue-100 text-blue-800' : 
                                 'bg-purple-100 text-purple-800'}`}>
                               {transaction.type === 'purchase' ? 'Purchase' : 
+                               transaction.type === 'sale' ? 'Sale' :
                                transaction.type === 'swap' ? 'Swap' : 'Borrow'}
                             </span>
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                            {transaction.type === 'purchase' ? 
-                              (transaction.items && transaction.items.length > 0 ? 
-                                `${transaction.items[0].title}${transaction.items.length > 1 ? ` +${transaction.items.length - 1} more` : ''}` : 
-                                'Multiple items') : 
-                              transaction.book?.attributes?.title || 'Unknown Book'}
+                            {transaction.items && transaction.items.length > 0 ? 
+                              `${transaction.items[0].title}${transaction.items.length > 1 ? ` +${transaction.items.length - 1} more` : ''}` : 
+                              'N/A'}
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                             {transaction.role === 'buyer' ? 'Buyer' : 
+                             transaction.role === 'seller' ? 'Seller' :
                              transaction.role === 'requester' ? 'Requester' : 
                              transaction.role === 'provider' ? 'Provider' : 
                              transaction.role === 'borrower' ? 'Borrower' : 'Lender'}
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                            {transaction.type === 'purchase' ? 
+                            {transaction.type === 'purchase' || transaction.type === 'sale' ? 
                               `$${transaction.amount.toFixed(2)}` : 
                               transaction.type === 'borrow' ? 
                                 `$${transaction.depositAmount?.toFixed(2) || '0.00'} (deposit)` : 
