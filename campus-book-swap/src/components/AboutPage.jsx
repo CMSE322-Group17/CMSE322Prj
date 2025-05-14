@@ -7,9 +7,9 @@ const AboutPage = () => {
       <div className="bg-gradient-to-r from-blue-600 to-indigo-700 text-white py-16">
         <div className="container mx-auto px-4">
           <div className="max-w-4xl mx-auto text-center">
-            <h1 className="text-4xl font-bold mb-4">About CampusBookSwap</h1>
+            <h1 className="text-4xl font-bold mb-4">Lorem Ipsum Dolor</h1>
             <p className="text-xl text-blue-100">
-              Connecting students to exchange knowledge and save money on textbooks.
+              Lorem ipsum dolor sit amet, consectetur adipiscing elit.
             </p>
           </div>
         </div>
