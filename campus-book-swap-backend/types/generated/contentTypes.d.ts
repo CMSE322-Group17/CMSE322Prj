@@ -678,43 +678,40 @@ export interface ApiTransactionTransaction extends Struct.CollectionTypeSchema {
     draftAndPublish: true;
   };
   attributes: {
-    amount: Attribute.BigInteger;
-    book: Attribute.Relation<
-      'api::transaction.transaction',
-      'manyToOne',
-      'api::book.book'
-    >;
-    createdAt: Attribute.DateTime;
-    createdBy: Attribute.Relation<
-      'api::transaction.transaction',
-      'oneToOne',
-      'admin::user'
+    amount: Schema.Attribute.Float;
+    book: Schema.Attribute.Relation<'manyToOne', 'api::book.book'>;
+    createdAt: Schema.Attribute.DateTime;
+    createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+    locale: Schema.Attribute.String & Schema.Attribute.Private;
+    localizations: Schema.Attribute.Relation<
+      'oneToMany',
+      'api::transaction.transaction'
     > &
-      Attribute.Private;
-    orderDate: Attribute.DateTime;
-    publishedAt: Attribute.DateTime;
-    seller: Attribute.Relation<
-      'api::transaction.transaction',
+      Schema.Attribute.Private;
+    orderDate: Schema.Attribute.DateTime;
+    publishedAt: Schema.Attribute.DateTime;
+    seller: Schema.Attribute.Relation<
       'manyToOne',
       'plugin::users-permissions.user'
     >;
-    Tstatus: Attribute.Enumeration<['pending', 'completed', 'cancelled']>;
-    updatedAt: Attribute.DateTime;
-    updatedBy: Attribute.Relation<
-      'api::transaction.transaction',
-      'oneToOne',
-      'admin::user'
-    > &
-      Attribute.Private;
-    users_permissions_user: Attribute.Relation<
-      'api::transaction.transaction',
+    Tstatus: Schema.Attribute.Enumeration<
+      ['pending', 'completed', 'cancelled']
+    >;
+    type: Schema.Attribute.Enumeration<['sale', 'swap', 'refund', 'other']> &
+      Schema.Attribute.Required &
+      Schema.Attribute.DefaultTo<'sale'>;
+    updatedAt: Schema.Attribute.DateTime;
+    updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+    users_permissions_user: Schema.Attribute.Relation<
       'manyToOne',
       'plugin::users-permissions.user'
     >;
   };
 }
 
-export interface ApiWishlistWishlist extends Schema.CollectionType {
+export interface ApiWishlistWishlist extends Struct.CollectionTypeSchema {
   collectionName: 'wishlists';
   info: {
     displayName: 'Wishlist';
