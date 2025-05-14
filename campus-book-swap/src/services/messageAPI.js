@@ -1020,6 +1020,8 @@ const messageAPI = {
       // Group messages by chat ID
       const chatMap = new Map();
       response.data.data.forEach(msg => {
+        // Defensive: skip if attributes or ChatId is missing
+        if (!msg || !msg.attributes || !msg.attributes.ChatId) return;
         const chatId = msg.attributes.ChatId;
         if (!chatMap.has(chatId)) {
           chatMap.set(chatId, {
