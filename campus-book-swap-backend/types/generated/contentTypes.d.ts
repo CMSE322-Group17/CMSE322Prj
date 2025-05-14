@@ -538,22 +538,20 @@ export interface ApiMessageMessage extends Struct.CollectionTypeSchema {
     draftAndPublish: true;
   };
   attributes: {
-    attachments: Attribute.Media<'images' | 'files' | 'videos', true>;
-    book: Attribute.Relation<
-      'api::message.message',
-      'manyToOne',
-      'api::book.book'
-    >;
-    ChatId: Attribute.String & Attribute.Required;
-    createdAt: Attribute.DateTime;
-    createdBy: Attribute.Relation<
-      'api::message.message',
-      'oneToOne',
-      'admin::user'
+    attachments: Schema.Attribute.Media<'images' | 'files' | 'videos', true>;
+    book: Schema.Attribute.Relation<'manyToOne', 'api::book.book'>;
+    ChatId: Schema.Attribute.String & Schema.Attribute.Required;
+    createdAt: Schema.Attribute.DateTime;
+    createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+    deleted: Schema.Attribute.Boolean & Schema.Attribute.DefaultTo<false>;
+    locale: Schema.Attribute.String & Schema.Attribute.Private;
+    localizations: Schema.Attribute.Relation<
+      'oneToMany',
+      'api::message.message'
     > &
-      Attribute.Private;
-    deleted: Attribute.Boolean & Attribute.DefaultTo<false>;
-    messageType: Attribute.Enumeration<
+      Schema.Attribute.Private;
+    messageType: Schema.Attribute.Enumeration<
       [
         'general',
         'swap_offer',
