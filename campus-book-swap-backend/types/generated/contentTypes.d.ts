@@ -385,93 +385,81 @@ export interface ApiBookBook extends Struct.CollectionTypeSchema {
     draftAndPublish: true;
   };
   attributes: {
-    author: Attribute.String & Attribute.Required;
-    bookOfWeek: Attribute.Boolean & Attribute.DefaultTo<false>;
-    bookOfYear: Attribute.Boolean & Attribute.DefaultTo<false>;
-    bookType: Attribute.Enumeration<['For Sale', 'For Swap']> &
-      Attribute.Required &
-      Attribute.DefaultTo<'For Sale'>;
-    categories: Attribute.Relation<
-      'api::book.book',
+    author: Schema.Attribute.String & Schema.Attribute.Required;
+    bookOfWeek: Schema.Attribute.Boolean & Schema.Attribute.DefaultTo<false>;
+    bookOfYear: Schema.Attribute.Boolean & Schema.Attribute.DefaultTo<false>;
+    bookType: Schema.Attribute.Enumeration<['For Sale', 'For Swap']> &
+      Schema.Attribute.Required &
+      Schema.Attribute.DefaultTo<'For Sale'>;
+    categories: Schema.Attribute.Relation<
       'oneToMany',
       'api::category.category'
     >;
-    condition: Attribute.Enumeration<
+    condition: Schema.Attribute.Enumeration<
       ['New', 'Like New', 'Good', 'Fair', 'Poor', 'Digital Copy']
     > &
-      Attribute.Required;
-    course: Attribute.String;
-    cover: Attribute.Media<'images'>;
-    createdAt: Attribute.DateTime;
-    createdBy: Attribute.Relation<'api::book.book', 'oneToOne', 'admin::user'> &
-      Attribute.Private;
-    description: Attribute.Text;
-    Display: Attribute.Boolean & Attribute.DefaultTo<false>;
-    displayTitle: Attribute.String;
-    exchange: Attribute.String;
-    featured: Attribute.Boolean & Attribute.DefaultTo<false>;
-    likes: Attribute.Relation<
-      'api::book.book',
+      Schema.Attribute.Required;
+    course: Schema.Attribute.String;
+    cover: Schema.Attribute.Media<'images'>;
+    createdAt: Schema.Attribute.DateTime;
+    createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+    description: Schema.Attribute.Text;
+    Display: Schema.Attribute.Boolean & Schema.Attribute.DefaultTo<false>;
+    displayTitle: Schema.Attribute.String;
+    exchange: Schema.Attribute.String;
+    featured: Schema.Attribute.Boolean & Schema.Attribute.DefaultTo<false>;
+    likes: Schema.Attribute.Relation<
       'manyToMany',
       'plugin::users-permissions.user'
     >;
-    messages: Attribute.Relation<
-      'api::book.book',
-      'oneToMany',
-      'api::message.message'
-    >;
-    price: Attribute.Float & Attribute.DefaultTo<0>;
-    publishedAt: Attribute.DateTime;
-    rating: Attribute.Integer &
-      Attribute.SetMinMax<
+    locale: Schema.Attribute.String & Schema.Attribute.Private;
+    localizations: Schema.Attribute.Relation<'oneToMany', 'api::book.book'> &
+      Schema.Attribute.Private;
+    messages: Schema.Attribute.Relation<'oneToMany', 'api::message.message'>;
+    price: Schema.Attribute.Float & Schema.Attribute.DefaultTo<0>;
+    publishedAt: Schema.Attribute.DateTime;
+    rating: Schema.Attribute.Integer &
+      Schema.Attribute.SetMinMax<
         {
           max: 5;
         },
         number
       > &
-      Attribute.DefaultTo<0>;
-    seller: Attribute.Relation<
-      'api::book.book',
+      Schema.Attribute.DefaultTo<0>;
+    seller: Schema.Attribute.Relation<
       'manyToOne',
       'plugin::users-permissions.user'
     >;
-    status: Attribute.Enumeration<['available', 'pending', 'sold']> &
-      Attribute.Required &
-      Attribute.DefaultTo<'available'>;
-    subject: Attribute.String;
-    swapOffersAsOffered: Attribute.Relation<
-      'api::book.book',
+    status: Schema.Attribute.Enumeration<['available', 'pending', 'sold']> &
+      Schema.Attribute.Required &
+      Schema.Attribute.DefaultTo<'available'>;
+    subject: Schema.Attribute.String;
+    swapOffersAsOffered: Schema.Attribute.Relation<
       'oneToMany',
       'api::swap-offer.swap-offer'
     >;
-    swapOffersAsRequested: Attribute.Relation<
-      'api::book.book',
+    swapOffersAsRequested: Schema.Attribute.Relation<
       'oneToMany',
       'api::swap-offer.swap-offer'
     >;
-    title: Attribute.String & Attribute.Required;
-    transactions: Attribute.Relation<
-      'api::book.book',
+    title: Schema.Attribute.String & Schema.Attribute.Required;
+    transactions: Schema.Attribute.Relation<
       'oneToMany',
       'api::transaction.transaction'
     >;
-    updatedAt: Attribute.DateTime;
-    updatedBy: Attribute.Relation<'api::book.book', 'oneToOne', 'admin::user'> &
-      Attribute.Private;
-    users_permissions_user: Attribute.Relation<
-      'api::book.book',
+    updatedAt: Schema.Attribute.DateTime;
+    updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+    users_permissions_user: Schema.Attribute.Relation<
       'manyToOne',
       'plugin::users-permissions.user'
     >;
-    wishlists: Attribute.Relation<
-      'api::book.book',
-      'oneToMany',
-      'api::wishlist.wishlist'
-    >;
+    wishlists: Schema.Attribute.Relation<'oneToMany', 'api::wishlist.wishlist'>;
   };
 }
 
-export interface ApiCartItemCartItem extends Schema.CollectionType {
+export interface ApiCartItemCartItem extends Struct.CollectionTypeSchema {
   collectionName: 'cart_items';
   info: {
     displayName: 'CartItem';
