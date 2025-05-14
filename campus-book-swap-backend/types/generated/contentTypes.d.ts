@@ -559,41 +559,35 @@ export interface ApiMessageMessage extends Struct.CollectionTypeSchema {
         'swap_declined',
         'purchase_request',
         'request_accepted',
-        'request_declined'
+        'request_declined',
       ]
     > &
-      Attribute.DefaultTo<'general'>;
-    publishedAt: Attribute.DateTime;
-    reactions: Attribute.JSON & Attribute.DefaultTo<{}>;
-    read: Attribute.Boolean & Attribute.DefaultTo<false>;
-    readBy: Attribute.JSON & Attribute.DefaultTo<{}>;
-    receiver: Attribute.Relation<
-      'api::message.message',
+      Schema.Attribute.DefaultTo<'general'>;
+    publishedAt: Schema.Attribute.DateTime;
+    reactions: Schema.Attribute.JSON & Schema.Attribute.DefaultTo<{}>;
+    read: Schema.Attribute.Boolean & Schema.Attribute.DefaultTo<false>;
+    readBy: Schema.Attribute.JSON & Schema.Attribute.DefaultTo<{}>;
+    receiver: Schema.Attribute.Relation<
       'manyToOne',
       'plugin::users-permissions.user'
     >;
-    requestStatus: Attribute.Enumeration<
+    requestStatus: Schema.Attribute.Enumeration<
       ['pending', 'accepted', 'declined', 'completed', 'cancelled']
     > &
-      Attribute.DefaultTo<'pending'>;
-    sender: Attribute.Relation<
-      'api::message.message',
+      Schema.Attribute.DefaultTo<'pending'>;
+    sender: Schema.Attribute.Relation<
       'manyToOne',
       'plugin::users-permissions.user'
     >;
-    text: Attribute.Text & Attribute.Required;
-    timestamp: Attribute.DateTime;
-    updatedAt: Attribute.DateTime;
-    updatedBy: Attribute.Relation<
-      'api::message.message',
-      'oneToOne',
-      'admin::user'
-    > &
-      Attribute.Private;
+    text: Schema.Attribute.Text & Schema.Attribute.Required;
+    timestamp: Schema.Attribute.DateTime;
+    updatedAt: Schema.Attribute.DateTime;
+    updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
   };
 }
 
-export interface ApiOrderOrder extends Schema.CollectionType {
+export interface ApiOrderOrder extends Struct.CollectionTypeSchema {
   collectionName: 'orders';
   info: {
     displayName: 'Order';
