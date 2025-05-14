@@ -20,11 +20,9 @@ const AboutPage = () => {
         <div className="container mx-auto px-4">
           <div className="max-w-4xl mx-auto">
             <div className="mb-12 text-center">
-              <h2 className="text-3xl font-bold mb-4 text-gray-800">Our Mission</h2>
+              <h2 className="text-3xl font-bold mb-4 text-gray-800">Sed Ut Perspiciatis</h2>
               <p className="text-xl text-gray-600">
-                CampusBookSwap was created to help students reduce the high cost of education 
-                by providing a platform to buy, sell, swap, and borrow textbooks directly from 
-                their peers.
+                Sed ut perspiciatis unde omnis iste natus error sit voluptatem accusantium doloremque laudantium.
               </p>
             </div>
             
