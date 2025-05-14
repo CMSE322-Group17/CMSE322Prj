@@ -139,15 +139,16 @@ export default factories.createCoreController('api::order.order', ({ strapi }) =
             if (existingTransactions.length === 0) {
               await strapi.entityService.create('api::transaction.transaction', {
                 data: {
-                  book: bookId,
-                  users_permissions_user: buyerId,
-                  seller: sellerId,
-                  Tstatus: 'completed',
+                  book: { id: bookId },
+                  users_permissions_user: { id: buyerId }, // Buyer
+                  seller: { id: sellerId },           // Seller
+                  Tstatus: 'completed', // Corrected back to Tstatus
                   orderDate: new Date().toISOString(),
                   // @ts-ignore
-                  amount: bookEntry.price,
-                  type: 'sale', // This is the new field
+                  amount: bookEntry.price, // Use price from the fetched book
+                  type: 'sale', 
                   publishedAt: new Date().toISOString(),
+                  // order: { id: orderId }, // If transaction is linked to order
                 },
               });
             } else {
