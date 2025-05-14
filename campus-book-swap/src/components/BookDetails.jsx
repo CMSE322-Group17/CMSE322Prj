@@ -16,6 +16,8 @@ const BookDetail = () => {
   const [error, setError] = useState(null);
   const [activeTab, setActiveTab] = useState('details');
   
+  const isSold = book?.status === 'sold';
+
   useEffect(() => {
     const fetchBookDetails = async () => {
       try {
