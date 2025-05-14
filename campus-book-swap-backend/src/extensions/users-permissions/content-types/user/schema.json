@@ -86,6 +86,36 @@
       "relation": "oneToMany",
       "target": "api::transaction.transaction",
       "mappedBy": "seller"
+    },
+    "sentMessages": {
+      "type": "relation",
+      "relation": "oneToMany",
+      "target": "api::message.message",
+      "mappedBy": "sender"
+    },
+    "receivedMessages": {
+      "type": "relation",
+      "relation": "oneToMany",
+      "target": "api::message.message",
+      "mappedBy": "receiver"
+    },
+    "wishlists": {
+      "type": "relation",
+      "relation": "oneToMany",
+      "target": "api::wishlist.wishlist",
+      "mappedBy": "user"
+    },
+    "initiatedSwapOffers": {
+      "type": "relation",
+      "relation": "oneToMany",
+      "target": "api::swap-offer.swap-offer",
+      "mappedBy": "requester"
+    },
+    "receivedSwapOffers": {
+      "type": "relation",
+      "relation": "oneToMany",
+      "target": "api::swap-offer.swap-offer",
+      "mappedBy": "owner"
     }
   }
 }

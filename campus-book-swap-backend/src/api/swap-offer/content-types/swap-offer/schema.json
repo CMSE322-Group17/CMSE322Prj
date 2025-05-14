@@ -1,0 +1,63 @@
+{
+  "kind": "collectionType",
+  "collectionName": "swap_offers",
+  "info": {
+    "singularName": "swap-offer",
+    "pluralName": "swap-offers",
+    "displayName": "SwapOffer"
+  },
+  "options": {
+    "draftAndPublish": true
+  },
+  "attributes": {
+    "chatId": {
+      "type": "string",
+      "required": true
+    },
+    "requester": {
+      "type": "relation",
+      "relation": "manyToOne",
+      "target": "plugin::users-permissions.user",
+      "inversedBy": "initiatedSwapOffers"
+    },
+    "owner": {
+      "type": "relation",
+      "relation": "manyToOne",
+      "target": "plugin::users-permissions.user",
+      "inversedBy": "receivedSwapOffers"
+    },
+    "requestedBook": {
+      "type": "relation",
+      "relation": "manyToOne",
+      "target": "api::book.book",
+      "inversedBy": "swapOffersAsRequested"
+    },
+    "offeredBooks": {
+      "type": "relation",
+      "relation": "manyToMany",
+      "target": "api::book.book",
+      "inversedBy": "swapOffersAsOffered"
+    },
+    "status": {
+      "type": "enumeration",
+      "enum": [
+        "pending",
+        "accepted",
+        "declined",
+        "completed"
+      ],
+      "default": "pending",
+      "required": true
+    },
+    "timestamp": {
+      "type": "datetime",
+      "required": true
+    },
+    "messageToOwner": {
+      "type": "text"
+    },
+    "messageToRequester": {
+      "type": "text"
+    }
+  }
+}

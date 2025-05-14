@@ -49,7 +49,10 @@
       "type": "string"
     },
     "seller": {
-      "type": "string"
+      "type": "relation",
+      "relation": "manyToOne",
+      "target": "plugin::users-permissions.user",
+      "inversedBy": "books"
     },
     "featured": {
       "type": "boolean",
@@ -68,16 +71,17 @@
     },
     "cover": {
       "type": "media",
-      "multiple": true,
-      "required": true,
+      "multiple": false,
+      "required": false,
       "allowedTypes": [
         "images"
       ]
     },
-    "category": {
+    "categories": {
       "type": "relation",
-      "relation": "oneToOne",
-      "target": "api::category.category"
+      "relation": "oneToMany",
+      "target": "api::category.category",
+      "mappedBy": "book"
     },
     "likes": {
       "type": "relation",
@@ -96,6 +100,58 @@
       "relation": "oneToMany",
       "target": "api::transaction.transaction",
       "mappedBy": "book"
+    },
+    "messages": {
+      "type": "relation",
+      "relation": "oneToMany",
+      "target": "api::message.message",
+      "mappedBy": "book"
+    },
+    "bookType": {
+      "type": "enumeration",
+      "enum": [
+        "For Sale",
+        "For Swap"
+      ],
+      "default": "For Sale",
+      "required": true
+    },
+    "price": {
+      "type": "float",
+      "required": false,
+      "default": 0
+    },
+    "status": {
+      "type": "enumeration",
+      "enum": [
+        "available",
+        "pending",
+        "sold"
+      ],
+      "default": "available",
+      "required": true
+    },
+    "wishlists": {
+      "type": "relation",
+      "relation": "oneToMany",
+      "target": "api::wishlist.wishlist",
+      "mappedBy": "book"
+    },
+    "Display": {
+      "type": "boolean",
+      "default": false
+    },
+    "swapOffersAsRequested": {
+      "type": "relation",
+      "relation": "oneToMany",
+      "target": "api::swap-offer.swap-offer",
+      "mappedBy": "requestedBook"
+    },
+    "swapOffersAsOffered": {
+      "type": "relation",
+      "relation": "oneToMany",
+      "target": "api::swap-offer.swap-offer",
+      "mappedBy": "offeredBooks"
     }
   }
 }

@@ -28,49 +28,16 @@ export const CartProvider = ({ children }) => {
     setLoading(true);
     try {
       // API call to get cart items
-      // For now using mock data until backend is set up
+      // For now using empty array until backend is set up
       // const response = await authAxios.get(`${import.meta.env.VITE_API_URL}/api/cart-items`);
       // const items = response.data.data || [];
       
-      // Mock data for development
-      const mockItems = [
-        {
-          id: 1,
-          bookId: 1,
-          title: "Introduction to Computer Science",
-          author: "John Smith",
-          price: 24.99,
-          quantity: 1,
-          cover: null,
-          transactionType: "buy" // Added transaction type
-        },
-        {
-          id: 2,
-          bookId: 2,
-          title: "Calculus Made Easy",
-          author: "Sarah Johnson",
-          price: 19.95,
-          quantity: 2,
-          cover: null,
-          transactionType: "buy" // Added transaction type
-        },
-        {
-          id: 3,
-          bookId: 3,
-          title: "Introduction to Psychology",
-          author: "Michael Brown",
-          borrowDuration: "2 weeks", // Borrow-specific field
-          depositAmount: 15.00, // Borrow-specific field
-          dueDate: "2025-05-01", // Borrow-specific field
-          quantity: 1,
-          cover: null,
-          transactionType: "borrow" // Added transaction type
-        }
-      ];
+      // Use empty array instead of mock data
+      const items = [];
       
-      setCartItems(mockItems);
+      setCartItems(items);
       // Update cart count (total quantity of all items)
-      const count = mockItems.reduce((total, item) => total + item.quantity, 0);
+      const count = items.reduce((total, item) => total + item.quantity, 0);
       setCartCount(count);
       setError(null);
     } catch (err) {
@@ -81,18 +48,23 @@ export const CartProvider = ({ children }) => {
     }
   };
 
-  const addToCart = async (book, transactionType = "buy", borrowDetails = null) => {
+  const addToCart = async (book) => {
     if (!isAuthenticated) {
       // Return an error if user is not logged in
       return { success: false, error: 'Please sign in to add items to your cart' };
     }
     
+    // Ensure we have a valid book object with required properties
+    if (!book || !book.id) {
+      console.error('Invalid book object:', book);
+      return { success: false, error: 'Invalid book data' };
+    }
+    
     setLoading(true);
     try {
-      // Check if the item already exists in cart with the same transaction type
-      const existingItem = cartItems.find(item => 
-        item.bookId === book.id && item.transactionType === transactionType
-      );
+      console.log('Adding book to cart:', book);
+      // Check if the item already exists in cart
+      const existingItem = cartItems.find(item => item.bookId === book.id);
       
       if (existingItem) {
         // Update quantity if item exists
@@ -118,31 +90,24 @@ export const CartProvider = ({ children }) => {
           id: Date.now(), // Mock ID for development
           bookId: book.id,
           quantity: 1,
-          price: book.price || 19.99, // Fallback price if not provided
-          title: book.title,
-          author: book.author,
-          cover: book.cover,
-          transactionType: transactionType // Add transaction type
+          // Ensure price is a valid number or use fallback
+          price: typeof book.price === 'number' ? book.price : 19.99,
+          title: book.title || 'Unknown Book',
+          author: book.author || 'Unknown Author',
+          cover: book.cover || null
         };
         
-        // Add borrowing-specific details if applicable
-        if (transactionType === "borrow" && borrowDetails) {
-          Object.assign(newItem, {
-            borrowDuration: borrowDetails.duration || "2 weeks",
-            depositAmount: borrowDetails.deposit || 15.00,
-            dueDate: borrowDetails.dueDate || new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString().split('T')[0] // Default 2 weeks
-          });
-        }
+        console.log('Creating new cart item:', newItem);
         
         /* In a real app, you'd make an API call:
         const response = await authAxios.post(
           `${import.meta.env.VITE_API_URL}/api/cart-items`, 
-          cartItem
+          newItem
         );
         */
         
         // Add the new item to local cart state
-        setCartItems([...cartItems, newItem]);
+        setCartItems(prevItems => [...prevItems, newItem]);
         setCartCount(prev => prev + 1);
       }
       
@@ -216,44 +181,6 @@ export const CartProvider = ({ children }) => {
     }
   };
 
-  const updateBorrowDetails = async (itemId, borrowDetails) => {
-    if (!isAuthenticated) return;
-    
-    setLoading(true);
-    try {
-      // Find the current item
-      const currentItem = cartItems.find(item => item.id === itemId);
-      if (!currentItem || currentItem.transactionType !== "borrow") return;
-      
-      /* In a real app, you'd make an API call:
-      await authAxios.put(
-        `${import.meta.env.VITE_API_URL}/api/cart-items/${itemId}`, 
-        { borrowDetails }
-      );
-      */
-      
-      // Update local cart state
-      const updatedItems = cartItems.map(item => 
-        item.id === itemId ? { 
-          ...item, 
-          borrowDuration: borrowDetails.duration || item.borrowDuration,
-          depositAmount: borrowDetails.deposit || item.depositAmount,
-          dueDate: borrowDetails.dueDate || item.dueDate
-        } : item
-      );
-      
-      setCartItems(updatedItems);
-      setError(null);
-      return { success: true };
-    } catch (err) {
-      console.error('Error updating borrow details:', err);
-      setError('Failed to update borrowing details.');
-      return { success: false, error: 'Failed to update borrowing details' };
-    } finally {
-      setLoading(false);
-    }
-  };
-
   const clearCart = async () => {
     if (!isAuthenticated) return;
     
@@ -275,22 +202,6 @@ export const CartProvider = ({ children }) => {
     }
   };
 
-  // Get counts by transaction type
-  const getTransactionTypeCounts = () => {
-    const counts = {
-      buy: 0,
-      borrow: 0,
-      swap: 0
-    };
-    
-    cartItems.forEach(item => {
-      const type = item.transactionType || 'buy';
-      counts[type] += item.quantity;
-    });
-    
-    return counts;
-  };
-
   return (
     <CartContext.Provider 
       value={{ 
@@ -300,11 +211,9 @@ export const CartProvider = ({ children }) => {
         error, 
         addToCart, 
         removeFromCart, 
-        updateCartItemQuantity,
-        updateBorrowDetails,
+        updateCartItemQuantity, 
         clearCart,
-        fetchCartItems,
-        getTransactionTypeCounts
+        fetchCartItems
       }}
     >
       {children}

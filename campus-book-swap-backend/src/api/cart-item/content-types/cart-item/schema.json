@@ -1,0 +1,37 @@
+{
+  "kind": "collectionType",
+  "collectionName": "cart_items",
+  "info": {
+    "singularName": "cart-item",
+    "pluralName": "cart-items",
+    "displayName": "CartItem"
+  },
+  "options": {
+    "draftAndPublish": true
+  },
+  "attributes": {
+    "userId": {
+      "type": "string",
+      "required": true
+    },
+    "bookId": {
+      "type": "string",
+      "required": true
+    },
+    "quantity": {
+      "type": "integer",
+      "default": 1,
+      "required": true
+    },
+    "price": {
+      "type": "decimal"
+    },
+    "transactionType": {
+      "type": "enumeration",
+      "enum": [
+        "buy",
+        "swap"
+      ]
+    }
+  }
+}

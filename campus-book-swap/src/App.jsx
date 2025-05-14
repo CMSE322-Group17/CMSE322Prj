@@ -16,6 +16,7 @@ import AboutPage from './components/AboutPage';
 import NotFound from './pages/NotFound';
 import ProtectedRoute from './components/ProtectedRoute';
 import Footer from './components/Footer';
+import Wishlist from './pages/Wishlist';
 
 {/* App Area */}
 function App() {
@@ -39,7 +40,6 @@ function App() {
           <Route path="/books" element={<BookPage />} />
           <Route path="/book/:id" element={<BookDetail />} />
           <Route path="/category/:categoryName" element={<BookPage />} />
-          <Route path="/textbooks" element={<BookPage />} />
           <Route path="/about" element={<AboutPage />} />
           <Route path="/signin" element={<SignIn />} />
           <Route path="/signup" element={<SignUp />} />
@@ -90,6 +90,14 @@ function App() {
             element={
               <ProtectedRoute>
                 <SellerChat />
+              </ProtectedRoute>
+            } 
+          />
+          <Route 
+            path="/wishlist" 
+            element={
+              <ProtectedRoute>
+                <Wishlist />
               </ProtectedRoute>
             } 
           />

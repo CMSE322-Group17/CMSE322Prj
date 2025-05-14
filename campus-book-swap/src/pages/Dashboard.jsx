@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { Link, useNavigate } from 'react-router-dom';
 import BookForm from '../components/BookForm';
+import { swapOfferAPI } from '../services/api';
 
 const Dashboard = () => {
   const { user, authAxios, isAuthenticated } = useAuth();
@@ -17,8 +18,7 @@ const Dashboard = () => {
   // User data state
   const [myBooks, setMyBooks] = useState([]);
   const [pendingSwaps, setPendingSwaps] = useState([]);
-  const [pendingBorrows, setPendingBorrows] = useState([]);
-  const [borrowedBooks, setBorrowedBooks] = useState([]);
+  const [pendingPurchaseRequests, setPendingPurchaseRequests] = useState([]);
   const [transactionHistory, setTransactionHistory] = useState([]);
   const [stats, setStats] = useState({
     totalListings: 0,
@@ -36,6 +36,7 @@ const Dashboard = () => {
     } else if (user && user.id) {
       fetchDashboardData();
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isAuthenticated, user, navigate]);
 
   // Fetch all dashboard data
@@ -45,9 +46,8 @@ const Dashboard = () => {
       await Promise.all([
         fetchMyBooks(),
         fetchPendingSwaps(),
-        fetchPendingBorrows(),
-        fetchBorrowedBooks(),
         fetchTransactionHistory(),
+        fetchPendingPurchaseRequests(),
         calculateStats()
       ]);
     } catch (err) {
@@ -61,24 +61,34 @@ const Dashboard = () => {
   // Fetch user's books
   const fetchMyBooks = async () => {
     try {
-      // Get books where users_permissions_user matches current user ID
       const response = await authAxios.get(
         `${import.meta.env.VITE_API_URL}/api/books?filters[users_permissions_user][id][$eq]=${user.id}&populate=*`
       );
       
-      const books = response.data.data.map(book => ({
-        id: book.id,
-        ...book.attributes,
-        cover: book.attributes.cover?.data ? 
-          `${import.meta.env.VITE_API_URL}${book.attributes.cover.data.attributes.url}` : 
-          null,
-        category: book.attributes.category?.data ? {
-          id: book.attributes.category.data.id,
-          name: book.attributes.category.data.attributes?.name || 
-                book.attributes.category.data.attributes?.Type || 
-                'Unknown Category'
-        } : null
-      }));
+      const books = response.data.data.map(book => {
+        let coverUrl = null;
+        try {
+          if (book.attributes?.cover?.data?.attributes?.url) {
+            coverUrl = `${import.meta.env.VITE_API_URL}${book.attributes.cover.data.attributes.url}`;
+          } else if (book.attributes?.cover?.url) {
+            coverUrl = `${import.meta.env.VITE_API_URL}${book.attributes.cover.url}`;
+          }
+        } catch (err) {
+          console.log(`Cover processing error for book ${book.id}:`, err);
+        }
+        
+        return {
+          id: book.id,
+          ...book.attributes,
+          cover: coverUrl,
+          category: book.attributes?.category?.data ? {
+            id: book.attributes.category.data.id,
+            name: book.attributes.category.data.attributes?.name || 
+                  book.attributes.category.data.attributes?.Type || 
+                  'Unknown Category'
+          } : null
+        };
+      });
       
       setMyBooks(books);
     } catch (err) {
@@ -87,168 +97,137 @@ const Dashboard = () => {
     }
   };
 
-  // Fetch pending swap requests
+  // Fetch pending swap requests using the new API service
   const fetchPendingSwaps = async () => {
+    if (!user || !user.id) return;
     try {
-      const response = await authAxios.get(
-        `${import.meta.env.VITE_API_URL}/api/swap-offers?filters[$or][0][buyerId][$eq]=${user.id}&filters[$or][1][sellerId][$eq]=${user.id}&filters[status][$eq]=pending&populate=*`
-      );
+      const response = await swapOfferAPI.getUserSwapOffers();
+      const swapsData = response.data || []; 
       
-      const swaps = response.data.data || [];
+      // Log swap data for debugging
+      console.log('Raw swap data from API:', swapsData);
       
-      // Process the data
-      const processedSwaps = await Promise.all(swaps.map(async (swap) => {
-        try {
-          // Determine if the user is the buyer or seller
-          const isUserBuyer = swap.attributes.buyerId === user.id;
+      const processedSwaps = swapsData
+        .filter(swap => swap.status === 'pending')
+        .map(swap => {
+        const isUserRequester = swap.requester && swap.requester.id === user.id;
+        const otherUser = isUserRequester ? swap.owner : swap.requester;
+        
+        // Process requested book with proper error handling
+        let requestedBookDetails = { id: null, title: 'Unknown Book', author: 'Unknown Author', cover: null };
+        if (swap.requestedBook) {
+          let coverUrl = null;
+          // Handle cover image
+          if (swap.requestedBook.cover?.data?.attributes?.url) {
+            coverUrl = `${import.meta.env.VITE_API_URL}${swap.requestedBook.cover.data.attributes.url}`;
+          } else if (swap.requestedBook.cover?.url) {
+            coverUrl = `${import.meta.env.VITE_API_URL}${swap.requestedBook.cover.url}`;
+          }
           
-          // Fetch the book details
-          const bookResponse = await authAxios.get(
-            `${import.meta.env.VITE_API_URL}/api/books/${swap.attributes.bookId}?populate=*`
-          );
-          
-          // Fetch the other user's details
-          const otherUserId = isUserBuyer ? swap.attributes.sellerId : swap.attributes.buyerId;
-          const userResponse = await authAxios.get(
-            `${import.meta.env.VITE_API_URL}/api/users/${otherUserId}`
-          );
-          
-          // Return processed swap data
-          return {
-            id: swap.id,
-            ...swap.attributes,
-            isUserBuyer,
-            book: bookResponse.data.data,
-            otherUser: userResponse.data,
-            type: 'swap'
-          };
-        } catch (err) {
-          console.error('Error processing swap data:', err);
-          return {
-            id: swap.id,
-            ...swap.attributes,
-            isUserBuyer: swap.attributes.buyerId === user.id,
-            book: { attributes: { title: 'Unknown Book' } },
-            otherUser: { username: 'Unknown User' },
-            type: 'swap'
+          requestedBookDetails = {
+            id: swap.requestedBook.id,
+            title: swap.requestedBook.title || 'Unknown Book',
+            author: swap.requestedBook.author || 'Unknown Author',
+            cover: coverUrl
           };
         }
-      }));
+        
+        // Process offered books with proper error handling
+        let offeredBooksSummary = 'Book(s) offered by requester';
+        let offeredBooks = [];
+        if (Array.isArray(swap.offeredBooks) && swap.offeredBooks.length > 0) {
+          // Process each offered book
+          offeredBooks = swap.offeredBooks.map(book => {
+            let coverUrl = null;
+            if (book.cover?.data?.attributes?.url) {
+              coverUrl = `${import.meta.env.VITE_API_URL}${book.cover.data.attributes.url}`;
+            } else if (book.cover?.url) {
+              coverUrl = `${import.meta.env.VITE_API_URL}${book.cover.url}`;
+            }
+            
+            return {
+              id: book.id,
+              title: book.title || 'Unknown Book',
+              author: book.author || 'Unknown Author',
+              cover: coverUrl
+            };
+          });
+          
+          offeredBooksSummary = `${swap.offeredBooks[0].title || 'Unnamed Book'}${swap.offeredBooks.length > 1 ? ` (+${swap.offeredBooks.length - 1} more)` : ''}`;
+        }
+        
+        // Ensure we have a chatId
+        const chatId = swap.chatId || 
+          (swap.requester?.id && swap.owner?.id && swap.requestedBook?.id ? 
+            `${swap.requester.id}_${swap.owner.id}_${swap.requestedBook.id}` : 
+            null);
+
+        return {
+          id: swap.id,
+          ...swap,
+          isUserRequester,
+          otherUser: otherUser ? { id: otherUser.id, username: otherUser.username || 'Unknown User' } : { id: null, username: 'Unknown User' },
+          requestedBookDetails,
+          offeredBooksSummary,
+          offeredBooks,
+          type: 'swap',
+          timestamp: swap.timestamp || new Date().toISOString(),
+          chatId
+        };
+      });
       
+      console.log('Processed swap offers:', processedSwaps);
       setPendingSwaps(processedSwaps);
     } catch (err) {
-      console.error('Error fetching pending swaps:', err);
-      throw err;
+      console.error('Error fetching pending swaps:', err.response ? err.response.data : err.message);
+      setError(prev => prev + ' Failed to fetch pending swaps.');
     }
   };
 
-  // Fetch pending borrow requests
-  const fetchPendingBorrows = async () => {
+  // Fetch pending purchase requests
+  const fetchPendingPurchaseRequests = async () => {
     try {
       const response = await authAxios.get(
-        `${import.meta.env.VITE_API_URL}/api/borrow-requests?filters[$or][0][borrowerId][$eq]=${user.id}&filters[$or][1][lenderId][$eq]=${user.id}&filters[status][$eq]=pending&populate=*`
+        `${import.meta.env.VITE_API_URL}/api/messages?filters[receiver][id][$eq]=${user.id}&filters[messageType][$eq]=purchase_request&filters[requestStatus][$eq]=pending&populate=*`
       );
       
-      const borrows = response.data.data || [];
+      const purchaseRequests = response.data.data || [];
       
-      // Process the data
-      const processedBorrows = await Promise.all(borrows.map(async (borrow) => {
+      const processedRequests = await Promise.all(purchaseRequests.map(async (request) => {
         try {
-          // Determine if the user is the borrower or lender
-          const isUserBorrower = borrow.attributes.borrowerId === user.id;
-          
-          // Fetch the book details
+          const bookId = request.attributes.book?.data?.id || request.attributes.bookId;
           const bookResponse = await authAxios.get(
-            `${import.meta.env.VITE_API_URL}/api/books/${borrow.attributes.bookId}?populate=*`
+            `${import.meta.env.VITE_API_URL}/api/books/${bookId}?populate=*`
           );
           
-          // Fetch the other user's details
-          const otherUserId = isUserBorrower ? borrow.attributes.lenderId : borrow.attributes.borrowerId;
+          const senderId = request.attributes.sender?.data?.id || request.attributes.senderId;
           const userResponse = await authAxios.get(
-            `${import.meta.env.VITE_API_URL}/api/users/${otherUserId}`
+            `${import.meta.env.VITE_API_URL}/api/users/${senderId}`
           );
           
-          // Return processed borrow data
           return {
-            id: borrow.id,
-            ...borrow.attributes,
-            isUserBorrower,
+            id: request.id,
+            ...request.attributes,
             book: bookResponse.data.data,
-            otherUser: userResponse.data,
-            type: 'borrow'
+            buyer: userResponse.data,
+            chatId: request.attributes.ChatId,
+            type: 'purchase'
           };
         } catch (err) {
-          console.error('Error processing borrow data:', err);
+          console.error('Error processing purchase request data:', err);
           return {
-            id: borrow.id,
-            ...borrow.attributes,
-            isUserBorrower: borrow.attributes.borrowerId === user.id,
+            id: request.id,
+            ...request.attributes,
             book: { attributes: { title: 'Unknown Book' } },
-            otherUser: { username: 'Unknown User' },
-            type: 'borrow'
+            buyer: { username: 'Unknown User' },
+            type: 'purchase'
           };
         }
       }));
       
-      setPendingBorrows(processedBorrows);
+      setPendingPurchaseRequests(processedRequests);
     } catch (err) {
-      console.error('Error fetching pending borrows:', err);
-      throw err;
-    }
-  };
-
-  // Fetch books currently borrowed by the user
-  const fetchBorrowedBooks = async () => {
-    try {
-      const response = await authAxios.get(
-        `${import.meta.env.VITE_API_URL}/api/borrow-requests?filters[borrowerId][$eq]=${user.id}&filters[status][$eq]=borrowed&populate=*`
-      );
-      
-      const borrows = response.data.data || [];
-      
-      // Process the data
-      const processedBorrows = await Promise.all(borrows.map(async (borrow) => {
-        try {
-          // Fetch the book details
-          const bookResponse = await authAxios.get(
-            `${import.meta.env.VITE_API_URL}/api/books/${borrow.attributes.bookId}?populate=*`
-          );
-          
-          // Fetch the lender's details
-          const userResponse = await authAxios.get(
-            `${import.meta.env.VITE_API_URL}/api/users/${borrow.attributes.lenderId}`
-          );
-          
-          // Calculate days until due
-          const dueDate = new Date(borrow.attributes.returnDate);
-          const today = new Date();
-          const daysUntilDue = Math.ceil((dueDate - today) / (1000 * 60 * 60 * 24));
-          
-          // Return processed borrow data
-          return {
-            id: borrow.id,
-            ...borrow.attributes,
-            book: bookResponse.data.data,
-            lender: userResponse.data,
-            daysUntilDue,
-            isOverdue: daysUntilDue < 0
-          };
-        } catch (err) {
-          console.error('Error processing borrowed book data:', err);
-          return {
-            id: borrow.id,
-            ...borrow.attributes,
-            book: { attributes: { title: 'Unknown Book' } },
-            lender: { username: 'Unknown User' },
-            daysUntilDue: 0,
-            isOverdue: false
-          };
-        }
-      }));
-      
-      setBorrowedBooks(processedBorrows);
-    } catch (err) {
-      console.error('Error fetching borrowed books:', err);
+      console.error('Error fetching pending purchase requests:', err);
       throw err;
     }
   };
@@ -256,126 +235,116 @@ const Dashboard = () => {
   // Fetch transaction history
   const fetchTransactionHistory = async () => {
     try {
-      // Fetch completed transactions (sales, swaps, borrows)
-      const salesResponse = await authAxios.get(
-        `${import.meta.env.VITE_API_URL}/api/orders?filters[userId][$eq]=${user.id}&sort[0]=timestamp:desc&populate=*`
+      // 1. Purchases made by the current user
+      const purchasesResponse = await authAxios.get(
+        `${import.meta.env.VITE_API_URL}/api/orders?filters[userId][$eq]=${user.id}&filters[status][$eq]=completed&sort[0]=timestamp:desc&populate=items,userId`
       );
-      
-      const swapsResponse = await authAxios.get(
-        `${import.meta.env.VITE_API_URL}/api/swap-offers?filters[$or][0][buyerId][$eq]=${user.id}&filters[$or][1][sellerId][$eq]=${user.id}&filters[status][$eq]=completed&sort[0]=timestamp:desc&populate=*`
-      );
-      
-      const borrowsResponse = await authAxios.get(
-        `${import.meta.env.VITE_API_URL}/api/borrow-requests?filters[$or][0][borrowerId][$eq]=${user.id}&filters[$or][1][lenderId][$eq]=${user.id}&filters[status][$eq]=returned&sort[0]=timestamp:desc&populate=*`
-      );
-      
-      // Process sales data
-      const sales = salesResponse.data.data?.map(order => ({
-        id: `sale-${order.id}`,
+      const purchases = purchasesResponse.data.data?.map(order => ({
+        id: `purchase-${order.id}`,
         type: 'purchase',
         date: order.attributes.timestamp,
         amount: order.attributes.totalAmount,
         status: order.attributes.status,
-        items: order.attributes.items,
+        items: order.attributes.items.map(item => ({
+          bookId: item.bookId,
+          title: item.title || 'Unknown Book',
+          quantity: item.quantity,
+          price: item.price
+        })),
         role: 'buyer'
       })) || [];
+
+      // 2. Sales made by the current user
+      const userBooksResponse = await authAxios.get(
+        `${import.meta.env.VITE_API_URL}/api/books?filters[users_permissions_user][id][$eq]=${user.id}&fields[0]=id`
+      );
+      const userBookIds = userBooksResponse.data.data.map(b => b.id);
+
+      let salesByUserData = [];
+      if (userBookIds.length > 0) {
+        const allCompletedOrdersResponse = await authAxios.get(
+          `${import.meta.env.VITE_API_URL}/api/orders?filters[status][$eq]=completed&populate=items,userId`
+        );
+        
+        const allCompletedOrders = allCompletedOrdersResponse.data.data || [];
+        
+        salesByUserData = allCompletedOrders
+          .filter(order => {
+            // skip orders where current user was buyer
+            if (order.attributes.userId === user.id) {
+              return false;
+            }
+            // include orders that contain user's books
+            return order.attributes.items.some(item => userBookIds.includes(item.bookId));
+          })
+          .map(order => {
+            const itemsSoldByCurrentUser = order.attributes.items.filter(item => userBookIds.includes(item.bookId));
+            const amountForCurrentUser = itemsSoldByCurrentUser.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+
+            return {
+              id: `sale-${order.id}`,
+              type: 'sale',
+              date: order.attributes.timestamp,
+              amount: amountForCurrentUser,
+              status: order.attributes.status,
+              items: itemsSoldByCurrentUser.map(item => ({
+                bookId: item.bookId,
+                title: item.title || 'Unknown Book',
+                quantity: item.quantity,
+                price: item.price
+              })),
+              role: 'seller',
+              // order.attributes.userId is a string username or id; adjust as needed
+              buyerInfo: order.attributes.userId || 'Unknown Buyer'
+            };
+          });
+      }
+
+      // 3. Swaps involving the current user
+      // Assuming swap-offers have 'requester' and 'owner' relations to users,
+      // and 'requestedBook' and 'offeredBooks' relations to books.
+      const swapsResponse = await authAxios.get(
+        `${import.meta.env.VITE_API_URL}/api/swap-offers?filters[$or][0][requester][id][$eq]=${user.id}&filters[$or][1][owner][id][$eq]=${user.id}&filters[status][$eq]=completed&sort[0]=updatedAt:desc&populate=requestedBook,offeredBooks,requester,owner`
+      );
       
-      // Process swaps data (minimal processing - we'll do full processing later)
-      const swaps = swapsResponse.data.data?.map(swap => ({
-        id: `swap-${swap.id}`,
-        type: 'swap',
-        date: swap.attributes.timestamp,
-        bookId: swap.attributes.bookId,
-        offerBookIds: swap.attributes.offerBookIds,
-        role: swap.attributes.buyerId === user.id ? 'requester' : 'provider'
-      })) || [];
+      const swapsData = swapsResponse.data.data?.map(swapFull => {
+        const swap = swapFull.attributes;
+        const id = swapFull.id;
+        const isRequesterRole = swap.requester?.data?.id === user.id;
+        
+        const requestedTitle = swap.requestedBook?.data?.attributes?.title || 'Unknown Book';
+        const offeredTitles = swap.offeredBooks?.data?.map(b => b.attributes.title).join(', ') || 'N/A';
+        
+        let summary = `Requested: ${requestedTitle}`;
+        if (swap.offeredBooks?.data?.length > 0 && offeredTitles !== 'N/A') {
+          summary += ` | Offered: ${offeredTitles}`;
+        }
+
+        return {
+          id: `swap-${id}`,
+          type: 'swap',
+          date: swap.timestamp || swap.updatedAt,
+          items: [{ title: summary, quantity: 1, price: 0 }],
+          amount: 0,
+          status: 'completed',
+          role: isRequesterRole ? 'requester' : 'provider',
+        };
+      }) || [];
       
-      // Process borrows data (minimal processing - we'll do full processing later)
-      const borrows = borrowsResponse.data.data?.map(borrow => ({
-        id: `borrow-${borrow.id}`,
-        type: 'borrow',
-        date: borrow.attributes.timestamp,
-        returnDate: borrow.attributes.returnDate,
-        depositAmount: borrow.attributes.depositAmount,
-        bookId: borrow.attributes.bookId,
-        role: borrow.attributes.borrowerId === user.id ? 'borrower' : 'lender'
-      })) || [];
-      
-      // Combine all transactions and sort by date
-      const allTransactions = [...sales, ...swaps, ...borrows].sort((a, b) => 
+      const allTransactions = [...purchases, ...salesByUserData, ...swapsData].sort((a, b) => 
         new Date(b.date) - new Date(a.date)
       );
       
-      // Now enrich the transactions with full details
-      const enrichedTransactions = await Promise.all(allTransactions.map(async (transaction) => {
-        try {
-          if (transaction.type === 'purchase') {
-            // For purchases, we already have most details
-            // We could fetch more book details here if needed
-            return transaction;
-          } 
-          else if (transaction.type === 'swap') {
-            // For swaps, fetch the main book details
-            const bookResponse = await authAxios.get(
-              `${import.meta.env.VITE_API_URL}/api/books/${transaction.bookId}?populate=*`
-            );
-            
-            // Determine the other user
-            const otherUserId = transaction.role === 'requester' ? 
-              transaction.sellerId : transaction.buyerId;
-            
-            const userResponse = await authAxios.get(
-              `${import.meta.env.VITE_API_URL}/api/users/${otherUserId}`
-            );
-            
-            return {
-              ...transaction,
-              book: bookResponse.data.data,
-              otherUser: userResponse.data
-            };
-          }
-          else if (transaction.type === 'borrow') {
-            // For borrows, fetch the book details
-            const bookResponse = await authAxios.get(
-              `${import.meta.env.VITE_API_URL}/api/books/${transaction.bookId}?populate=*`
-            );
-            
-            // Determine the other user
-            const otherUserId = transaction.role === 'borrower' ? 
-              transaction.lenderId : transaction.borrowerId;
-            
-            const userResponse = await authAxios.get(
-              `${import.meta.env.VITE_API_URL}/api/users/${otherUserId}`
-            );
-            
-            return {
-              ...transaction,
-              book: bookResponse.data.data,
-              otherUser: userResponse.data
-            };
-          }
-          
-          return transaction;
-        } catch (err) {
-          console.error('Error enriching transaction data:', err);
-          return transaction;
-        }
-      }));
-      
-      setTransactionHistory(enrichedTransactions);
+      setTransactionHistory(allTransactions);
     } catch (err) {
-      console.error('Error fetching transaction history:', err);
-      throw err;
+      console.error('Error fetching transaction history:', err.response ? err.response.data : err.message);
+      setError(prev => (prev ? prev + '; ' : '') + 'Failed to fetch transaction history.');
     }
   };
 
   // Calculate dashboard stats
   const calculateStats = async () => {
     try {
-      // This would normally come from API aggregation endpoints
-      // For now, we'll calculate based on the data we've fetched
-      
-      // Mock implementation - in a real app, this would be more sophisticated
       const mockStats = {
         totalListings: 0,
         activeListings: 0,
@@ -385,46 +354,36 @@ const Dashboard = () => {
         savedBySwapping: 0
       };
       
-      // Calculate based on API responses
       const booksResponse = await authAxios.get(
-        `${import.meta.env.VITE_API_URL}/api/books/count?filters[users_permissions_user][id][$eq]=${user.id}`
+        `${import.meta.env.VITE_API_URL}/api/books?filters[users_permissions_user][id][$eq]=${user.id}&pagination[pageSize]=1&pagination[page]=1`
       );
-      mockStats.totalListings = booksResponse.data;
-      mockStats.activeListings = booksResponse.data; // Assuming all are active for now
+      mockStats.totalListings = booksResponse.data.meta.pagination.total;
+      mockStats.activeListings = booksResponse.data.meta.pagination.total;
       
-      // Completed sales + swaps + borrows
       const completedSalesResponse = await authAxios.get(
-        `${import.meta.env.VITE_API_URL}/api/orders/count?filters[userId][$eq]=${user.id}&filters[status][$eq]=completed`
+        `${import.meta.env.VITE_API_URL}/api/orders?filters[userId][$eq]=${user.id}&filters[status][$eq]=completed&pagination[pageSize]=1&pagination[page]=1`
       );
       
       const completedSwapsResponse = await authAxios.get(
-        `${import.meta.env.VITE_API_URL}/api/swap-offers/count?filters[$or][0][buyerId][$eq]=${user.id}&filters[$or][1][sellerId][$eq]=${user.id}&filters[status][$eq]=completed`
-      );
-      
-      const completedBorrowsResponse = await authAxios.get(
-        `${import.meta.env.VITE_API_URL}/api/borrow-requests/count?filters[$or][0][borrowerId][$eq]=${user.id}&filters[$or][1][lenderId][$eq]=${user.id}&filters[status][$eq]=returned`
+        `${import.meta.env.VITE_API_URL}/api/swap-offers?filters[$or][0][buyerId][$eq]=${user.id}&filters[$or][1][sellerId][$eq]=${user.id}&filters[status][$eq]=completed&pagination[pageSize]=1&pagination[page]=1`
       );
       
       mockStats.completedTransactions = 
-        completedSalesResponse.data + 
-        completedSwapsResponse.data + 
-        completedBorrowsResponse.data;
+        completedSalesResponse.data.meta.pagination.total + 
+        completedSwapsResponse.data.meta.pagination.total;
       
-      // Pending transactions
       const pendingSwapsResponse = await authAxios.get(
-        `${import.meta.env.VITE_API_URL}/api/swap-offers/count?filters[$or][0][buyerId][$eq]=${user.id}&filters[$or][1][sellerId][$eq]=${user.id}&filters[status][$eq]=pending`
+        `${import.meta.env.VITE_API_URL}/api/swap-offers?filters[$or][0][buyerId][$eq]=${user.id}&filters[$or][1][sellerId][$eq]=${user.id}&filters[status][$eq]=pending&pagination[pageSize]=1&pagination[page]=1`
       );
       
-      const pendingBorrowsResponse = await authAxios.get(
-        `${import.meta.env.VITE_API_URL}/api/borrow-requests/count?filters[$or][0][borrowerId][$eq]=${user.id}&filters[$or][1][lenderId][$eq]=${user.id}&filters[status][$eq]=pending`
+      const pendingPurchasesResponse = await authAxios.get(
+        `${import.meta.env.VITE_API_URL}/api/messages?filters[receiver][id][$eq]=${user.id}&filters[messageType][$eq]=purchase_request&filters[requestStatus][$eq]=pending&pagination[pageSize]=1&pagination[page]=1`
       );
       
       mockStats.pendingTransactions = 
-        pendingSwapsResponse.data + 
-        pendingBorrowsResponse.data;
+        pendingSwapsResponse.data.meta.pagination.total + 
+        pendingPurchasesResponse.data.meta.pagination.total;
       
-      // For earnings and savings, we would need more detailed calculation
-      // Using mock values for demonstration
       mockStats.totalEarnings = 142.50;
       mockStats.savedBySwapping = 87.25;
       
@@ -442,7 +401,6 @@ const Dashboard = () => {
     try {
       await authAxios.delete(`${import.meta.env.VITE_API_URL}/api/books/${bookId}`);
       setMyBooks(myBooks.filter(book => book.id !== bookId));
-      // Refresh dashboard data to update statistics
       calculateStats();
     } catch (err) {
       console.error('Error deleting book:', err);
@@ -464,88 +422,6 @@ const Dashboard = () => {
     calculateStats();
   };
 
-  // Handle responding to a swap request
-  const handleSwapResponse = async (swapId, accept) => {
-    try {
-      // Update the swap offer status
-      await authAxios.put(`${import.meta.env.VITE_API_URL}/api/swap-offers/${swapId}`, {
-        data: {
-          status: accept ? 'accepted' : 'declined'
-        }
-      });
-      
-      // Refresh pending swaps
-      fetchPendingSwaps();
-      
-      // Update the stats
-      calculateStats();
-      
-      // Send a message notification
-      const swap = pendingSwaps.find(s => s.id === swapId);
-      if (swap) {
-        const message = accept
-          ? "I've accepted your swap offer! Let's coordinate to exchange the books."
-          : "I'm sorry, but I've declined your swap offer.";
-        
-        await authAxios.post(`${import.meta.env.VITE_API_URL}/api/messages`, {
-          data: {
-            chatId: `${swap.buyerId}_${swap.sellerId}_${swap.bookId}`,
-            senderId: user.id,
-            receiverId: swap.isUserBuyer ? swap.sellerId : swap.buyerId,
-            bookId: swap.bookId,
-            text: message,
-            timestamp: new Date().toISOString(),
-            messageType: accept ? 'swap_accepted' : 'swap_declined'
-          }
-        });
-      }
-    } catch (err) {
-      console.error('Error responding to swap request:', err);
-      setError('Failed to respond to swap request');
-    }
-  };
-
-  // Handle responding to a borrow request
-  const handleBorrowResponse = async (borrowId, accept) => {
-    try {
-      // Update the borrow request status
-      await authAxios.put(`${import.meta.env.VITE_API_URL}/api/borrow-requests/${borrowId}`, {
-        data: {
-          status: accept ? 'accepted' : 'declined'
-        }
-      });
-      
-      // Refresh pending borrows
-      fetchPendingBorrows();
-      
-      // Update the stats
-      calculateStats();
-      
-      // Send a message notification
-      const borrow = pendingBorrows.find(b => b.id === borrowId);
-      if (borrow) {
-        const message = accept
-          ? "I've accepted your borrow request! Let's coordinate a pickup time."
-          : "I'm sorry, but I've declined your borrow request.";
-        
-        await authAxios.post(`${import.meta.env.VITE_API_URL}/api/messages`, {
-          data: {
-            chatId: `${borrow.borrowerId}_${borrow.lenderId}_${borrow.bookId}`,
-            senderId: user.id,
-            receiverId: borrow.isUserBorrower ? borrow.lenderId : borrow.borrowerId,
-            bookId: borrow.bookId,
-            text: message,
-            timestamp: new Date().toISOString(),
-            messageType: accept ? 'borrow_accepted' : 'borrow_declined'
-          }
-        });
-      }
-    } catch (err) {
-      console.error('Error responding to borrow request:', err);
-      setError('Failed to respond to borrow request');
-    }
-  };
-
   // Format timestamp
   const formatDate = (dateString) => {
     const date = new Date(dateString);
@@ -555,9 +431,6 @@ const Dashboard = () => {
       day: 'numeric' 
     });
   };
-
-  // Calculate total pending actions
-  const pendingActionsCount = pendingSwaps.length + pendingBorrows.length;
 
   if (isLoading) {
     return (
@@ -584,7 +457,6 @@ const Dashboard = () => {
         </div>
       )}
       
-      {/* Dashboard Navigation */}
       <div className="bg-white rounded-lg shadow-md mb-6">
         <div className="border-b border-gray-200">
           <nav className="flex -mb-px">
@@ -608,7 +480,7 @@ const Dashboard = () => {
             >
               My Books
             </button>
-            <button
+            {/* <button
               onClick={() => setActiveTab('actions')}
               className={`mr-8 py-4 px-1 relative ${
                 activeTab === 'actions'
@@ -617,22 +489,7 @@ const Dashboard = () => {
               }`}
             >
               Pending Actions
-              {pendingActionsCount > 0 && (
-                <span className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-5 h-5 text-xs flex items-center justify-center">
-                  {pendingActionsCount}
-                </span>
-              )}
-            </button>
-            <button
-              onClick={() => setActiveTab('borrowed')}
-              className={`mr-8 py-4 px-1 ${
-                activeTab === 'borrowed'
-                  ? 'border-b-2 border-blue-500 text-blue-600'
-                  : 'text-gray-500 hover:text-gray-700 hover:border-gray-300'
-              }`}
-            >
-              Books I'm Borrowing
-            </button>
+            </button> */}
             <button
               onClick={() => setActiveTab('history')}
               className={`mr-8 py-4 px-1 ${
@@ -647,249 +504,44 @@ const Dashboard = () => {
         </div>
       </div>
       
-      {/* Dashboard Content */}
       <div className="bg-white rounded-lg shadow-md p-6">
-        {/* Overview Tab */}
         {activeTab === 'overview' && (
           <div>
-            <div className="mb-6">
-              <h2 className="text-xl font-semibold mb-4">Welcome, {user.username}!</h2>
-              
-              {/* Stats Grid */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-                <div className="bg-blue-50 p-4 rounded-lg">
-                  <p className="text-blue-800 text-sm font-medium uppercase">My Books</p>
-                  <p className="text-2xl font-bold text-gray-800">{stats.totalListings}</p>
-                  <p className="text-gray-500 text-sm">{stats.activeListings} active</p>
-                </div>
-                
-                <div className="bg-green-50 p-4 rounded-lg">
-                  <p className="text-green-800 text-sm font-medium uppercase">Earnings</p>
-                  <p className="text-2xl font-bold text-gray-800">${stats.totalEarnings.toFixed(2)}</p>
-                  <p className="text-gray-500 text-sm">From sales</p>
-                </div>
-                
-                <div className="bg-purple-50 p-4 rounded-lg">
-                  <p className="text-purple-800 text-sm font-medium uppercase">Saved</p>
-                  <p className="text-2xl font-bold text-gray-800">${stats.savedBySwapping.toFixed(2)}</p>
-                  <p className="text-gray-500 text-sm">By swapping & borrowing</p>
-                </div>
-                
-                <div className="bg-yellow-50 p-4 rounded-lg">
-                  <p className="text-yellow-800 text-sm font-medium uppercase">Transactions</p>
-                  <p className="text-2xl font-bold text-gray-800">{stats.completedTransactions}</p>
-                  <p className="text-gray-500 text-sm">{stats.pendingTransactions} pending</p>
-                </div>
+            <h2 className="text-2xl font-semibold mb-6 text-gray-800">Welcome, {user?.username || 'User'}!</h2>
+            
+            {/* Stats Grid */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+              {/* My Books Stat */}
+              <div className="bg-blue-100 p-6 rounded-lg shadow hover:shadow-lg transition-shadow">
+                <h3 className="text-lg font-semibold text-blue-700">MY BOOKS</h3>
+                <p className="text-3xl font-bold text-blue-900">{stats.activeListings}</p>
+                <p className="text-sm text-gray-600">{stats.activeListings === 1 ? 'active listing' : 'active listings'}</p>
               </div>
-              
-              {/* Quick Actions */}
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
-                <button 
-                  onClick={() => {
-                    setSelectedBook(null);
-                    setShowBookForm(true);
-                  }}
-                  className="bg-blue-600 text-white p-4 rounded-lg hover:bg-blue-700 transition-colors flex items-center gap-3 justify-center"
-                >
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-                  </svg>
-                  List a New Book
-                </button>
-                
-                <Link
-                  to="/books"
-                  className="bg-gray-100 text-gray-800 p-4 rounded-lg hover:bg-gray-200 transition-colors flex items-center gap-3 justify-center"
-                >
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                  </svg>
-                  Browse Books
-                </Link>
-                
-                <Link
-                  to="/messages"
-                  className="bg-gray-100 text-gray-800 p-4 rounded-lg hover:bg-gray-200 transition-colors flex items-center gap-3 justify-center"
-                >
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" />
-                  </svg>
-                  Messages
-                </Link>
+
+              {/* Earnings Stat */}
+              <div className="bg-green-100 p-6 rounded-lg shadow hover:shadow-lg transition-shadow">
+                <h3 className="text-lg font-semibold text-green-700">EARNINGS</h3>
+                <p className="text-3xl font-bold text-green-900">${stats.totalEarnings.toFixed(2)}</p>
+                <p className="text-sm text-gray-600">From sales</p>
               </div>
-              
-              {/* Recent Activity and Pending Actions */}
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                {/* Recent Activity */}
-                <div>
-                  <h3 className="font-medium text-gray-800 mb-3 flex items-center">
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2 text-blue-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                    </svg>
-                    Recent Activity
-                  </h3>
-                  
-                  <div className="border border-gray-200 rounded-lg overflow-hidden">
-                    {transactionHistory.slice(0, 5).length === 0 ? (
-                      <div className="p-4 text-center text-gray-500">
-                        No recent activity to display
-                      </div>
-                    ) : (
-                      <div className="divide-y divide-gray-200">
-                        {transactionHistory.slice(0, 5).map(transaction => (
-                          <div key={transaction.id} className="p-3 hover:bg-gray-50">
-                            <div className="flex justify-between items-start">
-                              <div>
-                                <p className="font-medium text-gray-800">
-                                  {transaction.type === 'purchase' ? 'Purchased books' : 
-                                   transaction.type === 'swap' ? (transaction.role === 'requester' ? 'Requested swap' : 'Provided swap') :
-                                   transaction.role === 'borrower' ? 'Borrowed book' : 'Lent book'}
-                                </p>
-                                <p className="text-sm text-gray-500">{formatDate(transaction.date)}</p>
-                              </div>
-                              
-                              {transaction.type === 'purchase' && (
-                                <span className="bg-green-100 text-green-800 px-2 py-1 rounded text-xs font-medium">
-                                  ${transaction.amount.toFixed(2)}
-                                </span>
-                              )}
-                              
-                              {transaction.type === 'swap' && (
-                                <span className="bg-blue-100 text-blue-800 px-2 py-1 rounded text-xs font-medium">
-                                  Swap
-                                </span>
-                              )}
-                              
-                              {transaction.type === 'borrow' && (
-                                <span className="bg-purple-100 text-purple-800 px-2 py-1 rounded text-xs font-medium">
-                                  Borrow
-                                </span>
-                              )}
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-                  
-                  <div className="mt-3 text-right">
-                    <button 
-                      onClick={() => setActiveTab('history')}
-                      className="text-blue-600 hover:text-blue-800 text-sm font-medium"
-                    >
-                      View All Activity
-                    </button>
-                  </div>
-                </div>
-                
-                {/* Pending Actions */}
-                <div>
-                  <h3 className="font-medium text-gray-800 mb-3 flex items-center">
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2 text-yellow-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-                    </svg>
-                    Pending Actions
-                    {pendingActionsCount > 0 && (
-                      <span className="ml-2 bg-red-100 text-red-800 px-2 py-0.5 rounded-full text-xs">
-                        {pendingActionsCount}
-                      </span>
-                    )}
-                  </h3>
-                  
-                  <div className="border border-gray-200 rounded-lg overflow-hidden">
-                    {pendingActionsCount === 0 ? (
-                      <div className="p-4 text-center text-gray-500">
-                        No pending actions to complete
-                      </div>
-                    ) : (
-                      <div className="divide-y divide-gray-200">
-                        {/* Show Swap Requests that require user's action */}
-                        {pendingSwaps.filter(swap => !swap.isUserBuyer).map(swap => (
-                          <div key={`swap-${swap.id}`} className="p-3 hover:bg-gray-50">
-                            <div className="flex justify-between items-start">
-                              <div>
-                                <p className="font-medium text-gray-800">
-                                  <span className="text-blue-600">{swap.otherUser?.username}</span> requested to swap for your book
-                                </p>
-                                <p className="text-sm text-gray-600 font-medium mt-1">
-                                  Book: {swap.book?.attributes?.title}
-                                </p>
-                                <div className="mt-2 flex space-x-2">
-                                  <button 
-                                    onClick={() => handleSwapResponse(swap.id, true)}
-                                    className="px-3 py-1 bg-blue-600 text-white text-xs rounded hover:bg-blue-700"
-                                  >
-                                    Accept
-                                  </button>
-                                  <button 
-                                    onClick={() => handleSwapResponse(swap.id, false)}
-                                    className="px-3 py-1 bg-gray-100 text-gray-700 text-xs rounded hover:bg-gray-200"
-                                  >
-                                    Decline
-                                  </button>
-                                </div>
-                              </div>
-                              <span className="bg-blue-100 text-blue-800 px-2 py-1 rounded text-xs font-medium">
-                                Swap Request
-                              </span>
-                            </div>
-                          </div>
-                        ))}
-                        
-                        {/* Show Borrow Requests that require user's action */}
-                        {pendingBorrows.filter(borrow => !borrow.isUserBorrower).map(borrow => (
-                          <div key={`borrow-${borrow.id}`} className="p-3 hover:bg-gray-50">
-                            <div className="flex justify-between items-start">
-                              <div>
-                                <p className="font-medium text-gray-800">
-                                  <span className="text-purple-600">{borrow.otherUser?.username}</span> requested to borrow your book
-                                </p>
-                                <p className="text-sm text-gray-600 font-medium mt-1">
-                                  Book: {borrow.book?.attributes?.title}
-                                </p>
-                                <p className="text-xs text-gray-500 mt-1">
-                                  Duration: {borrow.duration} • Return by: {formatDate(borrow.returnDate)}
-                                </p>
-                                <div className="mt-2 flex space-x-2">
-                                  <button 
-                                    onClick={() => handleBorrowResponse(borrow.id, true)}
-                                    className="px-3 py-1 bg-purple-600 text-white text-xs rounded hover:bg-purple-700"
-                                  >
-                                    Accept
-                                  </button>
-                                  <button 
-                                    onClick={() => handleBorrowResponse(borrow.id, false)}
-                                    className="px-3 py-1 bg-gray-100 text-gray-700 text-xs rounded hover:bg-gray-200"
-                                  >
-                                    Decline
-                                  </button>
-                                </div>
-                              </div>
-                              <span className="bg-purple-100 text-purple-800 px-2 py-1 rounded text-xs font-medium">
-                                Borrow Request
-                              </span>
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-                  
-                  <div className="mt-3 text-right">
-                    <button 
-                      onClick={() => setActiveTab('actions')}
-                      className="text-blue-600 hover:text-blue-800 text-sm font-medium"
-                    >
-                      View All Actions
-                    </button>
-                  </div>
-                </div>
+
+              {/* Saved Stat */}
+              <div className="bg-purple-100 p-6 rounded-lg shadow hover:shadow-lg transition-shadow">
+                <h3 className="text-lg font-semibold text-purple-700">SAVED</h3>
+                <p className="text-3xl font-bold text-purple-900">${stats.savedBySwapping.toFixed(2)}</p>
+                <p className="text-sm text-gray-600">By swapping</p>
+              </div>
+
+              {/* Transactions Stat */}
+              <div className="bg-yellow-100 p-6 rounded-lg shadow hover:shadow-lg transition-shadow">
+                <h3 className="text-lg font-semibold text-yellow-700">TRANSACTIONS</h3>
+                <p className="text-3xl font-bold text-yellow-900">{stats.completedTransactions}</p>
+                <p className="text-sm text-gray-600">{stats.pendingTransactions > 0 ? `${stats.pendingTransactions} pending` : 'completed'}</p>
               </div>
             </div>
           </div>
         )}
         
-        {/* My Books Tab */}
         {activeTab === 'myBooks' && (
           <div>
             <div className="flex justify-between items-center mb-4">
@@ -923,79 +575,88 @@ const Dashboard = () => {
               </div>
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {myBooks.map(book => (
-                  <div key={book.id} className="bg-white rounded-lg shadow border border-gray-200 overflow-hidden">
-                    <div className="p-4 flex">
-                      <div className="w-24 h-32 bg-gray-200 rounded overflow-hidden flex-shrink-0">
-                        {book.cover ? (
-                          <img 
-                            src={book.cover} 
-                            alt={book.title} 
-                            className="w-full h-full object-cover"
-                          />
-                        ) : (
-                          <div className="w-full h-full bg-gray-300 flex items-center justify-center">
-                            <span className="text-gray-500 text-xs">No image</span>
+                {myBooks.map(book => {
+                  const isSold = book.status === 'sold';
+                  return (
+                    <div key={book.id} className={`bg-white rounded-lg shadow border border-gray-200 overflow-hidden ${isSold ? 'filter grayscale opacity-50' : ''}`}>
+                      <div className="p-4 flex">
+                        <div className="w-24 h-32 bg-gray-200 rounded overflow-hidden flex-shrink-0">
+                          {book.cover ? (
+                            <img 
+                              src={book.cover} 
+                              alt={book.title} 
+                              className="w-full h-full object-cover"
+                            />
+                          ) : (
+                            <div className="w-full h-full bg-gray-300 flex items-center justify-center">
+                              <span className="text-gray-500 text-xs">No image</span>
+                            </div>
+                          )}
+                        </div>
+                        
+                        <div className="ml-4 flex-grow">
+                          <div className="flex justify-between items-center">
+                            <h3 className="font-medium text-lg text-gray-800">{book.title}</h3>
+                            {isSold && (
+                              <span className="px-2 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800 ml-2">
+                                Sold
+                              </span>
+                            )}
+                            <span className={`
+                              px-2 py-0.5 rounded-full text-xs font-medium
+                              ${book.bookType === 'For Sale' ? 'bg-green-100 text-green-800' : 
+                                book.bookType === 'For Swap' ? 'bg-blue-100 text-blue-800' : 
+                                'bg-purple-100 text-purple-800'}
+                            `}>
+                              {book.bookType}
+                            </span>
                           </div>
-                        )}
+                          <p className="text-gray-500 text-sm">by {book.author}</p>
+                          <div className="mt-2 text-sm">
+                            <p><span className="font-medium">Condition:</span> {book.condition}</p>
+                            {book.subject && <p><span className="font-medium">Subject:</span> {book.subject}</p>}
+                            {book.category && <p><span className="font-medium">Category:</span> {book.category.name}</p>}
+                            
+                            {book.bookType === 'For Sale' && book.price && (
+                              <p><span className="font-medium">Price:</span> ${book.price.toFixed(2)}</p>
+                            )}
+                            
+                            {book.bookType === 'For Swap' && book.exchange && (
+                              <p><span className="font-medium">Swap For:</span> {book.exchange}</p>
+                            )}
+                          </div>
+                        </div>
                       </div>
                       
-                      <div className="ml-4 flex-grow">
-                        <div className="flex justify-between">
-                          <h3 className="font-medium text-lg text-gray-800">{book.title}</h3>
-                          <span className={`
-                            px-2 py-0.5 rounded-full text-xs font-medium
-                            ${book.bookType === 'For Sale' ? 'bg-green-100 text-green-800' : 
-                              book.bookType === 'For Swap' ? 'bg-blue-100 text-blue-800' : 
-                              'bg-purple-100 text-purple-800'}
-                          `}>
-                            {book.bookType}
-                          </span>
-                        </div>
-                        <p className="text-gray-500 text-sm">by {book.author}</p>
-                        <div className="mt-2 text-sm">
-                          <p><span className="font-medium">Condition:</span> {book.condition}</p>
-                          {book.subject && <p><span className="font-medium">Subject:</span> {book.subject}</p>}
-                          {book.category && <p><span className="font-medium">Category:</span> {book.category.name}</p>}
-                          
-                          {book.bookType === 'For Sale' && book.price && (
-                            <p><span className="font-medium">Price:</span> ${book.price.toFixed(2)}</p>
-                          )}
-                          
-                          {book.bookType === 'For Swap' && book.exchange && (
-                            <p><span className="font-medium">Swap For:</span> {book.exchange}</p>
-                          )}
-                        </div>
+                      <div className="border-t border-gray-100 p-3 bg-gray-50 flex justify-end space-x-2">
+                        <button 
+                          onClick={() => !isSold && handleEditBook(book)}
+                          disabled={isSold}
+                          className={`px-3 py-1 rounded ${isSold ? 'bg-gray-200 text-gray-500 cursor-not-allowed' : 'bg-blue-100 text-blue-600 hover:bg-blue-200'}`}
+                        >
+                          Edit
+                        </button>
+                        <button 
+                          onClick={() => !isSold && handleDeleteBook(book.id)}
+                          disabled={isSold}
+                          className={`px-3 py-1 rounded ${isSold ? 'bg-gray-200 text-gray-500 cursor-not-allowed' : 'bg-red-100 text-red-600 hover:bg-red-200'}`}
+                        >
+                          Delete
+                        </button>
                       </div>
                     </div>
-                    
-                    <div className="border-t border-gray-100 p-3 bg-gray-50 flex justify-end space-x-2">
-                      <button 
-                        onClick={() => handleEditBook(book)}
-                        className="px-3 py-1 bg-blue-100 text-blue-600 rounded hover:bg-blue-200"
-                      >
-                        Edit
-                      </button>
-                      <button 
-                        onClick={() => handleDeleteBook(book.id)}
-                        className="px-3 py-1 bg-red-100 text-red-600 rounded hover:bg-red-200"
-                      >
-                        Delete
-                      </button>
-                    </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             )}
           </div>
         )}
         
-        {/* Pending Actions Tab */}
         {activeTab === 'actions' && (
           <div>
             <h2 className="text-lg font-medium mb-4">Pending Actions</h2>
             
-            {pendingActionsCount === 0 ? (
+            {pendingSwaps.length === 0 && pendingPurchaseRequests.length === 0 ? (
               <div className="text-center py-8 bg-gray-50 rounded-lg">
                 <svg xmlns="http://www.w3.org/2000/svg" className="h-12 w-12 text-gray-400 mx-auto mb-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
@@ -1004,307 +665,11 @@ const Dashboard = () => {
               </div>
             ) : (
               <div className="space-y-6">
-                {/* Pending Swap Requests Section */}
-                {pendingSwaps.length > 0 && (
-                  <div>
-                    <h3 className="text-md font-medium mb-3 text-blue-800 flex items-center">
-                      <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
-                      </svg>
-                      Swap Requests
-                    </h3>
-                    
-                    <div className="space-y-4">
-                      {pendingSwaps.map(swap => (
-                        <div key={swap.id} className="bg-blue-50 rounded-lg p-4 border border-blue-200">
-                          <div className="flex items-start">
-                            <div className="flex-shrink-0">
-                              <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center text-blue-600 font-bold">
-                                {swap.otherUser?.username ? swap.otherUser.username.charAt(0).toUpperCase() : 'U'}
-                              </div>
-                            </div>
-                            
-                            <div className="ml-4 flex-grow">
-                              <div className="flex justify-between">
-                                <h4 className="font-medium text-gray-800">
-                                  {swap.isUserBuyer ? 
-                                    `You requested to swap with ${swap.otherUser?.username}` : 
-                                    `${swap.otherUser?.username} wants to swap with you`}
-                                </h4>
-                                <span className="text-xs text-gray-500">
-                                  {formatDate(swap.timestamp)}
-                                </span>
-                              </div>
-                              
-                              <div className="mt-2 bg-white p-3 rounded-lg border border-gray-200">
-                                <div className="flex items-center">
-                                  <div className="w-12 h-16 bg-gray-200 rounded overflow-hidden flex-shrink-0">
-                                    {swap.book?.attributes?.cover?.data ? (
-                                      <img 
-                                        src={`${import.meta.env.VITE_API_URL}${swap.book.attributes.cover.data.attributes.url}`} 
-                                        alt={swap.book.attributes.title}
-                                        className="w-full h-full object-cover"
-                                      />
-                                    ) : (
-                                      <div className="w-full h-full bg-gray-300 flex items-center justify-center">
-                                        <span className="text-gray-500 text-xs">No image</span>
-                                      </div>
-                                    )}
-                                  </div>
-                                  
-                                  <div className="ml-3">
-                                    <h5 className="font-medium text-gray-800">{swap.book?.attributes?.title}</h5>
-                                    <p className="text-sm text-gray-500">{swap.book?.attributes?.author}</p>
-                                  </div>
-                                </div>
-                              </div>
-                              
-                              {swap.isUserBuyer ? (
-                                <div className="mt-2 flex space-x-2">
-                                  <Link
-                                    to={`/chat/${swap.sellerId}/${swap.bookId}`}
-                                    className="px-3 py-1.5 bg-blue-600 text-white text-sm rounded hover:bg-blue-700"
-                                  >
-                                    View in Messages
-                                  </Link>
-                                </div>
-                              ) : (
-                                <div className="mt-2 flex space-x-2">
-                                  <button 
-                                    onClick={() => handleSwapResponse(swap.id, true)}
-                                    className="px-3 py-1.5 bg-blue-600 text-white text-sm rounded hover:bg-blue-700"
-                                  >
-                                    Accept Swap
-                                  </button>
-                                  <button 
-                                    onClick={() => handleSwapResponse(swap.id, false)}
-                                    className="px-3 py-1.5 bg-white border border-gray-300 text-gray-700 text-sm rounded hover:bg-gray-50"
-                                  >
-                                    Decline
-                                  </button>
-                                  <Link 
-                                    to={`/chat/${swap.buyerId}/${swap.bookId}`}
-                                    className="px-3 py-1.5 bg-gray-100 text-gray-700 text-sm rounded hover:bg-gray-200 ml-auto"
-                                  >
-                                    View Chat
-                                  </Link>
-                                </div>
-                              )}
-                            </div>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
-                
-                {/* Pending Borrow Requests Section */}
-                {pendingBorrows.length > 0 && (
-                  <div>
-                    <h3 className="text-md font-medium mb-3 text-purple-800 flex items-center">
-                      <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                      </svg>
-                      Borrow Requests
-                    </h3>
-                    
-                    <div className="space-y-4">
-                      {pendingBorrows.map(borrow => (
-                        <div key={borrow.id} className="bg-purple-50 rounded-lg p-4 border border-purple-200">
-                          <div className="flex items-start">
-                            <div className="flex-shrink-0">
-                              <div className="w-12 h-12 bg-purple-100 rounded-full flex items-center justify-center text-purple-600 font-bold">
-                                {borrow.otherUser?.username ? borrow.otherUser.username.charAt(0).toUpperCase() : 'U'}
-                              </div>
-                            </div>
-                            
-                            <div className="ml-4 flex-grow">
-                              <div className="flex justify-between">
-                                <h4 className="font-medium text-gray-800">
-                                  {borrow.isUserBorrower ? 
-                                    `You requested to borrow from ${borrow.otherUser?.username}` : 
-                                    `${borrow.otherUser?.username} wants to borrow from you`}
-                                </h4>
-                                <span className="text-xs text-gray-500">
-                                  {formatDate(borrow.timestamp)}
-                                </span>
-                              </div>
-                              
-                              <div className="mt-2 bg-white p-3 rounded-lg border border-gray-200">
-                                <div className="flex items-center">
-                                  <div className="w-12 h-16 bg-gray-200 rounded overflow-hidden flex-shrink-0">
-                                    {borrow.book?.attributes?.cover?.data ? (
-                                      <img 
-                                        src={`${import.meta.env.VITE_API_URL}${borrow.book.attributes.cover.data.attributes.url}`} 
-                                        alt={borrow.book.attributes.title}
-                                        className="w-full h-full object-cover"
-                                      />
-                                    ) : (
-                                      <div className="w-full h-full bg-gray-300 flex items-center justify-center">
-                                        <span className="text-gray-500 text-xs">No image</span>
-                                      </div>
-                                    )}
-                                  </div>
-                                  
-                                  <div className="ml-3">
-                                    <h5 className="font-medium text-gray-800">{borrow.book?.attributes?.title}</h5>
-                                    <p className="text-sm text-gray-500">{borrow.book?.attributes?.author}</p>
-                                  </div>
-                                </div>
-                                
-                                <div className="mt-2 grid grid-cols-2 gap-2 text-sm">
-                                  <div>
-                                    <span className="text-gray-600">Duration: </span>
-                                    <span className="font-medium">{borrow.duration}</span>
-                                  </div>
-                                  <div>
-                                    <span className="text-gray-600">Return By: </span>
-                                    <span className="font-medium">{formatDate(borrow.returnDate)}</span>
-                                  </div>
-                                  <div>
-                                    <span className="text-gray-600">Deposit: </span>
-                                    <span className="font-medium">${borrow.depositAmount.toFixed(2)}</span>
-                                  </div>
-                                </div>
-                              </div>
-                              
-                              {borrow.isUserBorrower ? (
-                                <div className="mt-2 flex space-x-2">
-                                  <Link
-                                    to={`/chat/${borrow.lenderId}/${borrow.bookId}`}
-                                    className="px-3 py-1.5 bg-purple-600 text-white text-sm rounded hover:bg-purple-700"
-                                  >
-                                    View in Messages
-                                  </Link>
-                                </div>
-                              ) : (
-                                <div className="mt-2 flex space-x-2">
-                                  <button 
-                                    onClick={() => handleBorrowResponse(borrow.id, true)}
-                                    className="px-3 py-1.5 bg-purple-600 text-white text-sm rounded hover:bg-purple-700"
-                                  >
-                                    Accept Request
-                                  </button>
-                                  <button 
-                                    onClick={() => handleBorrowResponse(borrow.id, false)}
-                                    className="px-3 py-1.5 bg-white border border-gray-300 text-gray-700 text-sm rounded hover:bg-gray-50"
-                                  >
-                                    Decline
-                                  </button>
-                                  <Link 
-                                    to={`/chat/${borrow.borrowerId}/${borrow.bookId}`}
-                                    className="px-3 py-1.5 bg-gray-100 text-gray-700 text-sm rounded hover:bg-gray-200 ml-auto"
-                                  >
-                                    View Chat
-                                  </Link>
-                                </div>
-                              )}
-                            </div>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
               </div>
             )}
           </div>
         )}
         
-        {/* Books I'm Borrowing Tab */}
-        {activeTab === 'borrowed' && (
-          <div>
-            <h2 className="text-lg font-medium mb-4">Books I'm Borrowing</h2>
-            
-            {borrowedBooks.length === 0 ? (
-              <div className="text-center py-8 bg-gray-50 rounded-lg">
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-12 w-12 text-gray-400 mx-auto mb-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                </svg>
-                <p className="text-gray-500 mb-4">You're not currently borrowing any books.</p>
-                <Link to="/books" className="px-4 py-2 bg-purple-600 text-white rounded hover:bg-purple-700">
-                  Browse Books to Borrow
-                </Link>
-              </div>
-            ) : (
-              <div className="space-y-4">
-                {borrowedBooks.map(borrow => (
-                  <div 
-                    key={borrow.id} 
-                    className={`rounded-lg p-4 border ${borrow.isOverdue ? 'bg-red-50 border-red-200' : 'bg-purple-50 border-purple-200'}`}
-                  >
-                    <div className="flex">
-                      <div className="w-16 h-20 bg-gray-200 rounded overflow-hidden flex-shrink-0">
-                        {borrow.book?.attributes?.cover?.data ? (
-                          <img 
-                            src={`${import.meta.env.VITE_API_URL}${borrow.book.attributes.cover.data.attributes.url}`} 
-                            alt={borrow.book.attributes.title}
-                            className="w-full h-full object-cover"
-                          />
-                        ) : (
-                          <div className="w-full h-full bg-gray-300 flex items-center justify-center">
-                            <span className="text-gray-500 text-xs">No image</span>
-                          </div>
-                        )}
-                      </div>
-                      
-                      <div className="ml-4 flex-grow">
-                        <div className="flex justify-between">
-                          <h3 className="font-medium text-gray-800">{borrow.book?.attributes?.title}</h3>
-                          {borrow.isOverdue ? (
-                            <span className="bg-red-100 text-red-800 px-2 py-0.5 rounded-full text-xs font-medium">
-                              Overdue
-                            </span>
-                          ) : (
-                            <span className="bg-green-100 text-green-800 px-2 py-0.5 rounded-full text-xs font-medium">
-                              Active
-                            </span>
-                          )}
-                        </div>
-                        <p className="text-sm text-gray-500">by {borrow.book?.attributes?.author}</p>
-                        <div className="mt-2 grid grid-cols-2 gap-2 text-sm">
-                          <div>
-                            <span className="text-gray-600">Due Date: </span>
-                            <span className={`font-medium ${borrow.isOverdue ? 'text-red-600' : ''}`}>
-                              {formatDate(borrow.returnDate)}
-                            </span>
-                          </div>
-                          <div>
-                            <span className="text-gray-600">Status: </span>
-                            <span className="font-medium">
-                              {borrow.isOverdue ? 
-                                `Overdue by ${Math.abs(borrow.daysUntilDue)} days` : 
-                                `${borrow.daysUntilDue} days remaining`}
-                            </span>
-                          </div>
-                          <div>
-                            <span className="text-gray-600">Lender: </span>
-                            <span className="font-medium">{borrow.lender?.username}</span>
-                          </div>
-                          <div>
-                            <span className="text-gray-600">Deposit: </span>
-                            <span className="font-medium">${borrow.depositAmount.toFixed(2)}</span>
-                          </div>
-                        </div>
-                        
-                        <div className="mt-3">
-                          <Link 
-                            to={`/chat/${borrow.lenderId}/${borrow.bookId}`}
-                            className="inline-block px-3 py-1 bg-purple-600 text-white text-sm rounded hover:bg-purple-700"
-                          >
-                            Contact Lender
-                          </Link>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-        )}
-        
-        {/* Transaction History Tab */}
         {activeTab === 'history' && (
           <div>
             <h2 className="text-lg font-medium mb-4">Transaction History</h2>
@@ -1312,7 +677,7 @@ const Dashboard = () => {
             {transactionHistory.length === 0 ? (
               <div className="text-center py-8 bg-gray-50 rounded-lg">
                 <svg xmlns="http://www.w3.org/2000/svg" className="h-12 w-12 text-gray-400 mx-auto mb-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 012 2h2a2 2 0 012-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
                 </svg>
                 <p className="text-gray-500">No transaction history yet</p>
               </div>
@@ -1351,27 +716,28 @@ const Dashboard = () => {
                           <td className="px-6 py-4 whitespace-nowrap">
                             <span className={`px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full 
                               ${transaction.type === 'purchase' ? 'bg-green-100 text-green-800' : 
+                                transaction.type === 'sale' ? 'bg-yellow-100 text-yellow-800' :
                                 transaction.type === 'swap' ? 'bg-blue-100 text-blue-800' : 
                                 'bg-purple-100 text-purple-800'}`}>
                               {transaction.type === 'purchase' ? 'Purchase' : 
+                               transaction.type === 'sale' ? 'Sale' :
                                transaction.type === 'swap' ? 'Swap' : 'Borrow'}
                             </span>
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                            {transaction.type === 'purchase' ? 
-                              (transaction.items && transaction.items.length > 0 ? 
-                                `${transaction.items[0].title}${transaction.items.length > 1 ? ` +${transaction.items.length - 1} more` : ''}` : 
-                                'Multiple items') : 
-                              transaction.book?.attributes?.title || 'Unknown Book'}
+                            {transaction.items && transaction.items.length > 0 ? 
+                              `${transaction.items[0].title}${transaction.items.length > 1 ? ` +${transaction.items.length - 1} more` : ''}` : 
+                              'N/A'}
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                             {transaction.role === 'buyer' ? 'Buyer' : 
+                             transaction.role === 'seller' ? 'Seller' :
                              transaction.role === 'requester' ? 'Requester' : 
                              transaction.role === 'provider' ? 'Provider' : 
                              transaction.role === 'borrower' ? 'Borrower' : 'Lender'}
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                            {transaction.type === 'purchase' ? 
+                            {transaction.type === 'purchase' || transaction.type === 'sale' ? 
                               `$${transaction.amount.toFixed(2)}` : 
                               transaction.type === 'borrow' ? 
                                 `$${transaction.depositAmount?.toFixed(2) || '0.00'} (deposit)` : 
@@ -1379,9 +745,7 @@ const Dashboard = () => {
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap">
                             <span className="px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
-                              {transaction.type === 'purchase' ? 
-                                transaction.status || 'Completed' : 
-                                'Completed'}
+                              {transaction.status || 'Completed'}
                             </span>
                           </td>
                         </tr>
@@ -1395,7 +759,6 @@ const Dashboard = () => {
         )}
       </div>
       
-      {/* Book Form Modal */}
       {showBookForm && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 overflow-y-auto">
           <div className="bg-white rounded-lg max-w-4xl w-full m-4 max-h-[90vh] overflow-y-auto">

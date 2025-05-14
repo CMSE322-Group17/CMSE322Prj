@@ -4,7 +4,7 @@ import { useCart } from '../contexts/CartContext';
 import { useAuth } from '../contexts/AuthContext';
 
 const CartPage = () => {
-  const { cartItems, cartCount, removeFromCart, updateCartItemQuantity, updateBorrowDetails, clearCart, loading, error } = useCart();
+  const { cartItems, cartCount, removeFromCart, updateCartItemQuantity, clearCart, loading, error } = useCart();
   const { isAuthenticated } = useAuth();
   const navigate = useNavigate();
   const [checkoutLoading, setCheckoutLoading] = useState(false);
@@ -21,47 +21,21 @@ const CartPage = () => {
   // Calculate subtotals by transaction type
   const calculateSubtotal = (items) => {
     return items.reduce((total, item) => {
-      if (item.transactionType === 'borrow') {
-        return total + (item.depositAmount * item.quantity);
-      }
       return total + (item.price * item.quantity);
     }, 0);
   };
   
-  // Calculate main cart total (purchases + deposits)
+  // Calculate main cart total (purchases only)
   const cartTotal = cartItems.reduce((total, item) => {
-    if (item.transactionType === 'borrow') {
-      return total + (item.depositAmount * item.quantity);
+    if (item.transactionType !== 'swap') {
+      return total + (item.price * item.quantity);
     }
-    return total + (item.price * item.quantity);
+    return total;
   }, 0);
   
   const shipping = 0; // Free shipping for now
   const tax = calculateSubtotal(groupedItems.buy || []) * 0.08; // Only apply tax to purchased items
   const total = cartTotal + shipping + tax;
-  
-  const handleUpdateBorrowDuration = (itemId, duration) => {
-    // Calculate new due date based on duration
-    const dueDate = new Date();
-    switch(duration) {
-      case '1 week':
-        dueDate.setDate(dueDate.getDate() + 7);
-        break;
-      case '2 weeks':
-        dueDate.setDate(dueDate.getDate() + 14);
-        break;
-      case '1 month':
-        dueDate.setDate(dueDate.getDate() + 30);
-        break;
-      default:
-        dueDate.setDate(dueDate.getDate() + 14); // Default to 2 weeks
-    }
-    
-    updateBorrowDetails(itemId, {
-      duration: duration,
-      dueDate: dueDate.toISOString().split('T')[0]
-    });
-  };
   
   const handleCheckout = async () => {
     if (cartItems.length === 0) return;
@@ -88,7 +62,6 @@ const CartPage = () => {
   // Render a cart item based on its transaction type
   const renderCartItem = (item) => {
     const isBookType = item.transactionType === 'buy' || !item.transactionType;
-    const isBorrowType = item.transactionType === 'borrow';
     
     return (
       <div key={item.id} className="p-4 flex border-b border-gray-200">
@@ -129,12 +102,6 @@ const CartPage = () => {
               </span>
             )}
             
-            {isBorrowType && (
-              <span className="inline-block px-2 py-1 bg-purple-100 text-purple-800 text-xs rounded-full">
-                For Borrowing
-              </span>
-            )}
-            
             {item.transactionType === 'swap' && (
               <span className="inline-block px-2 py-1 bg-blue-100 text-blue-800 text-xs rounded-full">
                 For Swap
@@ -167,13 +134,6 @@ const CartPage = () => {
                   <span className="font-medium text-blue-600">${item.price.toFixed(2)}</span>
                 </>
               )}
-              
-              {isBorrowType && (
-                <>
-                  <span className="text-gray-700 mr-2">Deposit:</span>
-                  <span className="font-medium text-blue-600">${item.depositAmount.toFixed(2)}</span>
-                </>
-              )}
             </div>
             
             <div className="flex items-center">
@@ -182,36 +142,11 @@ const CartPage = () => {
                 <span className="font-medium text-blue-600">${(item.price * item.quantity).toFixed(2)}</span>
               )}
               
-              {isBorrowType && (
-                <span className="font-medium text-blue-600">${(item.depositAmount * item.quantity).toFixed(2)}</span>
+              {item.transactionType === 'swap' && (
+                <span className="font-medium text-blue-600">N/A</span>
               )}
             </div>
           </div>
-          
-          {/* Borrowing-specific options */}
-          {isBorrowType && (
-            <div className="mt-3 bg-purple-50 p-2 rounded">
-              <div className="flex justify-between items-center text-sm">
-                <span className="text-purple-700">Borrow Duration:</span>
-                <select 
-                  value={item.borrowDuration} 
-                  onChange={(e) => handleUpdateBorrowDuration(item.id, e.target.value)}
-                  className="border border-purple-300 rounded py-1 px-2 text-sm bg-white"
-                >
-                  <option value="1 week">1 Week</option>
-                  <option value="2 weeks">2 Weeks</option>
-                  <option value="1 month">1 Month</option>
-                </select>
-              </div>
-              <div className="flex justify-between items-center text-sm mt-2">
-                <span className="text-purple-700">Return By:</span>
-                <span className="font-medium">{item.dueDate}</span>
-              </div>
-              <p className="text-xs text-gray-500 mt-2">
-                * Deposit will be refunded upon return of the book in good condition
-              </p>
-            </div>
-          )}
         </div>
       </div>
     );
@@ -240,7 +175,7 @@ const CartPage = () => {
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
           </svg>
           <h2 className="text-xl font-bold text-green-800 mb-2">{successMessage}</h2>
-          <p className="text-green-700 mb-6">Thank you for your purchase and/or borrowing!</p>
+          <p className="text-green-700 mb-6">Thank you for your purchase!</p>
           <Link to="/books" className="px-4 py-2 bg-blue-600 text-white rounded font-medium hover:bg-blue-700 transition-colors">
             Continue Shopping
           </Link>
@@ -277,16 +212,6 @@ const CartPage = () => {
                   </div>
                 )}
                 
-                {/* Borrowing items */}
-                {groupedItems.borrow && groupedItems.borrow.length > 0 && (
-                  <div>
-                    <div className="bg-purple-50 p-3 border-b border-gray-200">
-                      <h3 className="font-medium text-purple-800">Books to Borrow</h3>
-                    </div>
-                    {groupedItems.borrow.map(item => renderCartItem(item))}
-                  </div>
-                )}
-                
                 {/* Swap items */}
                 {groupedItems.swap && groupedItems.swap.length > 0 && (
                   <div>
@@ -319,14 +244,6 @@ const CartPage = () => {
                     </div>
                   )}
                   
-                  {/* Borrowing deposit total */}
-                  {groupedItems.borrow && groupedItems.borrow.length > 0 && (
-                    <div className="flex justify-between">
-                      <span className="text-gray-600">Borrowing Deposits</span>
-                      <span className="font-medium">${calculateSubtotal(groupedItems.borrow).toFixed(2)}</span>
-                    </div>
-                  )}
-                  
                   <div className="flex justify-between">
                     <span className="text-gray-600">Shipping</span>
                     <span className="font-medium">$0.00</span>
@@ -345,12 +262,6 @@ const CartPage = () => {
                       <span className="font-medium">Total</span>
                       <span className="font-bold text-blue-600">${total.toFixed(2)}</span>
                     </div>
-                    
-                    {groupedItems.borrow && groupedItems.borrow.length > 0 && (
-                      <p className="text-xs text-gray-500 mt-1">
-                        * Borrowing deposits are refundable upon book return
-                      </p>
-                    )}
                   </div>
                 </div>
                 
