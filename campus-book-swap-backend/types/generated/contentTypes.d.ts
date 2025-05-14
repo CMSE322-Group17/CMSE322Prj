@@ -73,6 +73,9 @@ export interface AdminApiTokenPermission extends Struct.CollectionTypeSchema {
     pluralName: 'api-token-permissions';
     singularName: 'api-token-permission';
   };
+  options: {
+    draftAndPublish: false;
+  };
   pluginOptions: {
     'content-manager': {
       visible: false;
