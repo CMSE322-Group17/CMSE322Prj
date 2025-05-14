@@ -183,7 +183,8 @@ export const bookAPI = {
         method: 'GET',
         params: {
           populate: '*',
-          'filters[bookOfWeek]': true
+          'filters[bookOfWeek]': true,
+          'filters[status][$ne]': 'sold' // Exclude sold books
         }
       });
     } catch (error) {
