@@ -14,48 +14,43 @@ export default factories.createCoreController('api::order.order', ({ strapi }) =
       return ctx.badRequest('Buyer information is missing.');
     }
 
-    // Call the default core action to create the order
     const response = await super.create(ctx);
 
-    // After creating the order, update book statuses and create transactions
     if (response.data && items && Array.isArray(items)) {
       for (const item of items) {
         try {
           const book = await strapi.entityService.findOne('api::book.book', item.bookId, {
-            populate: ['seller', 'users_permissions_user'], // Populate seller relation
+            populate: ['seller', 'users_permissions_user'],
           });
 
           if (!book) {
             strapi.log.warn(`Book with ID ${item.bookId} not found during order creation.`);
             continue;
           }
-
           // @ts-ignore
-          const sellerId = book.seller?.id || book.users_permissions_user?.id; // Prioritize dedicated seller field
+          const sellerId = book.seller?.id || book.users_permissions_user?.id;
 
           if (!sellerId) {
             strapi.log.warn(`Seller ID not found for book ID ${item.bookId}.`);
             continue;
           }
 
-          // Update book status to 'sold'
           await strapi.entityService.update('api::book.book', item.bookId, {
             data: {
               status: 'sold',
             },
           });
 
-          // Create transaction record
           await strapi.entityService.create('api::transaction.transaction', {
             data: {
-              book: item.bookId,
-              users_permissions_user: buyerId, // Buyer
-              seller: sellerId, // Seller
-              Tstatus: 'completed',
+              book: { id: item.bookId },
+              users_permissions_user: { id: buyerId },
+              seller: { id: sellerId },
+              Tstatus: 'completed', // Corrected back to Tstatus
               orderDate: new Date().toISOString(),
               // @ts-ignore
-              amount: book.price, 
-              type: 'sale', // This is the new field
+              amount: book.price,
+              type: 'sale',
               publishedAt: new Date().toISOString(),
             },
           });
