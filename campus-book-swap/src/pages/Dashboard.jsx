@@ -235,72 +235,110 @@ const Dashboard = () => {
   // Fetch transaction history
   const fetchTransactionHistory = async () => {
     try {
-      const salesResponse = await authAxios.get(
-        `${import.meta.env.VITE_API_URL}/api/orders?filters[userId][$eq]=${user.id}&sort[0]=timestamp:desc&populate=*`
+      // 1. Purchases made by the current user
+      const purchasesResponse = await authAxios.get(
+        `${import.meta.env.VITE_API_URL}/api/orders?filters[userId][$eq]=${user.id}&filters[status][$eq]=completed&sort[0]=timestamp:desc&populate=items,userId`
       );
-      
-      const swapsResponse = await authAxios.get(
-        `${import.meta.env.VITE_API_URL}/api/swap-offers?filters[$or][0][buyerId][$eq]=${user.id}&filters[$or][1][sellerId][$eq]=${user.id}&filters[status][$eq]=completed&sort[0]=timestamp:desc&populate=*`
-      );
-      
-      const sales = salesResponse.data.data?.map(order => ({
-        id: `sale-${order.id}`,
+      const purchases = purchasesResponse.data.data?.map(order => ({
+        id: `purchase-${order.id}`,
         type: 'purchase',
         date: order.attributes.timestamp,
         amount: order.attributes.totalAmount,
         status: order.attributes.status,
-        items: order.attributes.items,
+        items: order.attributes.items.map(item => ({
+          bookId: item.bookId,
+          title: item.title || 'Unknown Book',
+          quantity: item.quantity,
+          price: item.price
+        })),
         role: 'buyer'
       })) || [];
+
+      // 2. Sales made by the current user
+      const userBooksResponse = await authAxios.get(
+        `${import.meta.env.VITE_API_URL}/api/books?filters[users_permissions_user][id][$eq]=${user.id}&fields[0]=id`
+      );
+      const userBookIds = userBooksResponse.data.data.map(b => b.id);
+
+      let salesByUserData = [];
+      if (userBookIds.length > 0) {
+        const allCompletedOrdersResponse = await authAxios.get(
+          `${import.meta.env.VITE_API_URL}/api/orders?filters[status][$eq]=completed&populate=items,userId`
+        );
+        
+        const allCompletedOrders = allCompletedOrdersResponse.data.data || [];
+        
+        salesByUserData = allCompletedOrders
+          .filter(order => {
+            // skip orders where current user was buyer
+            if (order.attributes.userId === user.id) {
+              return false;
+            }
+            // include orders that contain user's books
+            return order.attributes.items.some(item => userBookIds.includes(item.bookId));
+          })
+          .map(order => {
+            const itemsSoldByCurrentUser = order.attributes.items.filter(item => userBookIds.includes(item.bookId));
+            const amountForCurrentUser = itemsSoldByCurrentUser.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+
+            return {
+              id: `sale-${order.id}`,
+              type: 'sale',
+              date: order.attributes.timestamp,
+              amount: amountForCurrentUser,
+              status: order.attributes.status,
+              items: itemsSoldByCurrentUser.map(item => ({
+                bookId: item.bookId,
+                title: item.title || 'Unknown Book',
+                quantity: item.quantity,
+                price: item.price
+              })),
+              role: 'seller',
+              // order.attributes.userId is a string username or id; adjust as needed
+              buyerInfo: order.attributes.userId || 'Unknown Buyer'
+            };
+          });
+      }
+
+      // 3. Swaps involving the current user
+      // Assuming swap-offers have 'requester' and 'owner' relations to users,
+      // and 'requestedBook' and 'offeredBooks' relations to books.
+      const swapsResponse = await authAxios.get(
+        `${import.meta.env.VITE_API_URL}/api/swap-offers?filters[$or][0][requester][id][$eq]=${user.id}&filters[$or][1][owner][id][$eq]=${user.id}&filters[status][$eq]=completed&sort[0]=updatedAt:desc&populate=requestedBook,offeredBooks,requester,owner`
+      );
       
-      const swaps = swapsResponse.data.data?.map(swap => ({
-        id: `swap-${swap.id}`,
-        type: 'swap',
-        date: swap.attributes.timestamp,
-        bookId: swap.attributes.bookId,
-        offerBookIds: swap.attributes.offerBookIds,
-        role: swap.attributes.buyerId === user.id ? 'requester' : 'provider'
-      })) || [];
+      const swapsData = swapsResponse.data.data?.map(swapFull => {
+        const swap = swapFull.attributes;
+        const id = swapFull.id;
+        const isRequesterRole = swap.requester?.data?.id === user.id;
+        
+        const requestedTitle = swap.requestedBook?.data?.attributes?.title || 'Unknown Book';
+        const offeredTitles = swap.offeredBooks?.data?.map(b => b.attributes.title).join(', ') || 'N/A';
+        
+        let summary = `Requested: ${requestedTitle}`;
+        if (swap.offeredBooks?.data?.length > 0 && offeredTitles !== 'N/A') {
+          summary += ` | Offered: ${offeredTitles}`;
+        }
+
+        return {
+          id: `swap-${id}`,
+          type: 'swap',
+          date: swap.timestamp || swap.updatedAt,
+          items: [{ title: summary, quantity: 1, price: 0 }],
+          amount: 0,
+          status: 'completed',
+          role: isRequesterRole ? 'requester' : 'provider',
+        };
+      }) || [];
       
-      const allTransactions = [...sales, ...swaps].sort((a, b) => 
+      const allTransactions = [...purchases, ...salesByUserData, ...swapsData].sort((a, b) => 
         new Date(b.date) - new Date(a.date)
       );
       
-      const enrichedTransactions = await Promise.all(allTransactions.map(async (transaction) => {
-        try {
-          if (transaction.type === 'purchase') {
-            return transaction;
-          } 
-          else if (transaction.type === 'swap') {
-            const bookResponse = await authAxios.get(
-              `${import.meta.env.VITE_API_URL}/api/books/${transaction.bookId}?populate=*`
-            );
-            
-            const otherUserId = transaction.role === 'requester' ? 
-              transaction.sellerId : transaction.buyerId;
-            
-            const userResponse = await authAxios.get(
-              `${import.meta.env.VITE_API_URL}/api/users/${otherUserId}`
-            );
-            
-            return {
-              ...transaction,
-              book: bookResponse.data.data,
-              otherUser: userResponse.data
-            };
-          }
-          
-          return transaction;
-        } catch (err) {
-          console.error('Error enriching transaction data:', err);
-          return transaction;
-        }
-      }));
-      
-      setTransactionHistory(enrichedTransactions);
+      setTransactionHistory(allTransactions);
     } catch (err) {
-      console.error('Error fetching transaction history:', err);
-      throw err;
+      console.error('Error fetching transaction history:', err.response ? err.response.data : err.message);
+      setError(prev => (prev ? prev + '; ' : '') + 'Failed to fetch transaction history.');
     }
   };
 
