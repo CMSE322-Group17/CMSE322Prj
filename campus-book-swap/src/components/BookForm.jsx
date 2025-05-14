@@ -155,11 +155,30 @@ const BookForm = ({ onSuccess, bookToEdit = null }) => {
         bookOfWeek: book.bookOfWeek,
         bookOfYear: book.bookOfYear,
         displayTitle: book.displayTitle,
-        category: book.category || null,
+        category: book.category || null, // Ensure category is null if not selected, or a valid ID
         bookType: book.bookType,
-        users_permissions_user: user.id // Explicitly use the logged-in user's ID
+        // Ensure users_permissions_user is a valid number and correctly structured for Strapi
+        users_permissions_user: typeof user.id === 'number' ? user.id : parseInt(user.id, 10)
       };
       
+      // Revised price logic
+      let finalPrice = null;
+      if (bookData.bookType === 'For Sale') {
+        const parsedPrice = parseFloat(book.price);
+        // Ensure price is a valid number and positive. Adjust condition if 0 is a valid price.
+        if (!isNaN(parsedPrice) && parsedPrice > 0) {
+          finalPrice = parsedPrice;
+        }
+        // If price is invalid or not positive for a 'For Sale' book, it remains null.
+        // Consider adding form validation to alert the user for invalid prices for 'For Sale' items.
+      }
+      bookData.price = finalPrice;
+      
+      // Ensure category is an ID if it's an object (from bookToEdit)
+      if (bookData.category && typeof bookData.category === 'object' && bookData.category.id) {
+        bookData.category = bookData.category.id;
+      }
+
       // Log the actual data before submission for debugging
       console.log('Submitting book data:', bookData);
       
