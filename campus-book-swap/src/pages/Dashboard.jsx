@@ -507,193 +507,36 @@ const Dashboard = () => {
       <div className="bg-white rounded-lg shadow-md p-6">
         {activeTab === 'overview' && (
           <div>
-            <div className="mb-6">
-              <h2 className="text-xl font-semibold mb-4">Welcome, {user.username}!</h2>
-              
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-                <div className="bg-blue-50 p-4 rounded-lg">
-                  <p className="text-blue-800 text-sm font-medium uppercase">My Books</p>
-                  <p className="text-2xl font-bold text-gray-800">{stats.totalListings}</p>
-                  <p className="text-gray-500 text-sm">{stats.activeListings} active</p>
-                </div>
-                
-                <div className="bg-green-50 p-4 rounded-lg">
-                  <p className="text-green-800 text-sm font-medium uppercase">Earnings</p>
-                  <p className="text-2xl font-bold text-gray-800">${stats.totalEarnings.toFixed(2)}</p>
-                  <p className="text-gray-500 text-sm">From sales</p>
-                </div>
-                
-                <div className="bg-purple-50 p-4 rounded-lg">
-                  <p className="text-purple-800 text-sm font-medium uppercase">Saved</p>
-                  <p className="text-2xl font-bold text-gray-800">${stats.savedBySwapping.toFixed(2)}</p>
-                  <p className="text-gray-500 text-sm">By swapping</p>
-                </div>
-                
-                <div className="bg-yellow-50 p-4 rounded-lg">
-                  <p className="text-yellow-800 text-sm font-medium uppercase">Transactions</p>
-                  <p className="text-2xl font-bold text-gray-800">{stats.completedTransactions}</p>
-                  <p className="text-gray-500 text-sm">{stats.pendingTransactions} pending</p>
-                </div>
+            <h2 className="text-2xl font-semibold mb-6 text-gray-800">Welcome, {user?.username || 'User'}!</h2>
+            
+            {/* Stats Grid */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+              {/* My Books Stat */}
+              <div className="bg-blue-100 p-6 rounded-lg shadow hover:shadow-lg transition-shadow">
+                <h3 className="text-lg font-semibold text-blue-700">MY BOOKS</h3>
+                <p className="text-3xl font-bold text-blue-900">{stats.activeListings}</p>
+                <p className="text-sm text-gray-600">{stats.activeListings === 1 ? 'active listing' : 'active listings'}</p>
               </div>
-              
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                <div>
-                  <h3 className="font-medium text-gray-800 mb-3 flex items-center">
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2 text-blue-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                    </svg>
-                    Recent Activity
-                  </h3>
-                  
-                  <div className="border border-gray-200 rounded-lg overflow-hidden">
-                    {transactionHistory.slice(0, 5).length === 0 ? (
-                      <div className="p-4 text-center text-gray-500">
-                        No recent activity to display
-                      </div>
-                    ) : (
-                      <div className="divide-y divide-gray-200">
-                        {transactionHistory.slice(0, 5).map(transaction => (
-                          <div key={transaction.id} className="p-3 hover:bg-gray-50">
-                            <div className="flex justify-between items-start">
-                              <div>
-                                <p className="font-medium text-gray-800">
-                                  {transaction.type === 'purchase' ? 'Purchased books' : 
-                                   transaction.type === 'swap' ? (transaction.role === 'requester' ? 'Requested swap' : 'Provided swap') :
-                                   transaction.role === 'borrower' ? 'Borrowed book' : 'Lent book'}
-                                </p>
-                                <p className="text-sm text-gray-500">{formatDate(transaction.date)}</p>
-                              </div>
-                              
-                              {transaction.type === 'purchase' && (
-                                <span className="bg-green-100 text-green-800 px-2 py-1 rounded text-xs font-medium">
-                                  ${transaction.amount.toFixed(2)}
-                                </span>
-                              )}
-                              
-                              {transaction.type === 'swap' && (
-                                <span className="bg-blue-100 text-blue-800 px-2 py-1 rounded text-xs font-medium">
-                                  Swap
-                                </span>
-                              )}
-                              
-                              {transaction.type === 'borrow' && (
-                                <span className="bg-purple-100 text-purple-800 px-2 py-1 rounded text-xs font-medium">
-                                  Borrow
-                                </span>
-                              )}
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-                  
-                  <div className="mt-3 text-right">
-                    <button 
-                      onClick={() => setActiveTab('history')}
-                      className="text-blue-600 hover:text-blue-800 text-sm font-medium"
-                    >
-                      View All Activity
-                    </button>
-                  </div>
-                </div>
-                
-                <div>
-                  <h3 className="font-medium text-gray-800 mb-3 flex items-center">
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2 text-yellow-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-                    </svg>
-                    Pending Actions
-                    {pendingActionsCount > 0 && (
-                      <span className="ml-2 bg-red-100 text-red-800 px-2 py-0.5 rounded-full text-xs">
-                        {pendingActionsCount}
-                      </span>
-                    )}
-                  </h3>
-                  
-                  <div className="border border-gray-200 rounded-lg overflow-hidden">
-                    {pendingActionsCount === 0 ? (
-                      <div className="p-4 text-center text-gray-500">
-                        No pending actions to complete
-                      </div>
-                    ) : (
-                      <div className="divide-y divide-gray-200">
-                        {pendingSwaps.filter(swap => !swap.isUserBuyer).map(swap => (
-                          <div key={`swap-${swap.id}`} className="p-3 hover:bg-gray-50">
-                            <div className="flex justify-between items-start">
-                              <div>
-                                <p className="font-medium text-gray-800">
-                                  <span className="text-blue-600">{swap.otherUser?.username}</span> requested to swap for your book
-                                </p>
-                                <p className="text-sm text-gray-600 font-medium mt-1">
-                                  Book: {swap.book?.attributes?.title}
-                                </p>
-                                <div className="mt-2 flex space-x-2">
-                                  <button 
-                                    onClick={() => handleSwapResponse(swap.id, true)}
-                                    className="px-3 py-1 bg-blue-600 text-white text-xs rounded hover:bg-blue-700"
-                                  >
-                                    Accept
-                                  </button>
-                                  <button 
-                                    onClick={() => handleSwapResponse(swap.id, false)}
-                                    className="px-3 py-1 bg-gray-100 text-gray-700 text-xs rounded hover:bg-gray-200"
-                                  >
-                                    Decline
-                                  </button>
-                                </div>
-                              </div>
-                              <span className="bg-blue-100 text-blue-800 px-2 py-1 rounded text-xs font-medium">
-                                Swap Request
-                              </span>
-                            </div>
-                          </div>
-                        ))}
 
-                        {pendingPurchaseRequests.map(request => (
-                          <div key={`purchase-${request.id}`} className="p-3 hover:bg-gray-50">
-                            <div className="flex justify-between items-start">
-                              <div>
-                                <p className="font-medium text-gray-800">
-                                  <span className="text-green-600">{request.buyer?.username}</span> requested to purchase your book
-                                </p>
-                                <p className="text-sm text-gray-600 font-medium mt-1">
-                                  Book: {request.book?.attributes?.title}
-                                </p>
-                                <div className="mt-2 flex space-x-2">
-                                  <button 
-                                    onClick={() => handlePurchaseResponse(request.id, true)}
-                                    className="px-3 py-1 bg-green-600 text-white text-xs rounded hover:bg-green-700"
-                                  >
-                                    Accept
-                                  </button>
-                                  <button 
-                                    onClick={() => handlePurchaseResponse(request.id, false)}
-                                    className="px-3 py-1 bg-gray-100 text-gray-700 text-xs rounded hover:bg-gray-200"
-                                  >
-                                    Decline
-                                  </button>
-                                </div>
-                              </div>
-                              <span className="bg-green-100 text-green-800 px-2 py-1 rounded text-xs font-medium">
-                                Purchase Request
-                              </span>
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-                  
-                  <div className="mt-3 text-right">
-                    <button 
-                      onClick={() => setActiveTab('actions')}
-                      className="text-blue-600 hover:text-blue-800 text-sm font-medium"
-                    >
-                      View All Actions
-                    </button>
-                  </div>
-                </div>
+              {/* Earnings Stat */}
+              <div className="bg-green-100 p-6 rounded-lg shadow hover:shadow-lg transition-shadow">
+                <h3 className="text-lg font-semibold text-green-700">EARNINGS</h3>
+                <p className="text-3xl font-bold text-green-900">${stats.totalEarnings.toFixed(2)}</p>
+                <p className="text-sm text-gray-600">From sales</p>
+              </div>
+
+              {/* Saved Stat */}
+              <div className="bg-purple-100 p-6 rounded-lg shadow hover:shadow-lg transition-shadow">
+                <h3 className="text-lg font-semibold text-purple-700">SAVED</h3>
+                <p className="text-3xl font-bold text-purple-900">${stats.savedBySwapping.toFixed(2)}</p>
+                <p className="text-sm text-gray-600">By swapping</p>
+              </div>
+
+              {/* Transactions Stat */}
+              <div className="bg-yellow-100 p-6 rounded-lg shadow hover:shadow-lg transition-shadow">
+                <h3 className="text-lg font-semibold text-yellow-700">TRANSACTIONS</h3>
+                <p className="text-3xl font-bold text-yellow-900">{stats.completedTransactions}</p>
+                <p className="text-sm text-gray-600">{stats.pendingTransactions > 0 ? `${stats.pendingTransactions} pending` : 'completed'}</p>
               </div>
             </div>
           </div>
