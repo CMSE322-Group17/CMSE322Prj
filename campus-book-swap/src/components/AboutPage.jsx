@@ -73,18 +73,15 @@ const AboutPage = () => {
           <div className="max-w-4xl mx-auto">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-12 items-center">
               <div>
-                <h2 className="text-3xl font-bold mb-4 text-gray-800">Our Story</h2>
+                <h2 className="text-3xl font-bold mb-4 text-gray-800">Temporibus Autem</h2>
                 <p className="text-gray-600 mb-4">
-                  CampusBookSwap was founded in 2022 by a group of university students who were frustrated 
-                  with the high cost of textbooks and the limited options for selling them back.
+                  Temporibus autem quibusdam et aut officiis debitis aut rerum necessitatibus saepe eveniet.
                 </p>
                 <p className="text-gray-600 mb-4">
-                  Starting at just one campus with a simple bulletin board, we've now grown to serve 
-                  over 50 universities nationwide, helping thousands of students save money each semester.
+                  Ut enim ad minima veniam, quis nostrum exercitationem ullam corporis suscipit laboriosam.
                 </p>
                 <p className="text-gray-600">
-                  Our platform is built by students, for students, with a deep understanding of the 
-                  challenges of academic life and the financial pressures of higher education.
+                  Nisi ut aliquid ex ea commodi consequatur? Quis autem vel eum iure reprehenderit.
                 </p>
               </div>
               <div className="rounded-lg overflow-hidden shadow-md">
