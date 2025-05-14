@@ -328,46 +328,52 @@ export interface AdminUser extends Struct.CollectionTypeSchema {
     };
   };
   attributes: {
-    blocked: Attribute.Boolean & Attribute.Private & Attribute.DefaultTo<false>;
-    createdAt: Attribute.DateTime;
-    createdBy: Attribute.Relation<'admin::user', 'oneToOne', 'admin::user'> &
-      Attribute.Private;
-    email: Attribute.Email &
-      Attribute.Required &
-      Attribute.Private &
-      Attribute.Unique &
-      Attribute.SetMinMaxLength<{
+    blocked: Schema.Attribute.Boolean &
+      Schema.Attribute.Private &
+      Schema.Attribute.DefaultTo<false>;
+    createdAt: Schema.Attribute.DateTime;
+    createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+    email: Schema.Attribute.Email &
+      Schema.Attribute.Required &
+      Schema.Attribute.Private &
+      Schema.Attribute.Unique &
+      Schema.Attribute.SetMinMaxLength<{
         minLength: 6;
       }>;
-    firstname: Attribute.String &
-      Attribute.SetMinMaxLength<{
+    firstname: Schema.Attribute.String &
+      Schema.Attribute.SetMinMaxLength<{
         minLength: 1;
       }>;
-    isActive: Attribute.Boolean &
-      Attribute.Private &
-      Attribute.DefaultTo<false>;
-    lastname: Attribute.String &
-      Attribute.SetMinMaxLength<{
+    isActive: Schema.Attribute.Boolean &
+      Schema.Attribute.Private &
+      Schema.Attribute.DefaultTo<false>;
+    lastname: Schema.Attribute.String &
+      Schema.Attribute.SetMinMaxLength<{
         minLength: 1;
       }>;
-    password: Attribute.Password &
-      Attribute.Private &
-      Attribute.SetMinMaxLength<{
+    locale: Schema.Attribute.String & Schema.Attribute.Private;
+    localizations: Schema.Attribute.Relation<'oneToMany', 'admin::user'> &
+      Schema.Attribute.Private;
+    password: Schema.Attribute.Password &
+      Schema.Attribute.Private &
+      Schema.Attribute.SetMinMaxLength<{
         minLength: 6;
       }>;
-    preferedLanguage: Attribute.String;
-    registrationToken: Attribute.String & Attribute.Private;
-    resetPasswordToken: Attribute.String & Attribute.Private;
-    roles: Attribute.Relation<'admin::user', 'manyToMany', 'admin::role'> &
-      Attribute.Private;
-    updatedAt: Attribute.DateTime;
-    updatedBy: Attribute.Relation<'admin::user', 'oneToOne', 'admin::user'> &
-      Attribute.Private;
-    username: Attribute.String;
+    preferedLanguage: Schema.Attribute.String;
+    publishedAt: Schema.Attribute.DateTime;
+    registrationToken: Schema.Attribute.String & Schema.Attribute.Private;
+    resetPasswordToken: Schema.Attribute.String & Schema.Attribute.Private;
+    roles: Schema.Attribute.Relation<'manyToMany', 'admin::role'> &
+      Schema.Attribute.Private;
+    updatedAt: Schema.Attribute.DateTime;
+    updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+    username: Schema.Attribute.String;
   };
 }
 
-export interface ApiBookBook extends Schema.CollectionType {
+export interface ApiBookBook extends Struct.CollectionTypeSchema {
   collectionName: 'books';
   info: {
     description: '';
