@@ -200,7 +200,8 @@ export const bookAPI = {
         method: 'GET',
         params: {
           populate: '*',
-          'filters[bookOfYear]': true
+          'filters[bookOfYear]': true,
+          'filters[status][$ne]': 'sold' // Exclude sold books
         }
       });
     } catch (error) {
