@@ -1200,93 +1200,74 @@ export interface PluginUsersPermissionsUser
     draftAndPublish: false;
   };
   attributes: {
-    blocked: Attribute.Boolean & Attribute.DefaultTo<false>;
-    books: Attribute.Relation<
-      'plugin::users-permissions.user',
-      'oneToMany',
-      'api::book.book'
-    >;
-    confirmationToken: Attribute.String & Attribute.Private;
-    confirmed: Attribute.Boolean & Attribute.DefaultTo<false>;
-    createdAt: Attribute.DateTime;
-    createdBy: Attribute.Relation<
-      'plugin::users-permissions.user',
-      'oneToOne',
-      'admin::user'
-    > &
-      Attribute.Private;
-    email: Attribute.Email &
-      Attribute.Required &
-      Attribute.SetMinMaxLength<{
+    blocked: Schema.Attribute.Boolean & Schema.Attribute.DefaultTo<false>;
+    books: Schema.Attribute.Relation<'oneToMany', 'api::book.book'>;
+    confirmationToken: Schema.Attribute.String & Schema.Attribute.Private;
+    confirmed: Schema.Attribute.Boolean & Schema.Attribute.DefaultTo<false>;
+    createdAt: Schema.Attribute.DateTime;
+    createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+    email: Schema.Attribute.Email &
+      Schema.Attribute.Required &
+      Schema.Attribute.SetMinMaxLength<{
         minLength: 6;
       }>;
-    initiatedSwapOffers: Attribute.Relation<
-      'plugin::users-permissions.user',
+    initiatedSwapOffers: Schema.Attribute.Relation<
       'oneToMany',
       'api::swap-offer.swap-offer'
     >;
-    likedBooks: Attribute.Relation<
-      'plugin::users-permissions.user',
-      'manyToMany',
-      'api::book.book'
-    >;
-    password: Attribute.Password &
-      Attribute.Private &
-      Attribute.SetMinMaxLength<{
+    likedBooks: Schema.Attribute.Relation<'manyToMany', 'api::book.book'>;
+    locale: Schema.Attribute.String & Schema.Attribute.Private;
+    localizations: Schema.Attribute.Relation<
+      'oneToMany',
+      'plugin::users-permissions.user'
+    > &
+      Schema.Attribute.Private;
+    password: Schema.Attribute.Password &
+      Schema.Attribute.Private &
+      Schema.Attribute.SetMinMaxLength<{
         minLength: 6;
       }>;
-    provider: Attribute.String;
-    receivedMessages: Attribute.Relation<
-      'plugin::users-permissions.user',
+    provider: Schema.Attribute.String;
+    publishedAt: Schema.Attribute.DateTime;
+    receivedMessages: Schema.Attribute.Relation<
       'oneToMany',
       'api::message.message'
     >;
-    receivedSwapOffers: Attribute.Relation<
-      'plugin::users-permissions.user',
+    receivedSwapOffers: Schema.Attribute.Relation<
       'oneToMany',
       'api::swap-offer.swap-offer'
     >;
-    resetPasswordToken: Attribute.String & Attribute.Private;
-    role: Attribute.Relation<
-      'plugin::users-permissions.user',
+    resetPasswordToken: Schema.Attribute.String & Schema.Attribute.Private;
+    role: Schema.Attribute.Relation<
       'manyToOne',
       'plugin::users-permissions.role'
     >;
-    sentMessages: Attribute.Relation<
-      'plugin::users-permissions.user',
+    sentMessages: Schema.Attribute.Relation<
       'oneToMany',
       'api::message.message'
     >;
-    transactions: Attribute.Relation<
-      'plugin::users-permissions.user',
+    transactions: Schema.Attribute.Relation<
       'oneToMany',
       'api::transaction.transaction'
     >;
-    UID: Attribute.UID<'plugin::users-permissions.user', 'username'>;
-    updatedAt: Attribute.DateTime;
-    updatedBy: Attribute.Relation<
-      'plugin::users-permissions.user',
-      'oneToOne',
-      'admin::user'
-    > &
-      Attribute.Private;
-    username: Attribute.String &
-      Attribute.Required &
-      Attribute.Unique &
-      Attribute.SetMinMaxLength<{
+    UID: Schema.Attribute.UID<'username'>;
+    updatedAt: Schema.Attribute.DateTime;
+    updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+    username: Schema.Attribute.String &
+      Schema.Attribute.Required &
+      Schema.Attribute.Unique &
+      Schema.Attribute.SetMinMaxLength<{
         minLength: 3;
       }>;
-    wishlists: Attribute.Relation<
-      'plugin::users-permissions.user',
-      'oneToMany',
-      'api::wishlist.wishlist'
-    >;
+    wishlists: Schema.Attribute.Relation<'oneToMany', 'api::wishlist.wishlist'>;
   };
 }
 
-declare module '@strapi/types' {
-  export module Shared {
-    export interface ContentTypes {
+declare module '@strapi/strapi' {
+  export module Public {
+    export interface ContentTypeSchemas {
       'admin::api-token': AdminApiToken;
       'admin::api-token-permission': AdminApiTokenPermission;
       'admin::permission': AdminPermission;
