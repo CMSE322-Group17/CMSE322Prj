@@ -145,7 +145,6 @@ const BookCard = ({ book, onClick }) => {
           )}
         </div>
 
-        {/* Book Details */}
         <div className="p-4 flex-grow flex flex-col">
           <h3 className="font-medium text-gray-800 mb-1 group-hover:text-blue-600 transition-colors line-clamp-2">{book.title}</h3>
           <p className="text-sm text-gray-500 mb-2">{book.author}</p>
