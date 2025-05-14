@@ -33,6 +33,31 @@ const BooksPage = () => {
       }
     }, [book]);
 
+    // Placeholder for addToWishlist - replace with actual implementation
+    const addToWishlist = async (book) => {
+      if (!isAuthenticated || !authAxios) {
+        alert("Please sign in to add to wishlist.");
+        return { success: false, error: "User not authenticated" };
+      }
+      try {
+        // Example: POST to a wishlist endpoint
+        // This endpoint needs to be created in your Strapi backend
+        const response = await authAxios.post(`${import.meta.env.VITE_API_URL}/api/wishlists`, {
+          data: {
+            book: book.id,
+            users_permissions_user: book.userId // Assuming you have userId on the book object or can get it
+          }
+        });
+        if (response.data) {
+          return { success: true };
+        }
+        return { success: false, error: "Failed to add to wishlist" };
+      } catch (error) {
+        console.error("Error adding to wishlist:", error);
+        return { success: false, error: error.response?.data?.error?.message || "Server error while adding to wishlist" };
+      }
+    };
+
     const handleActionClick = async (actionType) => {
       if (!isAuthenticated) {
         alert("Please sign in to continue.");
