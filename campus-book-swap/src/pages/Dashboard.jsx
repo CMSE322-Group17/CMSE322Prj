@@ -385,7 +385,7 @@ const Dashboard = () => {
       const mockStats = {
         totalListings: 0,
         activeListings: 0,
-        completedTransactions: 0,
+        completedTransactions: 3, // Hardcoded to match fallback transactions
         pendingTransactions: 0,
         totalEarnings: 0,
         savedBySwapping: 0
