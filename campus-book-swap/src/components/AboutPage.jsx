@@ -106,9 +106,9 @@ const AboutPage = () => {
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                   </svg>
                 </div>
-                <h3 className="text-xl font-semibold mb-2 text-gray-800">Rerum Hic</h3>
+                <h3 className="text-xl font-semibold mb-2 text-gray-800">Find Books</h3>
                 <p className="text-gray-600">
-                  Rerum hic tenetur a sapiente delectus, ut aut reiciendis voluptatibus maiores alias consequatur.
+                  Search our marketplace for the textbooks you need for your courses.
                 </p>
               </div>
               <div className="p-6 bg-white rounded-lg shadow-md hover:shadow-xl transition-shadow">
