@@ -117,9 +117,9 @@ const AboutPage = () => {
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4" />
                   </svg>
                 </div>
-                <h3 className="text-xl font-semibold mb-2 text-gray-800">Aut Perferendis</h3>
+                <h3 className="text-xl font-semibold mb-2 text-gray-800">List Your Books</h3>
                 <p className="text-gray-600">
-                  Aut perferendis doloribus asperiores repellat.
+                  Sell or offer to swap your used textbooks with other students.
                 </p>
               </div>
               <div className="p-6 bg-white rounded-lg shadow-md hover:shadow-xl transition-shadow">
