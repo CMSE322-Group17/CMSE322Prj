@@ -73,15 +73,9 @@ const AboutPage = () => {
           <div className="max-w-4xl mx-auto">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-12 items-center">
               <div>
-                <h2 className="text-3xl font-bold mb-4 text-gray-800">Temporibus Autem</h2>
+                <h2 className="text-3xl font-bold mb-4 text-gray-800">About Us</h2>
                 <p className="text-gray-600 mb-4">
-                  Temporibus autem quibusdam et aut officiis debitis aut rerum necessitatibus saepe eveniet.
-                </p>
-                <p className="text-gray-600 mb-4">
-                  Ut enim ad minima veniam, quis nostrum exercitationem ullam corporis suscipit laboriosam.
-                </p>
-                <p className="text-gray-600">
-                  Nisi ut aliquid ex ea commodi consequatur? Quis autem vel eum iure reprehenderit.
+                  CampusBookSwap was created to help students save money and reduce textbook waste. Our platform provides a simple way to exchange books with other students on campus.
                 </p>
               </div>
               <div className="rounded-lg overflow-hidden shadow-md">
