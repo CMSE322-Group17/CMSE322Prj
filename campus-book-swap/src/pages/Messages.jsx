@@ -145,85 +145,49 @@ const Messages = () => {
           Browse Books
         </Link>
       </div>
-      
-      {loading.conversations ? (
-        <div className="flex justify-center py-8">
-          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
-        </div>
-      ) : error ? (
-        <div className="bg-red-50 text-red-700 p-4 rounded-lg">
-          <h2 className="font-bold mb-2">Error</h2>
-          <p>{error}</p>
-          <button 
-            onClick={fetchConversations}
-            className="mt-4 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
-          >
-            Try Again
-          </button>
-        </div>
-      ) : conversations.length === 0 ? (
-        <div className="bg-white rounded-lg shadow-md p-8 text-center">
-          <svg xmlns="http://www.w3.org/2000/svg" className="h-16 w-16 text-gray-400 mx-auto mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
-          </svg>
-          <h3 className="text-lg font-medium text-gray-800 mb-2">No messages yet</h3>
-          <p className="text-gray-600 mb-4">
-            Browse books and start conversations with sellers to see messages here.
-          </p>
-          <Link to="/books" className="inline-block px-4 py-2 bg-blue-600 text-white rounded font-medium hover:bg-blue-700 transition-colors">
-            Browse Books
-          </Link>
-        </div>
-      ) : (
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          {/* Conversations List */}
-          <div className="md:col-span-1">
-            <div className="bg-white rounded-lg shadow-md overflow-hidden">
-              <div className="p-3 border-b border-gray-200">
-                <h2 className="font-medium">Conversations</h2>
-              </div>
-              
-              <div className="overflow-y-auto max-h-[calc(100vh-250px)]">
-                {conversations.map(conversation => (
-                  <ConversationItem
-                    key={conversation.id || conversation.chatId}
-                    conversation={conversation}
-                    active={selectedChat && selectedChat.chatId === conversation.chatId}
-                    onClick={handleSelectConversation}
-                  />
-                ))}
-              </div>
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        {/* Conversations List */}
+        <div className="md:col-span-1">
+          <div className="bg-white rounded-lg shadow-md overflow-hidden">
+            <div className="p-3 border-b border-gray-200">
+              <h2 className="font-medium">Conversations</h2>
+            </div>
+            <div className="overflow-y-auto max-h-[calc(100vh-250px)]">
+              {conversations.map(conversation => (
+                <ConversationItem
+                  key={conversation.id || conversation.chatId}
+                  conversation={conversation}
+                  active={selectedChat && selectedChat.chatId === conversation.chatId}
+                  onClick={handleSelectConversation}
+                />
+              ))}
             </div>
           </div>
-          
-          {/* Messages Panel */}
-          <div className="md:col-span-2">
-            {selectedChat ? (
-              <div className="bg-white rounded-lg shadow-md overflow-hidden flex flex-col h-[calc(100vh-250px)]">
-                <ChatHeader 
-                  book={activeChatDetails.book} 
-                  otherUser={activeChatDetails.otherUser}
-                />
-                
-                <MessageList 
-                  messages={messages} 
-                  currentUser={user} 
-                  loading={loading.messages}
-                />
-                
-                <MessageInput onSend={handleSendMessage} />
-              </div>
-            ) : (
-              <div className="bg-white rounded-lg shadow-md p-8 text-center h-[calc(100vh-250px)] flex flex-col items-center justify-center">
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-16 w-16 text-gray-300 mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
-                </svg>
-                <p className="text-gray-500">Select a conversation to view messages</p>
-              </div>
-            )}
-          </div>
         </div>
-      )}
+        {/* Messages Panel */}
+        <div className="md:col-span-2">
+          {selectedChat ? (
+            <div className="bg-white rounded-lg shadow-md overflow-hidden flex flex-col h-[calc(100vh-250px)]">
+              <ChatHeader 
+                book={activeChatDetails.book} 
+                otherUser={activeChatDetails.otherUser}
+              />
+              <MessageList 
+                messages={messages} 
+                currentUser={user}
+              />
+              <MessageInput onSend={handleSendMessage} />
+            </div>
+          ) : (
+            <div className="bg-white rounded-lg shadow-md p-8 text-center h-[calc(100vh-250px)] flex flex-col items-center justify-center">
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-16 w-16 text-gray-300 mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+              </svg>
+              <p className="text-gray-500">Select a conversation to view messages</p>
+            </div>
+          )}
+        </div>
+      </div>
     </div>
   );
 };
