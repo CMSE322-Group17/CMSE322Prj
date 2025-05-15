@@ -45,9 +45,9 @@ const AboutPage = () => {
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
                   </svg>
                 </div>
-                <h3 className="text-xl font-semibold mb-2 text-gray-800">Quis Autem</h3>
+                <h3 className="text-xl font-semibold mb-2 text-gray-800">Swap Books</h3>
                 <p className="text-gray-600">
-                  Quis autem vel eum iure reprehenderit qui in ea voluptate velit esse quam nihil molestiae.
+                  Exchange books with other students without spending any money.
                 </p>
               </div>
               
