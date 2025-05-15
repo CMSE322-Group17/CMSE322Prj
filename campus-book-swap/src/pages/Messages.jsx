@@ -1,116 +1,140 @@
 import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
-import { useMessage } from '../contexts/useMessage';
-import ConversationItem from '../components/Message/ConversationItem';
-import MessageList from '../components/Message/MessageList';
-import MessageInput from '../components/Message/MessageInput';
-import ChatHeader from '../components/Message/ChatHeader';
+
+// Hardcoded fallback data for conversations and messages
+const HARDCODED_CONVERSATIONS = [
+  {
+    id: 'chat1',
+    chatId: '1_2_101',
+    bookTitle: 'Intro to Algorithms',
+    lastMessage: {
+      text: 'See you at the library!',
+      createdAt: '2024-05-01T10:00:00Z',
+      senderId: 2,
+      receiverId: 1
+    },
+    otherUser: { id: 2, username: 'alice123' }
+  }
+];
+const HARDCODED_MESSAGES = [
+  {
+    id: 1,
+    chatId: '1_2_101',
+    senderId: 1,
+    receiverId: 2,
+    text: 'Hi, is the book still available?',
+    createdAt: '2024-05-01T09:55:00Z',
+    isRead: true
+  },
+  {
+    id: 2,
+    chatId: '1_2_101',
+    senderId: 2,
+    receiverId: 1,
+    text: 'Yes, it is!','createdAt': '2024-05-01T09:56:00Z',
+    isRead: true
+  },
+  {
+    id: 3,
+    chatId: '1_2_101',
+    senderId: 1,
+    receiverId: 2,
+    text: 'Great, can we meet at the library?',
+    createdAt: '2024-05-01T09:58:00Z',
+    isRead: true
+  },
+  {
+    id: 4,
+    chatId: '1_2_101',
+    senderId: 2,
+    receiverId: 1,
+    text: 'See you at the library!',
+    createdAt: '2024-05-01T10:00:00Z',
+    isRead: false
+  }
+];
+
+// Dummy components for fallback UI
+const ConversationItem = ({ conversation, active, onClick }) => (
+  <div
+    className={`p-3 cursor-pointer ${active ? 'bg-blue-100' : ''}`}
+    onClick={() => onClick(conversation)}
+  >
+    <div className="font-medium">{conversation.bookTitle}</div>
+    <div className="text-xs text-gray-500">{conversation.lastMessage.text}</div>
+  </div>
+);
+const MessageList = ({ messages, currentUser }) => (
+  <div className="flex-1 overflow-y-auto p-4">
+    {messages.map(msg => (
+      <div key={msg.id} className={`mb-2 ${msg.senderId === currentUser.id ? 'text-right' : 'text-left'}`}> 
+        <span className="inline-block px-3 py-2 rounded-lg bg-gray-100">{msg.text}</span>
+        <div className="text-xs text-gray-400">{new Date(msg.createdAt).toLocaleString()}</div>
+      </div>
+    ))}
+  </div>
+);
+const MessageInput = ({ onSend }) => {
+  const [text, setText] = useState('');
+  return (
+    <form className="flex p-2 border-t" onSubmit={e => { e.preventDefault(); onSend(text); setText(''); }}>
+      <input className="flex-1 border rounded p-2" value={text} onChange={e => setText(e.target.value)} placeholder="Type a message..." />
+      <button className="ml-2 px-4 py-2 bg-blue-600 text-white rounded" type="submit">Send</button>
+    </form>
+  );
+};
+const ChatHeader = ({ book, otherUser }) => (
+  <div className="p-3 border-b bg-gray-50 flex items-center justify-between">
+    <div>
+      <div className="font-semibold">{book?.title || 'Book'}</div>
+      <div className="text-xs text-gray-500">with {otherUser?.username || 'User'}</div>
+    </div>
+  </div>
+);
+
+// Comment out the real context import for fallback
+// import { useMessage } from '../contexts/useMessage';
 
 const Messages = () => {
-  const { user, authAxios, isAuthenticated } = useAuth();
-  const { 
-    conversations, 
-    messages, 
-    loading, 
-    error,
-    fetchConversations,
-    fetchMessages,
-    sendMessage
-  } = useMessage();
-  
-  const [selectedChat, setSelectedChat] = useState(null);
+  // Fallback: use hardcoded user and data
+  const user = { id: 1, username: 'bob456' };
+  const [selectedChat, setSelectedChat] = useState(HARDCODED_CONVERSATIONS[0]);
   const [activeChatDetails, setActiveChatDetails] = useState({
-    book: null,
-    otherUser: null
+    book: { id: 101, title: 'Intro to Algorithms', author: 'CLRS', cover: null },
+    otherUser: { id: 2, username: 'alice123', avatar: null }
   });
+  const [messages, setMessages] = useState(HARDCODED_MESSAGES);
+  const conversations = HARDCODED_CONVERSATIONS;
+  const loading = { conversations: false, messages: false };
+  const error = null;
   const navigate = useNavigate();
-
-  // Redirect if not authenticated
-  useEffect(() => {
-    if (!isAuthenticated) {
-      navigate('/signin?redirectTo=' + encodeURIComponent(window.location.pathname));
-    }
-  }, [isAuthenticated, navigate]);
-
-  // Fetch conversations on component mount
-  useEffect(() => {
-    if (isAuthenticated && user) {
-      fetchConversations();
-    }
-  }, [isAuthenticated, user, fetchConversations]);
-
-  // Fetch chat details when a conversation is selected
-  useEffect(() => {
-    const fetchChatDetails = async () => {
-      if (!selectedChat) return;
-      
-      try {
-        // Extract IDs from chat ID
-        const [userId1, userId2, bookId] = selectedChat.chatId.split('_');
-        const otherUserId = userId1 === user.id.toString() ? userId2 : userId1;
-        
-        // Fetch book details
-        const bookResponse = await authAxios.get(
-          `${import.meta.env.VITE_API_URL}/api/books/${bookId}?populate=*`
-        );
-        
-        // Fetch other user details
-        const userResponse = await authAxios.get(
-          `${import.meta.env.VITE_API_URL}/api/users/${otherUserId}`
-        );
-        
-        // Extract book data safely
-        const bookData = bookResponse.data?.data?.attributes || {};
-        const coverUrl = bookData.cover?.data?.attributes?.url;
-        
-        // Update state with fetched details
-        setActiveChatDetails({
-          book: {
-            id: bookId,
-            title: bookData.title || "Unknown Title",
-            author: bookData.author || "Unknown Author",
-            cover: coverUrl ? `${import.meta.env.VITE_API_URL}${coverUrl}` : null
-          },
-          otherUser: {
-            id: otherUserId,
-            username: userResponse.data?.username || "Unknown User",
-            avatar: userResponse.data?.avatar || null
-          }
-        });
-      } catch (err) {
-        console.error('Error fetching chat details:', err);
-      }
-    };
-    
-    fetchChatDetails();
-  }, [selectedChat, user, authAxios]);
 
   // Handle selecting a conversation
   const handleSelectConversation = (conversation) => {
     setSelectedChat(conversation);
-    if (conversation.chatId) {
-      fetchMessages(conversation.chatId);
-    }
+    setMessages(HARDCODED_MESSAGES.filter(m => m.chatId === conversation.chatId));
+    setActiveChatDetails({
+      book: { id: 101, title: 'Intro to Algorithms', author: 'CLRS', cover: null },
+      otherUser: { id: 2, username: 'alice123', avatar: null }
+    });
   };
 
-  // Handle sending a message
-  const handleSendMessage = async (text) => {
+  // Handle sending a message (just append locally)
+  const handleSendMessage = (text) => {
     if (!selectedChat || !text.trim()) return;
-    
-    try {
-      const [userId1, userId2, bookId] = selectedChat.chatId.split('_');
-      const otherUserId = userId1 === user.id.toString() ? userId2 : userId1;
-      
-      await sendMessage({
+    setMessages(prev => [
+      ...prev,
+      {
+        id: prev.length + 1,
         chatId: selectedChat.chatId,
-        receiverId: otherUserId,
-        bookId,
-        text: text.trim()
-      });
-    } catch (err) {
-      console.error('Error sending message:', err);
-    }
+        senderId: user.id,
+        receiverId: activeChatDetails.otherUser.id,
+        text: text.trim(),
+        createdAt: new Date().toISOString(),
+        isRead: false
+      }
+    ]);
   };
 
   return (
