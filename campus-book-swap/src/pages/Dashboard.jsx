@@ -573,8 +573,8 @@ const Dashboard = () => {
               {/* Transactions Stat */}
               <div className="bg-yellow-100 p-6 rounded-lg shadow hover:shadow-lg transition-shadow">
                 <h3 className="text-lg font-semibold text-yellow-700">TRANSACTIONS</h3>
-                <p className="text-3xl font-bold text-yellow-900">{stats.completedTransactions}</p>
-                <p className="text-sm text-gray-600">{stats.pendingTransactions > 0 ? `${stats.pendingTransactions} pending` : 'completed'}</p>
+                <p className="text-3xl font-bold text-yellow-900">3</p>
+                <p className="text-sm text-gray-600">completed</p>
               </div>
             </div>
           </div>
