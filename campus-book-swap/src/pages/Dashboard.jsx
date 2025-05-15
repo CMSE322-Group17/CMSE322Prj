@@ -338,7 +338,44 @@ const Dashboard = () => {
       setTransactionHistory(allTransactions);
     } catch (err) {
       console.error('Error fetching transaction history:', err.response ? err.response.data : err.message);
-      setError(prev => (prev ? prev + '; ' : '') + 'Failed to fetch transaction history.');
+      setError(prev => (prev ? prev + '; ' : '') + 'Failed to fetch transaction history. Showing sample data.');
+      // Fallback: Hardcoded sample transaction history
+      setTransactionHistory([
+        {
+          id: 'purchase-1',
+          type: 'purchase',
+          date: '2024-04-01T10:00:00Z',
+          amount: 25.00,
+          status: 'completed',
+          items: [
+            { bookId: 101, title: 'Intro to Algorithms', quantity: 1, price: 25.00 }
+          ],
+          role: 'buyer'
+        },
+        {
+          id: 'sale-2',
+          type: 'sale',
+          date: '2024-03-15T14:30:00Z',
+          amount: 40.00,
+          status: 'completed',
+          items: [
+            { bookId: 202, title: 'Discrete Math', quantity: 1, price: 40.00 }
+          ],
+          role: 'seller',
+          buyerInfo: 'alice123'
+        },
+        {
+          id: 'swap-3',
+          type: 'swap',
+          date: '2024-02-20T09:15:00Z',
+          amount: 0,
+          status: 'completed',
+          items: [
+            { title: 'Requested: Linear Algebra | Offered: Calculus I', quantity: 1, price: 0 }
+          ],
+          role: 'requester'
+        }
+      ]);
     }
   };
 
