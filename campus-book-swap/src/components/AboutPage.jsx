@@ -128,59 +128,9 @@ const AboutPage = () => {
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-2.586a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 9H4" />
                   </svg>
                 </div>
-                <h3 className="text-xl font-semibold mb-2 text-gray-800">Doloribus Asperiores</h3>
+                <h3 className="text-xl font-semibold mb-2 text-gray-800">Message & Meet</h3>
                 <p className="text-gray-600">
-                  Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt.
-                </p>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Team section */}
-      <div className="py-16 bg-gray-50">
-        <div className="container mx-auto px-4">
-          <div className="max-w-4xl mx-auto text-center">
-            <h2 className="text-3xl font-bold mb-8 text-gray-800">Repellat</h2>
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-8">
-              {/* Team Member 1 */}
-              <div className="bg-white rounded-lg shadow-md p-6 text-center hover:shadow-xl transition-shadow">
-                <img 
-                  src="https://via.placeholder.com/150?text=Team+Member" 
-                  alt="Team Member 1" 
-                  className="w-32 h-32 rounded-full mx-auto mb-4"
-                />
-                <h3 className="text-xl font-semibold text-gray-800">John Doe</h3>
-                <p className="text-blue-600">CEO & Co-founder</p>
-                <p className="text-gray-600 mt-2 text-sm">
-                  Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.
-                </p>
-              </div>
-              {/* Team Member 2 */}
-              <div className="bg-white rounded-lg shadow-md p-6 text-center hover:shadow-xl transition-shadow">
-                <img 
-                  src="https://via.placeholder.com/150?text=Team+Member" 
-                  alt="Team Member 2" 
-                  className="w-32 h-32 rounded-full mx-auto mb-4"
-                />
-                <h3 className="text-xl font-semibold text-gray-800">Jane Smith</h3>
-                <p className="text-blue-600">CTO & Co-founder</p>
-                <p className="text-gray-600 mt-2 text-sm">
-                  Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur.
-                </p>
-              </div>
-              {/* Team Member 3 */}
-              <div className="bg-white rounded-lg shadow-md p-6 text-center hover:shadow-xl transition-shadow">
-                <img 
-                  src="https://via.placeholder.com/150?text=Team+Member" 
-                  alt="Team Member 3" 
-                  className="w-32 h-32 rounded-full mx-auto mb-4"
-                />
-                <h3 className="text-xl font-semibold text-gray-800">Mike Johnson</h3>
-                <p className="text-blue-600">Lead Developer</p>
-                <p className="text-gray-600 mt-2 text-sm">
-                  Neque porro quisquam est, qui dolorem ipsum quia dolor sit amet, consectetur, adipisci velit.
+                  Communicate with sellers or buyers and arrange to exchange books on campus.
                 </p>
               </div>
             </div>
