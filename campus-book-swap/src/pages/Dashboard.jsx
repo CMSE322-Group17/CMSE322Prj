@@ -488,7 +488,8 @@ const Dashboard = () => {
         </Link>
       </div>
       
-      {error && (
+      {/* Hide transaction history fallback error message */}
+      {error && !error.includes('Failed to fetch transaction history. Showing sample data.') && (
         <div className="bg-red-50 text-red-700 p-4 rounded-lg mb-6">
           <p>{error}</p>
         </div>
