@@ -142,9 +142,9 @@ const AboutPage = () => {
       <div className="py-16 bg-blue-600 text-white">
         <div className="container mx-auto px-4">
           <div className="max-w-2xl mx-auto text-center">
-            <h2 className="text-3xl font-bold mb-4">Voluptatem Sequines</h2>
+            <h2 className="text-3xl font-bold mb-4">Start Swapping Today</h2>
             <p className="text-xl text-blue-100 mb-8">
-              Ut enim ad minima veniam, quis nostrum exercitationem ullam corporis suscipit laboriosam.
+              Join our community and save money on your textbooks
             </p>
             <Link 
               to="/signup" 
