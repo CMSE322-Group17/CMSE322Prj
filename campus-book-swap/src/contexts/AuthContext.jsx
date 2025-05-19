@@ -8,6 +8,7 @@ export const AuthProvider = ({ children }) => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [user, setUser] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [tokenValidated, setTokenValidated] = useState(false);
 
   // Check if user is already logged in (token exists)
   useEffect(() => {
@@ -142,6 +143,34 @@ export const AuthProvider = ({ children }) => {
     }
   );
 
+  // Function to refresh authentication state
+  const refreshAuth = async () => {
+    const token = localStorage.getItem('token');
+    if (token) {
+      try {
+        const response = await authAPI.verifyToken(token);
+        setUser({
+          email: response.data.email,
+          username: response.data.username,
+          id: response.data.id,
+          token
+        });
+        setIsAuthenticated(true);
+        setTokenValidated(true);
+        return true;
+      } catch (error) {
+        console.error('Token refresh failed:', error);
+        localStorage.removeItem('token');
+        localStorage.removeItem('refreshToken');
+        setIsAuthenticated(false);
+        setUser(null);
+        setTokenValidated(false);
+        return false;
+      }
+    }
+    return false;
+  };
+
   return (
     <AuthContext.Provider value={{ 
       isAuthenticated, 
@@ -149,7 +178,9 @@ export const AuthProvider = ({ children }) => {
       login, 
       logout,
       authAxios,
-      isLoading
+      isLoading,
+      tokenValidated,
+      refreshAuth
     }}>
       {children}
     </AuthContext.Provider>

@@ -4,7 +4,6 @@ import { Link, useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
 import { useCart } from "../contexts/CartContext";
 import { useMessage } from "../contexts/useMessage"; // Import the message context
-import { bookAPI } from "../services/api";
 import MiniCart from "./MiniCart";
 
 const NavBar = () => {
@@ -14,8 +13,6 @@ const NavBar = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
-  const [searchQuery, setSearchQuery] = useState("");
-  const [isLoading, setIsLoading] = useState(false);
   const cartRef = useRef(null);
   const profileRef = useRef(null);
   const navigate = useNavigate();
@@ -61,21 +58,6 @@ const NavBar = () => {
   const toggleProfile = () => {
     setIsProfileOpen(!isProfileOpen);
     if (isCartOpen) setIsCartOpen(false);
-  };
-
-  const handleSearch = async (e) => {
-    e.preventDefault();
-    if (searchQuery.trim() === "") return;
-
-    setIsLoading(true);
-    try {
-      const response = await bookAPI.searchBooks(searchQuery);
-      console.log("Search Results:", response.data);
-    } catch (error) {
-      console.error("Error searching books:", error);
-    } finally {
-      setIsLoading(false);
-    }
   };
 
   return (
@@ -129,39 +111,6 @@ const NavBar = () => {
               </Link>
             </div>
           </div>
-
-          {/* Search bar - Desktop */}
-          <form
-            onSubmit={handleSearch}
-            className="hidden md:flex flex-1 justify-center max-w-xs mx-4"
-          >
-            <div className="relative w-full">
-              <input
-                type="text"
-                placeholder="Search books..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full px-4 py-1 pl-10 pr-4 rounded-full bg-gray-100 border border-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
-              />
-              <div className="absolute left-3 top-2 text-gray-400">
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  className="h-4 w-4"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
-                  />
-                </svg>
-              </div>
-              {isLoading && <div className="absolute right-3 top-2 text-gray-400">Loading...</div>}
-            </div>
-          </form>
 
           {/* User Navigation */}
           <div className="flex items-center">
@@ -387,36 +336,6 @@ const NavBar = () => {
       {/* Mobile menu */}
       {isMenuOpen && (
         <div className="md:hidden">
-          {/* Mobile search */}
-          <div className="px-4 py-2 border-t border-gray-200">
-            <form onSubmit={handleSearch} className="relative">
-              <input
-                type="text"
-                placeholder="Search books..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full px-4 py-2 pl-10 pr-4 rounded-lg bg-gray-100 border border-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
-              />
-              <div className="absolute left-3 top-3 text-gray-400">
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  className="h-5 w-5"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
-                  />
-                </svg>
-              </div>
-              {isLoading && <div className="absolute right-3 top-3 text-gray-400">Loading...</div>}
-            </form>
-          </div>
-
           {/* Mobile navigation links */}
           <div className="px-2 pt-2 pb-3 space-y-1 border-t border-gray-200">
             <Link

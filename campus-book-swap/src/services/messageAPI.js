@@ -984,30 +984,45 @@ const messageAPI = {
    */
   getUserChats: async (userId) => {
     if (!userId) {
-      throw new Error('User ID is required');
+      console.error('User ID is required for getUserChats');
+      return { data: [], error: { message: 'User ID is required' }};
     }
 
-    // Convert userId to string and validate
     const userIdStr = userId.toString();
     if (!userIdStr.match(/^\d+$/)) {
-      throw new Error('Invalid user ID format');
+      console.error('Invalid user ID format for getUserChats');
+      return { data: [], error: { message: 'Invalid user ID format' }};
     }
 
-    // Check cache first
     const cacheKey = `user_chats_${userIdStr}`;
     const cachedData = cache.get(cacheKey);
     if (cachedData) {
       return cachedData;
     }
+    
+    // Get auth token
+    const token = localStorage.getItem('token');
+    if (!token) {
+      console.error('No authentication token available for getUserChats');
+      return { data: [], error: { message: 'Authentication required' }};
+    }
 
     const cancelToken = createCancelToken();
 
     try {
-      // Properly encode the userId and format the query parameters
-      const encodedUserId = encodeURIComponent(userIdStr);
+      // Use a simpler query approach to reduce chance of errors
       const response = await api.get(
-        `/api/messages?filters[$or][0][sender][id][$eq]=${encodedUserId}&filters[$or][1][receiver][id][$eq]=${encodedUserId}&sort[0]=timestamp:desc&populate=*`,
-        { 
+        `/api/messages`, { 
+          params: {
+            'filters[$or][0][sender][id][$eq]': userIdStr,
+            'filters[$or][1][receiver][id][$eq]': userIdStr,
+            'sort[0]': 'timestamp:desc',
+            'populate': '*'
+          },
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          },
           cancelToken: cancelToken.token,
           retry: true
         }
@@ -1020,8 +1035,6 @@ const messageAPI = {
       // Group messages by chat ID
       const chatMap = new Map();
       response.data.data.forEach(msg => {
-        // Defensive: skip if attributes or ChatId is missing
-        if (!msg || !msg.attributes || !msg.attributes.ChatId) return;
         const chatId = msg.attributes.ChatId;
         if (!chatMap.has(chatId)) {
           chatMap.set(chatId, {
@@ -1034,33 +1047,60 @@ const messageAPI = {
               receiverId: msg.attributes.receiver?.data?.id,
               bookId: msg.attributes.book?.data?.id
             },
-            unreadCount: 0
+            unreadCount: 0,
+            otherUser: msg.attributes.sender?.data?.id === userId ? msg.attributes.receiver?.data : msg.attributes.sender?.data,
+            book: msg.attributes.book?.data
           });
+        }
+        // Update unread count for existing chats
+        if (msg.attributes.receiver?.data?.id === userId && !msg.attributes.read) {
+          const chat = chatMap.get(chatId);
+          if(chat) chat.unreadCount = (chat.unreadCount || 0) + 1;
         }
       });
 
+      // Make sure we have valid data to work with
       const result = {
-        data: Array.from(chatMap.values())
+        data: chatMap.size > 0 ? Array.from(chatMap.values()) : []
       };
 
-      // Cache the result
-      cache.set(cacheKey, result);
-
+      // Only cache if we have successful data
+      if (result.data.length > 0) {
+        cache.set(cacheKey, result);
+      }
+      
       return result;
     } catch (error) {
       if (axios.isCancel(error)) {
         console.log('Request cancelled:', error.message);
         return { data: [] };
       }
-
-      // Try to recover from error
+      
+      // Enhanced error logging
+      console.error('Error in getUserChats:', error);
+      if (error.response) {
+        console.error(`Error status: ${error.response.status}`);
+        console.error('Error data:', error.response.data);
+      } else if (error.request) {
+        console.error('No response received:', error.request);
+      } else {
+        console.error('Error message:', error.message);
+      }
+      
+      // Try error recovery
       const shouldRetry = await errorRecovery.recoverFromError(error, 'getUserChats');
       if (shouldRetry) {
         return messageAPI.getUserChats(userId);
       }
-
-      console.error('Error fetching user chats:', error);
-      return { data: [] }; // Return empty array instead of throwing error for better UX
+      
+      // Return empty data with error info
+      return { 
+        data: [], 
+        error: error.response?.data?.error || {
+          message: error.message || 'Failed to fetch user chats',
+          status: error.response?.status || 500
+        }
+      }; 
     } finally {
       cancelToken.cancel('Operation cancelled due to new request');
     }
@@ -1361,13 +1401,11 @@ const messageAPI = {
       throw new Error('User ID is required');
     }
 
-    // Convert userId to string and validate
     const userIdStr = userId.toString();
     if (!userIdStr.match(/^\d+$/)) {
       throw new Error('Invalid user ID format');
     }
 
-    // Check cache first
     const cacheKey = `unread_count_${userIdStr}`;
     const cachedData = cache.get(cacheKey);
     if (cachedData) {
@@ -1377,7 +1415,6 @@ const messageAPI = {
     const cancelToken = createCancelToken();
 
     try {
-      // Properly encode the userId and format the query parameters
       const encodedUserId = encodeURIComponent(userIdStr);
       const response = await api.get(
         `/api/messages?filters[receiver][id][$eq]=${encodedUserId}&filters[read][$eq]=false&populate=*`,
@@ -1389,24 +1426,19 @@ const messageAPI = {
       
       const count = response.data?.data?.length || 0;
 
-      // Cache the result
       cache.set(cacheKey, count);
-
       return count;
     } catch (error) {
       if (axios.isCancel(error)) {
         console.log('Request cancelled:', error.message);
         return 0;
       }
-
-      // Try to recover from error
       const shouldRetry = await errorRecovery.recoverFromError(error, 'getUnreadMessageCount');
       if (shouldRetry) {
         return messageAPI.getUnreadMessageCount(userId);
       }
-
       console.error('Error getting unread count:', error);
-      return 0; // Return 0 instead of throwing error for better UX
+      return 0; 
     } finally {
       cancelToken.cancel('Operation cancelled due to new request');
     }

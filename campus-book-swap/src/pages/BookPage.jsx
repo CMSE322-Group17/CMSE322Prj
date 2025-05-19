@@ -1,5 +1,5 @@
-import { useState, useEffect } from 'react';
-import { Link, useParams, useNavigate } from 'react-router-dom';
+import { useState, useEffect, useCallback, useRef } from 'react'; // Add useCallback
+import { Link, useParams, useNavigate, useLocation } from 'react-router-dom';
 import { bookAPI } from '../services/api';
 import { useAuth } from '../contexts/AuthContext';
 import { useCart } from '../contexts/CartContext';
@@ -9,6 +9,10 @@ import BookCard from '../components/BookCard';
 const BooksPage = () => {
   const { categoryName } = useParams();
   const [books, setBooks] = useState([]);
+  const [searchResults, setSearchResults] = useState([]); // To store search results
+  const [isSearching, setIsSearching] = useState(false); // To distinguish between browsing and searching
+  const [searchQuery, setSearchQuery] = useState(''); // For the search input
+  const [isLoadingSearch, setIsLoadingSearch] = useState(false); // Separate loading state for search
   const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -19,12 +23,16 @@ const BooksPage = () => {
     bookType: 'all' 
   });
   const [selectedBook, setSelectedBook] = useState(null);
+  const navigate = useNavigate();
+  const location = useLocation();
+
+  // Debounce timer ref
+  const debounceTimeoutRef = useRef(null);
 
   const BookDetails = ({ book, onClose }) => {
     const [activeTab, setActiveTab] = useState('details');
     const { isAuthenticated, authAxios } = useAuth(); // Added authAxios
     const { addToCart } = useCart();
-    const navigate = useNavigate();
     const [sellerDetails, setSellerDetails] = useState(null);
 
     useEffect(() => {
@@ -406,82 +414,92 @@ const BooksPage = () => {
   };
 
   const filteredBooks = getFilteredBooks();
+  const displayBooks = isSearching ? searchResults : filteredBooks;
 
   const getStrapiMediaUrl = (imageData) => {
-    if (!imageData) return null;
+    console.log('[getStrapiMediaUrl] Received imageData:', JSON.parse(JSON.stringify(imageData || null))); // Log input, ensure imageData is not undefined for stringify
+    const rawBaseUrl = import.meta.env.VITE_STRAPI_API_URL;
+    const defaultBaseUrl = 'http://localhost:1337';
+    console.log('[getStrapiMediaUrl] VITE_STRAPI_API_URL:', rawBaseUrl);
+
+    const baseUrl = (rawBaseUrl || defaultBaseUrl).replace(/\/$/, ''); // Corrected regex
+    console.log('[getStrapiMediaUrl] Using baseUrl:', baseUrl);
+
+    if (!imageData) {
+      console.log('[getStrapiMediaUrl] imageData is null or undefined, returning null.');
+      return null;
+    }
     
-    const baseUrl = (import.meta.env.VITE_STRAPI_API_URL || 'http://localhost:1337').replace(/\/$/, '');
-    
+    let finalUrl = null;
+
     try {
       if (typeof imageData === 'string') {
-        if (imageData.startsWith('http')) return imageData;
-        const path = imageData.startsWith('/') ? imageData : `/${imageData}`;
-        return `${baseUrl}${path}`;
-      }
-      
-      if (Array.isArray(imageData) && imageData.length > 0) {
-        const firstImage = imageData[0];
-        if (firstImage.formats) {
-          const format = firstImage.formats.medium || firstImage.formats.small || firstImage.formats.thumbnail;
-          if (format && format.url) {
-            const path = format.url.startsWith('/') ? format.url : `/${format.url}`;
-            return `${baseUrl}${path}`;
+        console.log('[getStrapiMediaUrl] imageData is a string:', imageData);
+        if (imageData.startsWith('http')) {
+          try {
+            const imageUrl = new URL(imageData);
+            const apiUrl = new URL(baseUrl); // baseUrl should always be a valid URL structure here
+            if (imageUrl.hostname === apiUrl.hostname && imageUrl.port === apiUrl.port) { // Check port too for localhost scenarios
+              finalUrl = imageData;
+              console.log('[getStrapiMediaUrl] imageData is an absolute URL with matching hostname and port:', finalUrl);
+            } else {
+              console.warn(`[getStrapiMediaUrl] imageData is an absolute URL with MISMATCHED host/port: "${imageData}" (Image Host: ${imageUrl.hostname}:${imageUrl.port}, API Host: ${apiUrl.hostname}:${apiUrl.port})`);
+              if (imageUrl.pathname.startsWith('/uploads/')) {
+                 finalUrl = `${baseUrl}${imageUrl.pathname}${imageUrl.search}${imageUrl.hash}`;
+                 console.warn('[getStrapiMediaUrl] Attempting to fix mismatched host/port by prepending local API URL:', finalUrl);
+              } else {
+                finalUrl = imageData; 
+                console.warn('[getStrapiMediaUrl] Using mismatched absolute URL as is (path does not start with /uploads/):', finalUrl);
+              }
+            }
+          } catch (urlParseError) {
+            console.error('[getStrapiMediaUrl] Error parsing imageData string as URL. Treating as relative path:', imageData, urlParseError);
+            const path = imageData.startsWith('/') ? imageData : `/${imageData}`;
+            finalUrl = `${baseUrl}${path}`;
+            console.log('[getStrapiMediaUrl] Constructed URL from string treated as relative path:', finalUrl);
           }
+        } else { // Relative path string
+          const path = imageData.startsWith('/') ? imageData : `/${imageData}`;
+          finalUrl = `${baseUrl}${path}`;
+          console.log('[getStrapiMediaUrl] imageData is a relative path string, constructed URL:', finalUrl);
         }
-        
-        if (firstImage.url) {
-          const path = firstImage.url.startsWith('/') ? firstImage.url : `/${firstImage.url}`;
-          return `${baseUrl}${path}`;
-        }
-      }
-      
-      if (imageData.data && imageData.data.attributes) {
-        const { url } = imageData.data.attributes;
-        if (url) {
-          const path = url.startsWith('/') ? url : `/${url}`;
-          return `${baseUrl}${path}`;
-        }
-      }
-      
-      if (imageData.formats) {
-        const format = 
-          imageData.formats.medium || 
-          imageData.formats.small || 
-          imageData.formats.thumbnail;
-        if (format && format.url) {
-          const path = format.url.startsWith('/') ? format.url : `/${format.url}`;
-          return `${baseUrl}${path}`;
-        }
-        
-        if (imageData.url) {
-          const path = imageData.url.startsWith('/') ? imageData.url : `/${imageData.url}`;
-          return `${baseUrl}${path}`;
-        }
-      }
-      
-      if (imageData.url) {
-        const path = imageData.url.startsWith('/') ? imageData.url : `/${imageData.url}`;
-        return `${baseUrl}${path}`;
-      }
-      
-      if (imageData.data) {
-        const data = Array.isArray(imageData.data) ? imageData.data[0] : imageData.data;
-        if (data) {
-          if (data.attributes && data.attributes.url) {
-            const path = data.attributes.url.startsWith('/') ? data.attributes.url : `/${data.attributes.url}`;
-            return `${baseUrl}${path}`;
-          }
-          if (data.url) {
-            const path = data.url.startsWith('/') ? data.url : `/${data.url}`;
-            return `${baseUrl}${path}`;
-          }
+      } else if (imageData.data && imageData.data.attributes && typeof imageData.data.attributes.url === 'string') { // Strapi v4 single media
+        const path = imageData.data.attributes.url;
+        console.log('[getStrapiMediaUrl] imageData is Strapi v4 single media, path:', path);
+        finalUrl = `${baseUrl}${path.startsWith('/') ? path : `/${path}`}`;
+      } else if (typeof imageData.url === 'string') { // Common case: object with a 'url' property
+        const path = imageData.url;
+        console.log('[getStrapiMediaUrl] imageData is object with .url, path:', path);
+        finalUrl = `${baseUrl}${path.startsWith('/') ? path : `/${path}`}`;
+      } else if (Array.isArray(imageData.data) && imageData.data.length > 0 && imageData.data[0].attributes && typeof imageData.data[0].attributes.url === 'string') { // Strapi v4 multiple media (taking first)
+        const path = imageData.data[0].attributes.url;
+        console.log('[getStrapiMediaUrl] imageData is Strapi v4 multiple media, path from first item:', path);
+        finalUrl = `${baseUrl}${path.startsWith('/') ? path : `/${path}`}`;
+      } else if (Array.isArray(imageData) && imageData.length > 0 && typeof imageData[0].url === 'string') { // Array of objects with .url (taking first)
+        const path = imageData[0].url;
+        console.log('[getStrapiMediaUrl] imageData is array of objects with .url, path from first item:', path);
+        finalUrl = `${baseUrl}${path.startsWith('/') ? path : `/${path}`}`;
+      } else if (imageData.formats) { // Fallback to formats if direct URLs aren't found
+        console.log('[getStrapiMediaUrl] imageData has .formats, checking medium, small, thumbnail');
+        const format = imageData.formats.medium || imageData.formats.small || imageData.formats.thumbnail;
+        if (format && typeof format.url === 'string') {
+          const path = format.url;
+          finalUrl = `${baseUrl}${path.startsWith('/') ? path : `/${path}`}`;
+          console.log('[getStrapiMediaUrl] Path from formats:', path);
+        } else {
+          console.log('[getStrapiMediaUrl] No suitable URL found in .formats');
         }
       }
-      
-      console.warn('Could not process image data:', imageData);
-      return null;
+
+      if (finalUrl) {
+        console.log('[getStrapiMediaUrl] Successfully constructed URL:', finalUrl);
+      } else {
+        console.warn('[getStrapiMediaUrl] Could not determine URL from imageData structure:', JSON.parse(JSON.stringify(imageData)));
+      }
+      return finalUrl;
+
     } catch (err) {
-      console.error('Error processing image URL:', err, imageData);
+      console.error('[getStrapiMediaUrl] Error during URL construction:', err, JSON.parse(JSON.stringify(imageData)));
       return null;
     }
   };
@@ -502,7 +520,85 @@ const BooksPage = () => {
       ...prev,
       [filterType]: value
     }));
+    setIsSearching(false); // Reset search when filters change
   };
+
+  // Search function
+  const handleSearch = useCallback(async (query) => {
+    if (!query || query.trim() === '') {
+      setSearchResults([]);
+      setIsSearching(false);
+      return;
+    }
+    setIsLoadingSearch(true);
+    setIsSearching(true);
+    try {
+      const apiResult = await bookAPI.searchBooks(query); // Renamed 'response' to 'apiResult' for clarity
+      const booksArray = apiResult?.data; // Correctly access the array of books
+
+      if (Array.isArray(booksArray)) {
+        setSearchResults(booksArray);
+        if (booksArray.length === 0) {
+          console.info('No books found matching your search criteria.');
+          alert('No books found matching your search criteria.');
+        }
+      } else {
+        // This case would be hit if apiResult.data is not an array
+        console.warn('Search result apiResult.data was not an array:', apiResult);
+        setSearchResults([]);
+        alert('No books found or unexpected search response format.');
+      }
+    } catch (err) {
+      console.error('Error searching books:', err);
+      alert('Failed to fetch search results.');
+      setSearchResults([]);
+    } finally {
+      setIsLoadingSearch(false);
+    }
+  }, [setSearchResults, setIsSearching, setIsLoadingSearch]);
+
+  const onSearchInputChange = (e) => {
+    const newQuery = e.target.value;
+    setSearchQuery(newQuery);
+    // Clear previous debounce timer
+    if (debounceTimeoutRef.current) {
+      clearTimeout(debounceTimeoutRef.current);
+    }
+    // Set new debounce timer
+    debounceTimeoutRef.current = setTimeout(() => {
+      if (newQuery.trim() === '' && location.pathname === '/books' && location.search === '') {
+        // If query is empty and we are already on /books with no query, do nothing to avoid unnecessary navigation
+        // but ensure search results are cleared if user deletes query
+        setIsSearching(false);
+        setSearchResults([]);
+      } else {
+        navigate(`/books?query=${encodeURIComponent(newQuery)}`);
+      }
+    }, 500); // 500ms debounce
+  };
+
+  const onSearchFormSubmit = (e) => {
+    e.preventDefault();
+    // Clear any existing debounce timer as we are submitting immediately
+    if (debounceTimeoutRef.current) {
+      clearTimeout(debounceTimeoutRef.current);
+    }
+    navigate(`/books?query=${encodeURIComponent(searchQuery)}`);
+    // handleSearch will be called by the useEffect watching location.search
+  };
+
+  // Effect to handle search query from URL
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    const queryFromUrl = params.get('query');
+    if (queryFromUrl) {
+      setSearchQuery(queryFromUrl);
+      handleSearch(queryFromUrl); // Call handleSearch directly
+    } else {
+      setIsSearching(false); // Not searching if no query in URL
+      setSearchResults([]); // Clear search results if no query
+    }
+  }, [location.search, handleSearch, setSearchQuery, setIsSearching, setSearchResults]);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -583,25 +679,50 @@ const BooksPage = () => {
 
   return (
     <div className="bg-gray-50 min-h-screen">
-      <div className="bg-gray-900 text-white py-10">
-        <div className="max-w-6xl mx-auto px-4">
-          <h1 className="text-3xl font-bold">{getCurrentCategoryName()}</h1>
-          
-          <div className="flex text-sm text-gray-400 mt-2">
-            <Link to="/" className="hover:text-blue-300">Home</Link>
-            <span className="mx-2">/</span>
-            <Link to="/books" className="hover:text-blue-300">Books</Link>
-            {categoryName && categoryName !== 'all' && (
-              <>
-                <span className="mx-2">/</span>
-                <span className="text-gray-300">{getCurrentCategoryName()}</span>
-              </>
-            )}
-          </div>
+      {/* Page Header */}
+      <header className="bg-gradient-to-r from-blue-600 to-purple-600 text-white py-8 shadow-lg">
+        <div className="container mx-auto px-4 text-center">
+          <h1 className="text-4xl font-bold tracking-tight">
+            {isSearching ? `Search Results for "${searchQuery}"` : getCurrentCategoryName()}
+          </h1>
+          <p className="mt-2 text-lg opacity-90">
+            {isSearching ? `Found ${searchResults.length} books.` : `Browse our collection of ${filteredBooks.length} books.`}
+          </p>
         </div>
+      </header>
+
+      {/* Search Bar - Integrated into BookPage */}
+      <div className="container mx-auto p-4 sticky top-16 z-40 bg-gray-50 py-4 mb-2">
+        <form onSubmit={onSearchFormSubmit} className="max-w-2xl mx-auto">
+          <div className="flex items-center border border-gray-300 rounded-full shadow-md overflow-hidden bg-white">
+            <input
+              type="text"
+              value={searchQuery}
+              onChange={onSearchInputChange}
+              placeholder="Search by title, author, ISBN, or subject..."
+              className="w-full px-6 py-3 text-gray-700 focus:outline-none"
+            />
+            <button
+              type="submit"
+              className="bg-purple-600 hover:bg-purple-700 text-white px-6 py-3 transition duration-150 ease-in-out"
+              disabled={isLoadingSearch}
+            >
+              {isLoadingSearch ? (
+                <svg className="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+              ) : (
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                </svg>
+              )}
+            </button>
+          </div>
+        </form>
       </div>
-      
-      <div className="max-w-6xl mx-auto px-4 py-8">
+
+      <div className="container mx-auto px-4 py-8">
         <div className="flex flex-col md:flex-row gap-8">
           <div className="w-full md:w-1/4">
             <div className="bg-white rounded-lg shadow-sm p-6 sticky top-4">
@@ -795,49 +916,33 @@ const BooksPage = () => {
             </div>
           </div>
           
-          <div className="w-full md:w-3/4">
-            <div className="bg-white rounded-lg shadow-sm p-4 mb-6">
-              <div className="flex flex-wrap items-center justify-between">
-                <div className="mb-2 md:mb-0">
-                  <span className="text-gray-600 text-sm mr-2">Sort by:</span>
-                  <select 
-                    value={filters.sort}
-                    onChange={(e) => handleFilterChange('sort', e.target.value)}
-                    className="border-gray-300 rounded-md text-sm focus:ring-blue-500 focus:border-blue-500"
-                  >
-                    <option value="newest">Newest</option>
-                    <option value="priceLow">Price: Low to High</option>
-                    <option value="priceHigh">Price: High to Low</option>
-                    <option value="rating">Rating</option>
-                    <option value="popular">Popularity</option>
-                  </select>
-                </div>
-                
-                <div className="text-sm text-gray-500">
-                  Showing {filteredBooks.length} of {books.length} books
-                </div>
-              </div>
-            </div>
-            
+          <div className="w-full lg:w-3/4">
             {loading ? (
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-                {[...Array(6)].map((_, i) => (
-                  <div key={i} className="bg-white rounded-lg shadow-sm overflow-hidden animate-pulse">
-                    <div className="h-64 bg-gray-200"></div>
-                    <div className="p-4">
-                      <div className="h-4 bg-gray-200 rounded mb-2"></div>
-                      <div className="h-3 bg-gray-200 rounded w-3/4 mb-3"></div>
-                      <div className="h-5 bg-gray-200 rounded w-1/4"></div>
-                    </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
+                {[...Array(6)].map((_, index) => (
+                  <div key={index} className="bg-white p-4 rounded-lg shadow animate-pulse">
+                    <div className="w-full h-48 bg-gray-200 rounded mb-4"></div>
+                    <div className="h-4 bg-gray-200 rounded w-3/4 mb-2"></div>
+                    <div className="h-4 bg-gray-200 rounded w-1/2"></div>
                   </div>
                 ))}
               </div>
             ) : error ? (
-              <div className="bg-red-50 text-red-700 p-4 rounded-lg">
-                <h2 className="font-bold mb-2">Error</h2>
-                <p>{error}</p>
+              <div className="text-center py-10">
+                <p className="text-red-500 text-lg">Error: {error.message || "Could not fetch books."}</p>
+                <p className="text-gray-600">Please try refreshing the page or check your network connection.</p>
               </div>
-            ) : filteredBooks.length === 0 ? (
+            ) : displayBooks.length > 0 ? (
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-x-6 gap-y-8">
+                {displayBooks.map(book => (
+                  <BookCard 
+                    key={book.id} 
+                    book={book} 
+                    onClick={() => setSelectedBook(book)} 
+                  />
+                ))}
+              </div>
+            ) : (
               <div className="bg-white rounded-lg shadow-sm p-8 text-center">
                 <svg xmlns="http://www.w3.org/2000/svg" className="h-16 w-16 text-gray-400 mx-auto mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
@@ -857,12 +962,6 @@ const BooksPage = () => {
                 >
                   Clear Filters
                 </button>
-              </div>
-            ) : (
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-                {filteredBooks.map(book => (
-                  <BookCard key={book.id} book={book} onClick={() => setSelectedBook(book)} />
-                ))}
               </div>
             )}
             

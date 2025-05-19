@@ -487,6 +487,8 @@ async function seedBooks() {
       // Defensive: print full response if data is missing
       if (!response.data || !response.data.data) {
         console.error('Unexpected response from Strapi when creating book:', JSON.stringify(response.data, null, 2));
+        // If data is not as expected, log a generic success or skip logging the title
+        console.log(`Book creation attempt for "${book.title}" processed. Check Strapi for details.`);
       } else {
         console.log(`Created book: ${response.data.data.attributes.title}`);
       }

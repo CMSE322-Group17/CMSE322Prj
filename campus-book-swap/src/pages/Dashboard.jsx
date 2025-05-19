@@ -43,16 +43,15 @@ const Dashboard = () => {
   const fetchDashboardData = async () => {
     setIsLoading(true);
     try {
-      await Promise.all([
-        fetchMyBooks(),
-        fetchPendingSwaps(),
-        fetchTransactionHistory(),
-        fetchPendingPurchaseRequests(),
-        calculateStats()
-      ]);
+      // Fetch each section individually to avoid all failing if one fails
+      try { await fetchMyBooks(); } catch (err) { console.error('Error fetching books:', err); }
+      try { await fetchPendingSwaps(); } catch (err) { console.error('Error fetching swaps:', err); }
+      try { await fetchTransactionHistory(); } catch (err) { console.error('Error fetching transactions:', err); }
+      try { await fetchPendingPurchaseRequests(); } catch (err) { console.error('Error fetching purchase requests:', err); }
+      try { await calculateStats(); } catch (err) { console.error('Error calculating stats:', err); }
     } catch (err) {
       console.error('Error fetching dashboard data:', err);
-      setError('Failed to load dashboard data. Please try again.');
+      setError('Failed to load dashboard data. Please refresh or try again later.');
     } finally {
       setIsLoading(false);
     }
@@ -61,9 +60,27 @@ const Dashboard = () => {
   // Fetch user's books
   const fetchMyBooks = async () => {
     try {
+      // Make sure we have a valid user ID
+      if (!user || !user.id) {
+        console.error('Cannot fetch books: Invalid user ID');
+        return;
+      }
+      
       const response = await authAxios.get(
-        `${import.meta.env.VITE_API_URL}/api/books?filters[users_permissions_user][id][$eq]=${user.id}&populate=*`
+        `${import.meta.env.VITE_API_URL}/api/books`, {
+          params: {
+            'filters[users_permissions_user][id][$eq]': user.id,
+            'populate': '*'
+          }
+        }
       );
+      
+      // Handle empty response data
+      if (!response.data || !response.data.data) {
+        console.warn('Empty response when fetching books');
+        setMyBooks([]);
+        return;
+      }
       
       const books = response.data.data.map(book => {
         let coverUrl = null;
@@ -187,8 +204,21 @@ const Dashboard = () => {
   // Fetch pending purchase requests
   const fetchPendingPurchaseRequests = async () => {
     try {
+      // Make sure we have a valid user ID
+      if (!user || !user.id) {
+        console.error('Cannot fetch purchase requests: Invalid user ID');
+        return;
+      }
+      
       const response = await authAxios.get(
-        `${import.meta.env.VITE_API_URL}/api/messages?filters[receiver][id][$eq]=${user.id}&filters[messageType][$eq]=purchase_request&filters[requestStatus][$eq]=pending&populate=*`
+        `${import.meta.env.VITE_API_URL}/api/messages`, {
+          params: {
+            'filters[receiver][id][$eq]': user.id,
+            'filters[messageType][$eq]': 'purchase_request',
+            'filters[requestStatus][$eq]': 'pending',
+            'populate': '*'
+          }
+        }
       );
       
       const purchaseRequests = response.data.data || [];
@@ -235,9 +265,23 @@ const Dashboard = () => {
   // Fetch transaction history
   const fetchTransactionHistory = async () => {
     try {
+      // Make sure we have a valid user ID
+      if (!user || !user.id) {
+        console.error('Cannot fetch transaction history: Invalid user ID');
+        return;
+      }
+      
       // 1. Purchases made by the current user
       const purchasesResponse = await authAxios.get(
-        `${import.meta.env.VITE_API_URL}/api/orders?filters[userId][$eq]=${user.id}&filters[status][$eq]=completed&sort[0]=timestamp:desc&populate=items,userId`
+        `${import.meta.env.VITE_API_URL}/api/orders`, {
+          params: {
+            'filters[user][id][$eq]': user.id,
+            'filters[status][$eq]': 'completed',
+            'sort[0]': 'timestamp:desc',
+            'populate[items][populate][0]': 'book',
+            'populate[user][fields][0]': 'username'
+          }
+        }
       );
       const purchases = purchasesResponse.data.data?.map(order => ({
         id: `purchase-${order.id}`,
@@ -246,8 +290,8 @@ const Dashboard = () => {
         amount: order.attributes.totalAmount,
         status: order.attributes.status,
         items: order.attributes.items.map(item => ({
-          bookId: item.bookId,
-          title: item.title || 'Unknown Book',
+          bookId: item.book?.data?.id || item.bookId, // Handle both direct ID and populated book
+          title: item.book?.data?.attributes?.title || item.title || 'Unknown Book',
           quantity: item.quantity,
           price: item.price
         })),
@@ -256,29 +300,39 @@ const Dashboard = () => {
 
       // 2. Sales made by the current user
       const userBooksResponse = await authAxios.get(
-        `${import.meta.env.VITE_API_URL}/api/books?filters[users_permissions_user][id][$eq]=${user.id}&fields[0]=id`
+        `${import.meta.env.VITE_API_URL}/api/books`, {
+          params: {
+            'filters[users_permissions_user][id][$eq]': user.id,
+            'fields[0]': 'id'
+          }
+        }
       );
+      
+      // Handle empty response data
+      if (!userBooksResponse.data || !userBooksResponse.data.data) {
+        console.warn('Empty response when fetching user book IDs');
+        return [];
+      }
+      
       const userBookIds = userBooksResponse.data.data.map(b => b.id);
 
       let salesByUserData = [];
       if (userBookIds.length > 0) {
         const allCompletedOrdersResponse = await authAxios.get(
-          `${import.meta.env.VITE_API_URL}/api/orders?filters[status][$eq]=completed&populate=items,userId`
+          `${import.meta.env.VITE_API_URL}/api/orders?filters[status][$eq]=completed&populate[items][populate][0]=book&populate[user][fields][0]=username`
         );
         
         const allCompletedOrders = allCompletedOrdersResponse.data.data || [];
         
         salesByUserData = allCompletedOrders
           .filter(order => {
-            // skip orders where current user was buyer
-            if (order.attributes.userId === user.id) {
+            if (order.attributes.user?.data?.id === user.id) {
               return false;
             }
-            // include orders that contain user's books
-            return order.attributes.items.some(item => userBookIds.includes(item.bookId));
+            return order.attributes.items.some(item => userBookIds.includes(item.book?.data?.id || item.bookId));
           })
           .map(order => {
-            const itemsSoldByCurrentUser = order.attributes.items.filter(item => userBookIds.includes(item.bookId));
+            const itemsSoldByCurrentUser = order.attributes.items.filter(item => userBookIds.includes(item.book?.data?.id || item.bookId));
             const amountForCurrentUser = itemsSoldByCurrentUser.reduce((sum, item) => sum + (item.price * item.quantity), 0);
 
             return {
@@ -288,14 +342,13 @@ const Dashboard = () => {
               amount: amountForCurrentUser,
               status: order.attributes.status,
               items: itemsSoldByCurrentUser.map(item => ({
-                bookId: item.bookId,
-                title: item.title || 'Unknown Book',
+                bookId: item.book?.data?.id || item.bookId,
+                title: item.book?.data?.attributes?.title || item.title || 'Unknown Book',
                 quantity: item.quantity,
                 price: item.price
               })),
               role: 'seller',
-              // order.attributes.userId is a string username or id; adjust as needed
-              buyerInfo: order.attributes.userId || 'Unknown Buyer'
+              buyerInfo: order.attributes.user?.data?.attributes?.username || 'Unknown Buyer'
             };
           });
       }
@@ -304,7 +357,18 @@ const Dashboard = () => {
       // Assuming swap-offers have 'requester' and 'owner' relations to users,
       // and 'requestedBook' and 'offeredBooks' relations to books.
       const swapsResponse = await authAxios.get(
-        `${import.meta.env.VITE_API_URL}/api/swap-offers?filters[$or][0][requester][id][$eq]=${user.id}&filters[$or][1][owner][id][$eq]=${user.id}&filters[status][$eq]=completed&sort[0]=updatedAt:desc&populate=requestedBook,offeredBooks,requester,owner`
+        `${import.meta.env.VITE_API_URL}/api/swap-offers`, {
+          params: {
+            'filters[$or][0][requester][id][$eq]': user.id,
+            'filters[$or][1][owner][id][$eq]': user.id,
+            'filters[status][$eq]': 'completed',
+            'sort[0]': 'updatedAt:desc',
+            'populate[0]': 'requestedBook',
+            'populate[1]': 'offeredBooks',
+            'populate[2]': 'requester',
+            'populate[3]': 'owner'
+          }
+        }
       );
       
       const swapsData = swapsResponse.data.data?.map(swapFull => {
@@ -337,7 +401,7 @@ const Dashboard = () => {
       
       setTransactionHistory(allTransactions);
     } catch (err) {
-      console.error('Error fetching transaction history:', err.response ? err.response.data : err.message);
+      console.error('Error fetching transaction history:', err);
       setError(prev => (prev ? prev + '; ' : '') + 'Failed to fetch transaction history. Showing sample data.');
       // Fallback: Hardcoded sample transaction history
       setTransactionHistory([
@@ -382,39 +446,82 @@ const Dashboard = () => {
   // Calculate dashboard stats
   const calculateStats = async () => {
     try {
+      // Make sure we have a valid user ID
+      if (!user || !user.id) {
+        console.error('Cannot calculate stats: Invalid user ID');
+        return;
+      }
+      
       const mockStats = {
         totalListings: 0,
         activeListings: 0,
-        completedTransactions: 3, // Hardcoded to match fallback transactions
+        completedTransactions: 0,
         pendingTransactions: 0,
         totalEarnings: 0,
         savedBySwapping: 0
       };
       
       const booksResponse = await authAxios.get(
-        `${import.meta.env.VITE_API_URL}/api/books?filters[users_permissions_user][id][$eq]=${user.id}&pagination[pageSize]=1&pagination[page]=1`
+        `${import.meta.env.VITE_API_URL}/api/books`, {
+          params: {
+            'filters[users_permissions_user][id][$eq]': user.id,
+            'pagination[pageSize]': 1,
+            'pagination[page]': 1
+          }
+        }
       );
       mockStats.totalListings = booksResponse.data.meta.pagination.total;
       mockStats.activeListings = booksResponse.data.meta.pagination.total;
       
       const completedSalesResponse = await authAxios.get(
-        `${import.meta.env.VITE_API_URL}/api/orders?filters[userId][$eq]=${user.id}&filters[status][$eq]=completed&pagination[pageSize]=1&pagination[page]=1`
+        `${import.meta.env.VITE_API_URL}/api/orders`, {
+          params: {
+            'filters[user][id][$eq]': user.id,
+            'filters[status][$eq]': 'completed',
+            'pagination[pageSize]': 1,
+            'pagination[page]': 1
+          }
+        }
       );
       
       const completedSwapsResponse = await authAxios.get(
-        `${import.meta.env.VITE_API_URL}/api/swap-offers?filters[$or][0][buyerId][$eq]=${user.id}&filters[$or][1][sellerId][$eq]=${user.id}&filters[status][$eq]=completed&pagination[pageSize]=1&pagination[page]=1`
+        `${import.meta.env.VITE_API_URL}/api/swap-offers`, {
+          params: {
+            'filters[$or][0][requester][id][$eq]': user.id,
+            'filters[$or][1][owner][id][$eq]': user.id,
+            'filters[status][$eq]': 'completed',
+            'pagination[pageSize]': 1,
+            'pagination[page]': 1
+          }
+        }
       );
       
       mockStats.completedTransactions = 
-        completedSalesResponse.data.meta.pagination.total + 
-        completedSwapsResponse.data.meta.pagination.total;
+        (completedSalesResponse.data?.meta?.pagination?.total || 0) + 
+        (completedSwapsResponse.data?.meta?.pagination?.total || 0);
       
       const pendingSwapsResponse = await authAxios.get(
-        `${import.meta.env.VITE_API_URL}/api/swap-offers?filters[$or][0][buyerId][$eq]=${user.id}&filters[$or][1][sellerId][$eq]=${user.id}&filters[status][$eq]=pending&pagination[pageSize]=1&pagination[page]=1`
+        `${import.meta.env.VITE_API_URL}/api/swap-offers`, {
+          params: {
+            'filters[$or][0][requester][id][$eq]': user.id,
+            'filters[$or][1][owner][id][$eq]': user.id,
+            'filters[status][$eq]': 'pending',
+            'pagination[pageSize]': 1,
+            'pagination[page]': 1
+          }
+        }
       );
       
       const pendingPurchasesResponse = await authAxios.get(
-        `${import.meta.env.VITE_API_URL}/api/messages?filters[receiver][id][$eq]=${user.id}&filters[messageType][$eq]=purchase_request&filters[requestStatus][$eq]=pending&pagination[pageSize]=1&pagination[page]=1`
+        `${import.meta.env.VITE_API_URL}/api/messages`, {
+          params: {
+            'filters[receiver][id][$eq]': user.id,
+            'filters[messageType][$eq]': 'purchase_request',
+            'filters[requestStatus][$eq]': 'pending',
+            'pagination[pageSize]': 1,
+            'pagination[page]': 1
+          }
+        }
       );
       
       mockStats.pendingTransactions = 
@@ -427,7 +534,7 @@ const Dashboard = () => {
       setStats(mockStats);
     } catch (err) {
       console.error('Error calculating stats:', err);
-      throw err;
+      // Do not throw error here, just log it and allow dashboard to render with default/fallback stats
     }
   };
 
@@ -573,8 +680,8 @@ const Dashboard = () => {
               {/* Transactions Stat */}
               <div className="bg-yellow-100 p-6 rounded-lg shadow hover:shadow-lg transition-shadow">
                 <h3 className="text-lg font-semibold text-yellow-700">TRANSACTIONS</h3>
-                <p className="text-3xl font-bold text-yellow-900">3</p>
-                <p className="text-sm text-gray-600">completed</p>
+                <p className="text-3xl font-bold text-yellow-900">{stats.completedTransactions}</p>
+                <p className="text-sm text-gray-600">{stats.pendingTransactions > 0 ? `${stats.pendingTransactions} pending` : 'completed'}</p>
               </div>
             </div>
           </div>

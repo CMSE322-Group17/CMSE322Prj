@@ -23,8 +23,11 @@ export const api = axios.create({
  */
 export const fetchFromAPI = async (endpoint, options = {}) => {
   try {
+    // Make sure endpoint is formatted correctly
     const url = endpoint.startsWith('/') ? endpoint : `/${endpoint}`;
-    console.log('Fetching from:', API_URL + url);
+    
+    // Log the request for debugging
+    console.log('Fetching from:', API_URL + url, options);
     
     // Get auth token if available
     const token = localStorage.getItem('token');
@@ -35,20 +38,57 @@ export const fetchFromAPI = async (endpoint, options = {}) => {
       headers.Authorization = `Bearer ${token}`;
     }
     
-    const response = await api.request({
+    // Add content type if not specified and not multipart form
+    if (!headers['Content-Type'] && !options.formData) {
+      headers['Content-Type'] = 'application/json';
+    }
+    
+    // Construct final request config
+    const requestConfig = {
       url,
       headers,
+      timeout: 15000, // Increase timeout to 15 seconds
       ...options
-    });
+    };
+    
+    // If using params, make sure they're properly formatted
+    if (options.params) {
+      requestConfig.params = options.params;
+      // Remove params from the original options to avoid duplication
+      delete requestConfig.data?.params;
+    }
+    
+    const response = await api.request(requestConfig);
 
     return response.data;
   } catch (error) {
-    // Fallback for missing wishlist endpoint
-    if (error.response && error.response.status === 404 && endpoint.includes('wishlists')) {
-      console.warn('Wishlist service returned 404, returning fallback data');
-      return { data: [] };
+    // Check for specific error cases
+    
+    // Authentication error
+    if (error.response?.status === 401) {
+      console.error('Authentication error, token may be invalid or expired');
+      // Let the calling code handle this case
     }
-
+    
+    // Bad request
+    if (error.response?.status === 400) {
+      console.error('Bad request error - check request format:', error.response.data);
+      // Return a formatted error response instead of throwing
+      return { data: null, error: error.response.data?.error || { message: 'Bad request' } };
+    }
+    
+    // Not found
+    if (error.response?.status === 404) {
+      console.warn(`Resource not found: ${endpoint}`);
+      // Fallback for missing endpoints
+      if (endpoint.includes('wishlists')) {
+        console.warn('Wishlist service returned 404, returning fallback data');
+        return { data: [] };
+      }
+      return { data: null, error: { status: 404, message: 'Resource not found' } };
+    }
+    
+    // Log the error for debugging
     console.error('API fetch error:', error);
     if (error.response) {
       console.error('Error response status:', error.response.status);
@@ -56,7 +96,15 @@ export const fetchFromAPI = async (endpoint, options = {}) => {
     } else if (error.request) {
       console.error('No response received:', error.request);
     }
-    throw error;
+    
+    // Return a formatted error instead of throwing
+    return { 
+      data: null, 
+      error: error.response?.data?.error || {
+        message: error.message || 'Unknown error occurred',
+        status: error.response?.status || 500
+      }
+    };
   }
 };
 
@@ -505,14 +553,28 @@ export const swapOfferAPI = {
     try {
       // The backend controller's find method is customized to filter by current user
       // and populate necessary relations.
+      const token = localStorage.getItem('token');
+      if (!token) {
+        console.error('No authentication token available for getUserSwapOffers');
+        return { data: [] };
+      }
+
       return await fetchFromAPI('/api/swap-offers', {
         method: 'GET',
-        // Params for populate are handled by the backend controller's find method by default
-        // if specific population is needed beyond default, it can be added here.
+        headers: {
+          'Authorization': `Bearer ${token}`
+        },
+        params: {
+          'populate[requestedBook][populate][0]': 'cover',
+          'populate[offeredBooks][populate][0]': 'cover',
+          'populate[requester]': '*',
+          'populate[owner]': '*'
+        }
       });
     } catch (error) {
       console.error('Error fetching user swap offers:', error.response ? error.response.data : error.message);
-      throw error;
+      // Return empty data instead of throwing to prevent component crashes
+      return { data: [] };
     }
   },
 
