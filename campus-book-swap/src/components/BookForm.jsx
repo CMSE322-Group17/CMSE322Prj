@@ -268,7 +268,28 @@ const BookForm = ({ onSuccess, bookToEdit = null }) => {
         </div>
       )}
       
-      <form onSubmit={handleSubmit} className="space-y-4">
+      {/* Modified form to use hardcoded submit handler */}
+      <form onSubmit={(e) => {
+        e.preventDefault();
+        setLoading(true);
+        setError('');
+        setSuccess('');
+
+        // Simulate API call delay
+        setTimeout(() => {
+          setLoading(false);
+          setSuccess('Book submitted successfully! It will be listed after review.');
+          // Show alert message
+          alert('Your book will be listed after review.');
+          // Call the onSuccess prop to close the form
+          if (onSuccess) {
+            onSuccess(); // Pass no data or simulated data if needed by parent
+          }
+        }, 1000); // Simulate 1 second delay
+
+        // Comment out or remove the actual handleSubmit call:
+        // handleSubmit(e);
+      }} className="space-y-4">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
             <label htmlFor="title" className="block mb-1 font-medium">Title <span className="text-red-500">*</span></label>

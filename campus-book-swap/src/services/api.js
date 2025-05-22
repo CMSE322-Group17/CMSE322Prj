@@ -568,29 +568,43 @@ export const wishlistAPI = {
         // Log the raw entry for debugging
         console.log(`Processing wishlist entry ${index}:`, JSON.stringify(entry, null, 2));
 
-        if (!entry || !entry.attributes) {
-          console.warn(`Invalid wishlist entry found (missing entry or attributes) at index ${index}:`, entry);
+        // Check if entry has attributes, otherwise use the entry directly
+        const entryData = entry.attributes || entry;
+
+        if (!entryData || !entryData.book) { // Check if entryData or book is missing
+          console.warn(`Invalid wishlist entry found (missing data or book relation) at index ${index}:`, entry);
           return { id: entry?.id || `invalid-entry-${index}`, book: null };
         }
 
         // Log the book relation part specifically before trying to access .data
-        console.log(`Wishlist entry ${index} (ID: ${entry.id}), attributes.book:`, JSON.stringify(entry.attributes.book, null, 2));
+        console.log(`Wishlist entry ${index} (ID: ${entryData.id}), book data:`, JSON.stringify(entryData.book, null, 2));
 
-        const bookData = entry.attributes.book?.data;
+        // Check if book data has the .data wrapper, otherwise use the book object directly
+        const bookData = entryData.book?.data || entryData.book;
 
         if (bookData && typeof bookData.attributes === 'object' && bookData.attributes !== null && bookData.id !== undefined) {
           return {
-            id: entry.id, // This is the wishlist entry ID
+            id: entryData.id, // This is the wishlist entry ID
             book: { 
               id: bookData.id, 
               ...bookData.attributes 
             }
           };
-        } else {
+        } else if (bookData && typeof bookData === 'object' && bookData !== null && bookData.id !== undefined) {
+           // Handle case where book data is not nested under .data.attributes
+           return {
+             id: entryData.id,
+             book: { 
+               id: bookData.id,
+               ...bookData
+             }
+           };
+        }
+        else {
           // This block will be hit if bookData is null/undefined, or if its attributes are not as expected.
-          console.warn(`Book data is not valid or missing for wishlist entry ${index} (ID: ${entry.id}). Book relation content:`, JSON.stringify(entry.attributes.book, null, 2));
+          console.warn(`Book data is not valid or missing for wishlist entry ${index} (ID: ${entryData.id}). Book relation content:`, JSON.stringify(entryData.book, null, 2));
           return {
-            id: entry.id,
+            id: entryData.id,
             book: null 
           };
         }

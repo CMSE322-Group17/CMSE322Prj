@@ -17,6 +17,9 @@ import NotFound from './pages/NotFound';
 import ProtectedRoute from './components/ProtectedRoute';
 import Footer from './components/Footer';
 import Wishlist from './pages/Wishlist';
+import NimaProfilePage from './pages/NimaProfilePage';
+import AliProfilePage from './pages/AliProfilePage'; // Import Ali's profile page
+import TransactionsPage from './pages/TransactionsPage'; // Import the new transactions page
 
 {/* App Area */}
 function App() {
@@ -102,6 +105,22 @@ function App() {
             } 
           />
           
+          {/* Hardcoded Nima Profile Page */}
+          <Route path="/nima-profile" element={<NimaProfilePage />} />
+          
+          {/* Hardcoded Ali Profile Page */}
+          <Route path="/ali-profile" element={<AliProfilePage />} />
+          
+          {/* Transactions Page */}
+          <Route 
+            path="/transactions" 
+            element={
+              <ProtectedRoute>
+                <TransactionsPage />
+              </ProtectedRoute>
+            } 
+          />
+
           {/* 404 Page */}
           <Route path="*" element={<NotFound />} />
         </Routes>

@@ -22,7 +22,7 @@ const BooksPage = () => {
 
   const BookDetails = ({ book, onClose }) => {
     const [activeTab, setActiveTab] = useState('details');
-    const { isAuthenticated, authAxios } = useAuth(); // Added authAxios
+    const { isAuthenticated, authAxios, user } = useAuth(); // Added user
     const { addToCart } = useCart();
     const navigate = useNavigate();
     const [sellerDetails, setSellerDetails] = useState(null);
@@ -35,7 +35,7 @@ const BooksPage = () => {
 
     // Placeholder for addToWishlist - replace with actual implementation
     const addToWishlist = async (book) => {
-      if (!isAuthenticated || !authAxios) {
+      if (!isAuthenticated || !authAxios || !user?.id) { // Check for user.id
         alert("Please sign in to add to wishlist.");
         return { success: false, error: "User not authenticated" };
       }
@@ -45,10 +45,12 @@ const BooksPage = () => {
         const response = await authAxios.post(`${import.meta.env.VITE_API_URL}/api/wishlists`, {
           data: {
             book: book.id,
-            users_permissions_user: book.userId // Assuming you have userId on the book object or can get it
+            users_permissions_user: user.id // Get user ID from useAuth hook
           }
         });
         if (response.data) {
+          // Navigate to wishlist page on success
+          navigate('/wishlist');
           return { success: true };
         }
         return { success: false, error: "Failed to add to wishlist" };
@@ -75,12 +77,8 @@ const BooksPage = () => {
             alert(result.error || "Failed to add book to cart.");
           }
         } else if (book.bookType === 'For Swap') {
-          if (book.actualSellerId) {
-            navigate(`/chat/${book.actualSellerId}/${book.id}`);
-          } else {
-            console.error("Actual Seller ID is missing for this book.");
-            alert("Cannot start swap: Seller information is missing.");
-          }
+          // Hardcode navigation to messages with nima for swap requests
+          navigate('/messages?user=nima'); // Example query param to identify chat
         }
       } else if (actionType === 'secondary') { // Secondary action: Add to Wishlist
         const result = await addToWishlist(book);
@@ -211,12 +209,8 @@ const BooksPage = () => {
                   </button>
                   <button 
                     onClick={() => {
-                      if (book.actualSellerId) {
-                        navigate(`/chat/${book.actualSellerId}/${book.id}`);
-                      } else {
-                        console.error("Actual Seller ID is missing for this book.");
-                        alert("Cannot message seller: Seller information is missing.");
-                      }
+                      // Hardcode navigation to messages with nima for Message Seller button
+                      navigate('/messages?user=nima'); // Example query param to identify chat
                     }}
                     className="w-full py-2 px-4 border border-gray-300 text-gray-600 rounded-lg hover:bg-gray-50 transition-colors flex items-center justify-center gap-2"
                   >
