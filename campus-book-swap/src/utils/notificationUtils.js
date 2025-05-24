@@ -120,9 +120,86 @@ export const showRequestStatusNotification = (message, status, book) => {
   });
 };
 
+/**
+ * Show notification for transaction status changes
+ * @param {Object} transaction The transaction object that changed status
+ * @param {string} action The action taken (accept or decline)
+ */
+export const showTransactionStatusNotification = (transaction, action) => {
+  if (Notification.permission !== "granted") return;
+
+  let title, body, icon;
+  
+  // Set default icon for the notification
+  icon = "/favicon.ico";
+  
+  // Check if we have message details for additional context
+  const details = transaction.messageDetails || {};
+  
+  // Determine book information from the transaction or message details
+  let bookTitle, price;
+  
+  if (transaction.type === "swap-request" || transaction.type === "swap") {
+    bookTitle = transaction.requestedBook?.title || "a book";
+    // Try to get book info from message details if not found in transaction
+    if (bookTitle === "a book" && details.bookIdFromChat) {
+      bookTitle = `book #${details.bookIdFromChat}`;
+    }
+    
+    if (action === "accept") {
+      title = "🔄 Swap Request Accepted";
+      body = `Your swap request for "${bookTitle}" has been accepted and scheduled for ${new Date(transaction.scheduledFor).toLocaleDateString()}.`;
+    } else {
+      title = "❌ Swap Request Declined";
+      body = `Your swap request for "${bookTitle}" has been declined.`;
+    }
+  } else if (transaction.type === "purchase") {
+    bookTitle = transaction.book?.title || "a book";
+    price = transaction.amount || details.price || "an agreed amount";
+    
+    // Try to get book info from message details if not found in transaction
+    if (bookTitle === "a book" && details.bookIdFromChat) {
+      bookTitle = `book #${details.bookIdFromChat}`;
+    }
+    
+    if (action === "accept") {
+      title = "✅ Purchase Request Accepted";
+      body = `Your purchase request for "${bookTitle}" ($${price}) has been accepted and scheduled for ${new Date(transaction.scheduledFor).toLocaleDateString()}.`;
+    } else {
+      title = "❌ Purchase Request Declined";
+      body = `Your purchase request for "${bookTitle}" ($${price}) has been declined.`;
+    }
+  }
+
+  if (title && body) {
+    const notification = new Notification(title, {
+      body,
+      icon,
+    });
+
+    // Close notification after 10 seconds
+    setTimeout(() => notification.close(), 10000);
+
+    // Handle notification clicks
+    notification.onclick = () => {
+      window.focus();
+      notification.close();
+      
+      // If we have a chat ID, navigate to the message
+      if (details.chatId) {
+        window.location.href = `/messages?chat=${details.chatId}`;
+      } else {
+        // Otherwise navigate to the transactions page
+        window.location.href = "/transactions";
+      }
+    };
+  }
+};
+
 export default {
   requestNotificationPermission,
   showNotification,
   showPurchaseRequestNotification,
   showRequestStatusNotification,
+  showTransactionStatusNotification,
 };

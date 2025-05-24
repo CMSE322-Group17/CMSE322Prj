@@ -1,273 +1,367 @@
-import { useState } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
+import { showTransactionStatusNotification } from '../utils/notificationUtils';
+
+// Hardcoded transaction data aligned with the message conversations
+const hardcodedTransactions = {
+  // Pending transactions that require user action (aligned with message swap requests)
+  pending: [
+    {
+      id: 'pending-swap-1',
+      type: 'swap-request',
+      requestId: 'swapOffer123',
+      messageId: 11,
+      chatId: '2_1_303',
+      date: '2024-05-22T10:00:00Z',
+      status: 'pending',
+      fromUser: {
+        id: 2,
+        username: 'nima',
+        profileLink: '/nima-profile'
+      },
+      requestedBook: {
+        id: 303,
+        title: 'Linear Algebra',
+        author: 'Gilbert Strang'
+      },
+      offeredBooks: [
+        {
+          id: 304,
+          title: 'Calculus I',
+          author: 'James Stewart'
+        }
+      ],
+      notes: 'Nima has requested to swap Linear Algebra for Calculus I.',
+      actions: ['accept', 'decline']
+    },
+    {
+      id: 'pending-swap-2',
+      type: 'swap-request',
+      requestId: 'swapOffer456',
+      messageId: 17,
+      chatId: '3_1_707',
+      date: '2024-05-23T11:20:00Z',
+      status: 'pending',
+      fromUser: {
+        id: 3,
+        username: 'ali',
+        profileLink: '/ali-profile'
+      },
+      requestedBook: {
+        id: 707,
+        title: 'Python for Data Science',
+        author: 'Jake VanderPlas'
+      },
+      offeredBooks: [
+        {
+          id: 708,
+          title: 'Data Structures and Algorithms',
+          author: 'Robert Lafore'
+        }
+      ],
+      notes: 'Ali has requested to swap your Python for Data Science book.',
+      actions: ['accept', 'decline']
+    }
+  ],
+
+  // Completed transactions (both purchases and swaps)
+  completed: [
+    {
+      id: 'completed-purchase-1',
+      type: 'purchase',
+      orderId: 'ORD-2024-101',
+      chatId: '3_1_202',
+      date: '2024-05-20T16:30:00Z',
+      status: 'completed',
+      amount: 40.00,
+      buyer: {
+        id: 3,
+        username: 'ali',
+        profileLink: '/ali-profile'
+      },
+      seller: {
+        id: 1,
+        username: 'emad'
+      },
+      book: {
+        id: 202,
+        title: 'Discrete Math',
+        author: 'Kenneth Rosen',
+        price: 40.00
+      },
+      meetupLocation: 'Campus Cafe',
+      meetupDate: '2024-05-21T15:00:00Z',
+      notes: 'Transaction successfully completed with Ali'
+    },
+    {
+      id: 'completed-swap-1',
+      type: 'swap',
+      swapId: 'SWAP-2024-101',
+      chatId: '2_1_101',
+      date: '2024-05-01T14:00:00Z',
+      status: 'completed',
+      participants: [
+        {
+          id: 1,
+          username: 'emad',
+          providedBook: {
+            id: 101,
+            title: 'Intro to Algorithms',
+            author: 'Thomas H. Cormen'
+          }
+        },
+        {
+          id: 2,
+          username: 'nima',
+          profileLink: '/nima-profile',
+          providedBook: {
+            id: 102,
+            title: 'Operating Systems',
+            author: 'Andrew S. Tanenbaum'
+          }
+        }
+      ],
+      meetupLocation: 'Campus Library',
+      meetupDate: '2024-05-01T14:00:00Z',
+      notes: 'Books successfully swapped with Nima'
+    }
+  ],
+
+  // Scheduled transactions (accepted but not yet completed)
+  scheduled: [
+    {
+      id: 'scheduled-purchase-1',
+      type: 'purchase',
+      orderId: 'ORD-2024-102',
+      chatId: '4_1_404',
+      date: '2024-05-18T09:20:00Z',
+      status: 'scheduled',
+      scheduledFor: '2024-05-25T13:00:00Z',
+      amount: 25.00,
+      buyer: {
+        id: 4,
+        username: 'sara'
+      },
+      seller: {
+        id: 1,
+        username: 'emad'
+      },
+      book: {
+        id: 404,
+        title: 'Machine Learning Basics',
+        author: 'Kevin P. Murphy',
+        price: 25.00
+      },
+      meetupLocation: 'Student Center',
+      meetupDate: '2024-05-25T13:00:00Z',
+      notes: 'Sara will pick up the book on Saturday'
+    },
+    {
+      id: 'scheduled-swap-1',
+      type: 'swap',
+      swapId: 'SWAP-2024-102',
+      chatId: '7_1_808',
+      date: '2024-05-03T10:00:00Z',
+      status: 'scheduled',
+      scheduledFor: '2024-05-27T11:30:00Z',
+      participants: [
+        {
+          id: 1,
+          username: 'emad',
+          providedBook: {
+            id: 808,
+            title: 'Operating Systems',
+            author: 'Andrew S. Tanenbaum'
+          }
+        },
+        {
+          id: 7,
+          username: 'alex',
+          providedBook: {
+            id: 809,
+            title: 'Computer Networks',
+            author: 'James F. Kurose'
+          }
+        }
+      ],
+      meetupLocation: 'Engineering Building',
+      meetupDate: '2024-05-27T11:30:00Z',
+      notes: 'Meeting Alex on Monday for the book swap'
+    }
+  ],
+  
+  // Cancelled transactions (declined or cancelled after accepting)
+  cancelled: [
+    {
+      id: 'cancelled-purchase-1',
+      type: 'purchase',
+      orderId: 'ORD-2024-100',
+      chatId: '5_1_505',
+      date: '2024-05-15T14:30:00Z',
+      status: 'cancelled',
+      amount: 30.00,
+      buyer: {
+        id: 5,
+        username: 'maya'
+      },
+      seller: {
+        id: 1,
+        username: 'emad'
+      },
+      book: {
+        id: 505,
+        title: 'Introduction to AI',
+        author: 'Peter Norvig',
+        price: 30.00
+      },
+      cancelReason: 'Buyer canceled the order',
+      cancelDate: '2024-05-16T09:10:00Z'
+    }
+  ]
+};
 
 const TransactionsPage = () => {
   const { user } = useAuth();
   const [activeTab, setActiveTab] = useState('pending');
+  const [transactions, setTransactions] = useState({
+    pending: [],
+    scheduled: [],
+    completed: [],
+    cancelled: []
+  });
+  
+  // Initialize transactions from hardcoded data
+  useEffect(() => {
+    setTransactions({
+      pending: hardcodedTransactions.pending,
+      scheduled: hardcodedTransactions.scheduled,
+      completed: hardcodedTransactions.completed,
+      cancelled: hardcodedTransactions.cancelled
+    });
+  }, []);
 
-  // Hardcoded transaction data aligned with the message conversations
-  const hardcodedTransactions = {
-    // Pending transactions that require user action (aligned with message swap requests)
-    pending: [
-      {
-        id: 'pending-swap-1',
-        type: 'swap-request',
-        requestId: 'swapOffer123',
-        messageId: 11,
-        chatId: '2_1_303',
-        date: '2024-05-22T10:00:00Z',
-        status: 'pending',
-        fromUser: {
-          id: 2,
-          username: 'nima',
-          profileLink: '/nima-profile'
-        },
-        requestedBook: {
-          id: 303,
-          title: 'Linear Algebra',
-          author: 'Gilbert Strang'
-        },
-        offeredBooks: [
-          {
-            id: 304,
-            title: 'Calculus I',
-            author: 'James Stewart'
-          }
-        ],
-        notes: 'Nima has requested to swap Linear Algebra for Calculus I.',
-        actions: ['accept', 'decline']
-      },
-      {
-        id: 'pending-swap-2',
-        type: 'swap-request',
-        requestId: 'swapOffer456',
-        messageId: 17,
-        chatId: '3_1_707',
-        date: '2024-05-05T11:20:00Z',
-        status: 'pending',
-        fromUser: {
-          id: 3,
-          username: 'ali',
-          profileLink: '/ali-profile'
-        },
-        requestedBook: {
-          id: 707,
-          title: 'Python for Data Science',
-          author: 'Jake VanderPlas'
-        },
-        offeredBooks: [
-          {
-            id: 708,
-            title: 'Data Structures and Algorithms',
-            author: 'Robert Lafore'
-          }
-        ],
-        notes: 'Ali has requested to swap your Python for Data Science book.',
-        actions: ['accept', 'decline']
+  // Function to handle transaction status changes
+  const handleTransactionAction = useCallback((transactionId, action, details = {}) => {
+    // Find the transaction in the pending list
+    setTransactions(currentTransactions => {
+      const transaction = currentTransactions.pending.find(t => t.id === transactionId);
+      if (!transaction) {
+        console.warn(`Transaction ${transactionId} not found in pending list`);
+        return currentTransactions;
       }
-    ],
 
-    // Completed transactions (both purchases and swaps)
-    completed: [
-      {
-        id: 'completed-purchase-1',
-        type: 'purchase',
-        orderId: 'ORD-2024-101',
-        chatId: '1_3_202',
-        date: '2024-05-20T16:30:00Z',
-        status: 'completed',
-        amount: 40.00,
-        buyer: {
-          id: 3,
-          username: 'ali',
-          profileLink: '/ali-profile'
-        },
-        seller: {
-          id: 1,
-          username: 'emad'
-        },
-        book: {
-          id: 202,
-          title: 'Discrete Math',
-          author: 'Kenneth Rosen',
-          price: 40.00
-        },
-        meetupLocation: 'Campus Cafe',
-        meetupDate: '2024-05-21T15:00:00Z',
-        notes: 'Transaction successfully completed with Ali'
-      },
-      {
-        id: 'completed-swap-1',
-        type: 'swap',
-        swapId: 'SWAP-2024-101',
-        chatId: '1_2_101',
-        date: '2024-05-01T14:00:00Z',
-        status: 'completed',
-        participants: [
-          {
-            id: 1,
-            username: 'emad',
-            providedBook: {
-              id: 101,
-              title: 'Intro to Algorithms',
-              author: 'Thomas H. Cormen'
-            }
-          },
-          {
-            id: 2,
-            username: 'nima',
-            profileLink: '/nima-profile',
-            providedBook: {
-              id: 102,
-              title: 'Operating Systems',
-              author: 'Andrew S. Tanenbaum'
-            }
-          }
-        ],
-        meetupLocation: 'Campus Library',
-        meetupDate: '2024-05-01T14:00:00Z',
-        notes: 'Books successfully swapped with Nima'
-      }
-    ],
+      if (action === 'accept') {
+        // Move from pending to scheduled
+        const updatedTransaction = {
+          ...transaction,
+          status: 'scheduled',
+          scheduledFor: new Date(Date.now() + 7*24*60*60*1000).toISOString(), // Schedule for 1 week from now
+          meetupLocation: 'Engineering Building', // Default location
+          meetupDate: new Date(Date.now() + 7*24*60*60*1000).toISOString(), // Default date (1 week later)
+          lastUpdated: details.timestamp || new Date().toISOString(),
+          updatedBy: details.receiverId, // The person who accepted the request
+          messageDetails: details // Store full message details for reference
+        };
 
-    // Scheduled transactions (accepted but not yet completed)
-    scheduled: [
-      {
-        id: 'scheduled-purchase-1',
-        type: 'purchase',
-        orderId: 'ORD-2024-102',
-        chatId: '1_4_404',
-        date: '2024-05-18T09:20:00Z',
-        status: 'scheduled',
-        scheduledFor: '2024-05-25T13:00:00Z',
-        amount: 25.00,
-        buyer: {
-          id: 4,
-          username: 'sara'
-        },
-        seller: {
-          id: 1,
-          username: 'emad'
-        },
-        book: {
-          id: 404,
-          title: 'Machine Learning Basics',
-          author: 'Kevin P. Murphy',
-          price: 25.00
-        },
-        meetupLocation: 'Student Center',
-        meetupDate: '2024-05-25T13:00:00Z',
-        notes: 'Sara will pick up the book on Saturday'
-      },
-      {
-        id: 'scheduled-swap-1',
-        type: 'swap',
-        swapId: 'SWAP-2024-102',
-        chatId: '1_7_808',
-        date: '2024-05-03T10:00:00Z',
-        status: 'scheduled',
-        scheduledFor: '2024-05-27T11:30:00Z',
-        participants: [
-          {
-            id: 1,
-            username: 'emad',
-            providedBook: {
-              id: 808,
-              title: 'Operating Systems',
-              author: 'Andrew S. Tanenbaum'
-            }
-          },
-          {
-            id: 7,
-            username: 'alex',
-            providedBook: {
-              id: 809,
-              title: 'Computer Networks',
-              author: 'James F. Kurose'
-            }
-          }
-        ],
-        meetupLocation: 'Engineering Building',
-        meetupDate: '2024-05-27T11:30:00Z',
-        notes: 'Meeting Alex on Monday for the book swap'
+        // In a real app, you would call an API to update the transaction status
+        console.log(`Transaction ${transactionId} accepted and moved to scheduled`);      // If this is a swap transaction, handle the specific swap details
+      if (transaction.type === 'swap-request') {
+        console.log(`Processing swap transaction: ${transaction.requestedBook.title} <-> ${transaction.offeredBooks[0].title}`);
+      } else if (transaction.type === 'purchase') {
+        console.log(`Processing purchase transaction: ${transaction.book.title} for $${transaction.amount}`);
       }
-    ],
-    
-    // Cancelled transactions (declined or cancelled after accepting)
-    cancelled: [
-      {
-        id: 'cancelled-purchase-1',
-        type: 'purchase',
-        orderId: 'ORD-2024-103',
-        chatId: '1_5_505',
-        date: '2024-05-15T11:30:00Z',
-        status: 'cancelled',
-        cancelledOn: '2024-05-15T14:45:00Z',
-        amount: 35.00,
-        buyer: {
-          id: 5,
-          username: 'john'
-        },
-        seller: {
-          id: 1,
-          username: 'emad'
-        },
-        book: {
-          id: 505,
-          title: 'Artificial Intelligence',
-          author: 'Stuart Russell',
-          price: 35.00
-        },
-        cancellationReason: 'Buyer found another copy',
-        notes: 'John cancelled the order after finding a cheaper copy'
-      },
-      {
-        id: 'declined-swap-1',
-        type: 'swap',
-        swapId: 'SWAP-2024-103',
-        chatId: '1_6_606',
-        date: '2024-05-10T14:20:00Z',
-        status: 'declined',
-        declinedOn: '2024-05-10T16:30:00Z',
-        participants: [
-          {
-            id: 6,
-            username: 'mia',
-            requestedBook: {
-              id: 606,
-              title: 'Database Systems',
-              author: 'Hector Garcia-Molina'
-            }
-          },
-          {
-            id: 1,
-            username: 'emad',
-            offeredBook: {
-              id: 607,
-              title: 'Web Development',
-              author: 'Jon Duckett'
-            }
-          }
-        ],
-        declineReason: 'Not interested in the offered book',
-        notes: 'Mia wasn\'t interested in the Web Development book'
-      }
-    ]
-  };
 
-  // Handle accept transaction
+      // Show notification for the transaction status change
+      showTransactionStatusNotification(updatedTransaction, 'accept');
+
+        return {
+          ...currentTransactions,
+          pending: currentTransactions.pending.filter(t => t.id !== transactionId),
+          scheduled: [...currentTransactions.scheduled, updatedTransaction]
+        };
+      } 
+      else if (action === 'decline') {
+        // Move from pending to cancelled
+        const updatedTransaction = {
+          ...transaction,
+          status: 'cancelled',
+          cancelReason: 'Declined by seller',
+          cancelDate: new Date().toISOString(),
+          lastUpdated: details.timestamp || new Date().toISOString(),
+          updatedBy: details.receiverId, // The person who declined the request
+          messageDetails: details // Store full message details for reference
+        };
+
+        // In a real app, you would call an API to update the transaction status
+        console.log(`Transaction ${transactionId} declined and moved to cancelled`);
+
+        // Show notification for the transaction status change
+        showTransactionStatusNotification(updatedTransaction, 'decline');
+
+        return {
+          ...currentTransactions,
+          pending: currentTransactions.pending.filter(t => t.id !== transactionId),
+          cancelled: [...currentTransactions.cancelled, updatedTransaction]
+        };
+      }
+      
+      return currentTransactions;
+    });
+  }, []);
+
+  // Listen for transaction update events from the MessageContext or RequestActions components
+  useEffect(() => {
+    const handleTransactionUpdate = (event) => {
+      const { 
+        transactionId, 
+        action, 
+        messageId, 
+        chatId, 
+        transactionType, 
+        senderId, 
+        receiverId,
+        bookId,
+        bookIdFromChat,
+        price,
+        text,
+        timestamp
+      } = event.detail;
+      
+      console.log(`TransactionsPage received event: ${transactionId} - ${action} (from message: ${messageId}, type: ${transactionType})`);
+      
+      // Additional details logging for debugging
+      if (chatId) {
+        console.log(`Details - chatId: ${chatId}, sender: ${senderId}, receiver: ${receiverId}, book: ${bookId || bookIdFromChat}, price: ${price || 'N/A'}`);
+        console.log(`Message text: ${text || 'No text provided'}`);
+        console.log(`Timestamp: ${timestamp || new Date().toISOString()}`);
+      }
+      
+      // Call the transaction action handler with additional details
+      handleTransactionAction(transactionId, action, event.detail);
+    };
+
+    // Add event listener
+    document.addEventListener('transaction-update', handleTransactionUpdate);
+
+    // Cleanup
+    return () => {
+      document.removeEventListener('transaction-update', handleTransactionUpdate);
+    };
+  }, [handleTransactionAction]); // Include handleTransactionAction in the dependency array
+
+
+
+
+
+  // Handle accept transaction - uses the same handler as the event listener
   const handleAcceptTransaction = (transactionId) => {
-    // In a real app, this would update the backend
-    console.log(`Accepting transaction: ${transactionId}`);
-    alert('Transaction accepted! In a real app, this would update the status and notify the other user.');
+    handleTransactionAction(transactionId, 'accept');
   };
 
-  // Handle decline transaction
+  // Handle decline transaction - uses the same handler as the event listener
   const handleDeclineTransaction = (transactionId) => {
-    // In a real app, this would update the backend
-    console.log(`Declining transaction: ${transactionId}`);
-    alert('Transaction declined! In a real app, this would update the status and notify the other user.');
+    handleTransactionAction(transactionId, 'decline');
   };
 
   // Function to format dates consistently
@@ -287,9 +381,6 @@ const TransactionsPage = () => {
       <div className="flex items-center justify-between mb-6">
         <h1 className="text-2xl font-bold">Transactions</h1>
         <div className="flex space-x-4">
-          <Link to="/messages" className="text-blue-600 hover:text-blue-800">
-            Messages
-          </Link>
           <Link to="/dashboard" className="text-blue-600 hover:text-blue-800">
             Dashboard
           </Link>
@@ -307,7 +398,7 @@ const TransactionsPage = () => {
                   : 'text-gray-500 hover:text-gray-700 hover:border-gray-300'
               }`}
             >
-              Pending ({hardcodedTransactions.pending.length})
+              Pending ({transactions.pending.length})
             </button>
             <button
               onClick={() => setActiveTab('scheduled')}
@@ -317,7 +408,7 @@ const TransactionsPage = () => {
                   : 'text-gray-500 hover:text-gray-700 hover:border-gray-300'
               }`}
             >
-              Scheduled ({hardcodedTransactions.scheduled.length})
+              Scheduled ({transactions.scheduled.length})
             </button>
             <button
               onClick={() => setActiveTab('completed')}
@@ -327,7 +418,7 @@ const TransactionsPage = () => {
                   : 'text-gray-500 hover:text-gray-700 hover:border-gray-300'
               }`}
             >
-              Completed ({hardcodedTransactions.completed.length})
+              Completed ({transactions.completed.length})
             </button>
             <button
               onClick={() => setActiveTab('cancelled')}
@@ -337,7 +428,7 @@ const TransactionsPage = () => {
                   : 'text-gray-500 hover:text-gray-700 hover:border-gray-300'
               }`}
             >
-              Cancelled ({hardcodedTransactions.cancelled.length})
+              Cancelled ({transactions.cancelled.length})
             </button>
           </nav>
         </div>
@@ -348,7 +439,7 @@ const TransactionsPage = () => {
         {activeTab === 'pending' && (
           <div>
             <h2 className="text-xl font-semibold mb-4">Pending Actions</h2>
-            {hardcodedTransactions.pending.length === 0 ? (
+            {transactions.pending.length === 0 ? (
               <div className="text-center py-8 bg-gray-50 rounded-lg">
                 <svg xmlns="http://www.w3.org/2000/svg" className="h-12 w-12 text-gray-400 mx-auto mb-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />

@@ -64,8 +64,10 @@ const Dashboard = () => {
     const hardcodedBooks = [
       {
         id: 1, // Example ID, replace with actual if known
-        title: "The Testaments",
+        title: "Linear Algebra",
         author: "Margaret Atwood",
+
+
         description: "A powerful sequel to The Handmaid's Tale, exploring the inner workings of Gilead through the eyes of three women.",
         condition: "Like New",
         bookType: "For Sale",
@@ -199,6 +201,62 @@ const Dashboard = () => {
         actualSellerId: 1,
         sellerName: "emad",
         categoryId: 85,
+        inStock: 1,
+        isNew: false,
+      },
+      {
+        id: 6, // New ID for the first new book
+        title: "Linear Algebra",
+        author: "Gilbert Strang",
+        description: "A foundational text in linear algebra.", // Added a placeholder description
+        condition: "Good", // Placeholder condition
+        bookType: "For Swap",
+        price: null,
+        subject: "Mathematics", // Placeholder subject
+        status: "available",
+        users_permissions_user: 1, // Assuming user 'emad' has ID 1
+        category: { data: { id: 93, attributes: { name: "Education" } } },
+        cover: 'seed-images/LA.jpg',
+        exchange: true, // Explicitly set for swap
+        featured: false,
+        bookOfWeek: false,
+        bookOfYear: false,
+        displayTitle: "",
+        Display: false,
+        rating: 0,
+        voters: 0,
+        course: "",
+        actualSellerId: 1,
+        sellerName: "emad",
+        categoryId: 93,
+        inStock: 1,
+        isNew: false,
+      },
+      {
+        id: 7, // New ID for the second new book
+        title: "Data Structures and Algorithms",
+        author: "Robert Lafore",
+        description: "A comprehensive guide to data structures and algorithms.", // Added a placeholder description
+        condition: "Very Good", // Placeholder condition
+        bookType: "For Swap",
+        price: null,
+        subject: "Computer Science", // Placeholder subject
+        status: "available",
+        users_permissions_user: 1, // Assuming user 'emad' has ID 1
+        category: { data: { id: 93, attributes: { name: "Education" } } },
+        cover: 'seed-images/DSA.jpg',
+        exchange: true, // Explicitly set for swap
+        featured: false,
+        bookOfWeek: false,
+        bookOfYear: false,
+        displayTitle: "",
+        Display: false,
+        rating: 0,
+        voters: 0,
+        course: "",
+        actualSellerId: 1,
+        sellerName: "emad",
+        categoryId: 93,
         inStock: 1,
         isNew: false,
       },
@@ -710,8 +768,8 @@ const Dashboard = () => {
               {/* My Books Stat */}
               <div className="bg-blue-100 p-6 rounded-lg shadow hover:shadow-lg transition-shadow">
                 <h3 className="text-lg font-semibold text-blue-700">MY BOOKS</h3>
-                <p className="text-3xl font-bold text-blue-900">5</p>
-                <p className="text-sm text-gray-600">active listings</p>
+                <p className="text-3xl font-bold text-blue-900">7</p>
+                <p className="text-sm text-gray-600">active listings 7</p>
               </div>
 
               {/* Earnings Stat */}
@@ -767,8 +825,8 @@ const Dashboard = () => {
                   className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
                 >
                   List a Book
-                </button>
-              </div>
+                  </button>
+                </div>
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {myBooks.map(book => {

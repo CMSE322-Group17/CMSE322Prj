@@ -217,6 +217,36 @@ const HARDCODED_MESSAGES = [
     status: 'pending' // 'pending', 'accepted', or 'declined'
   },
 
+  // Chat 5: john (5) and emad (1) about Artificial Intelligence (505) - Cancelled Purchase
+  {
+    id: 18, // New ID
+    chatId: '5_1_505',
+    senderId: 1, // Emad
+    receiverId: 5, // John
+    text: 'TRANSACTION_CANCELLED: The purchase of "Artificial Intelligence" has been cancelled.',
+    createdAt: '2024-05-15T14:50:00Z', // After last message in conversation
+    isRead: true,
+    isSystemMessage: true, // To style it as a system message
+    transactionType: 'purchase',
+    transactionStatus: 'cancelled',
+    transactionId: 'cancelled-purchase-1' // Link to TransactionsPage
+  },
+
+  // Chat 6: emad (1) and mia (6) about Database Systems (606) - Swap Declined Message
+  {
+    id: 19, // New ID
+    chatId: '1_6_606',
+    senderId: null, // System message
+    receiverId: 1, // Emad
+    text: 'TRANSACTION_DECLINED: Your swap offer for "Database Systems" with Mia was declined.',
+    createdAt: '2024-05-10T16:35:00Z', // After last message in conversation
+    isRead: true,
+    isSystemMessage: true,
+    transactionType: 'swap',
+    transactionStatus: 'declined',
+    transactionId: 'declined-swap-1' // Link to TransactionsPage
+  },
+
   // Chat 7: ali (3) and emad (1) about Data Structures and Algorithms (707) - Another Swap Request
   {
     id: 12,

@@ -387,6 +387,56 @@ export const MessageProvider = ({ children }) => {
     }
   }, [isAuthenticated, sendMessage, fetchConversations]);
 
+  // Helper function to map message/chat IDs to transaction IDs
+  const getTransactionID = useCallback((messageType, chatId) => {
+    // For a swap offer message, find a corresponding transaction in the system
+    let transactionId = null;
+    
+    if (messageType === 'swap_offer') {
+      // Map of chat IDs to transaction IDs for swap offers
+      const swapTransactionMap = {
+        '2_1_303': 'pending-swap-1',
+        '3_1_707': 'pending-swap-2',
+        '6_1_606': 'pending-swap-3',
+        '7_1_808': 'scheduled-swap-1',
+        '8_1_505': 'pending-swap-4',
+        '9_1_606': 'pending-swap-5',
+        '2_1_101': 'completed-swap-1'  // Adding a mapping for a completed swap
+      };
+      
+      transactionId = swapTransactionMap[chatId];
+    } else if (messageType === 'purchase_request') {
+      // Map of chat IDs to transaction IDs for purchase requests
+      const purchaseTransactionMap = {
+        '4_1_404': 'scheduled-purchase-1',
+        '5_1_505': 'cancelled-purchase-1',
+        '8_1_909': 'pending-purchase-1',
+        '9_1_1010': 'pending-purchase-2',
+        '3_1_202': 'completed-purchase-1',
+        '10_1_606': 'pending-purchase-3',
+        '11_1_707': 'pending-purchase-4'
+      };
+      
+      transactionId = purchaseTransactionMap[chatId];
+    }
+    
+    if (!transactionId) {
+      console.warn(`MessageContext: No transaction mapping found for ${messageType} with chat ID ${chatId}`);
+      
+      // In a real application, we would fetch this from the database
+      // For now in our demo app, we'll create a predictable ID if it doesn't exist
+      if (messageType === 'swap_offer') {
+        transactionId = `pending-swap-${chatId.split('_')[2]}`;
+      } else if (messageType === 'purchase_request') {
+        transactionId = `pending-purchase-${chatId.split('_')[2]}`;
+      }
+    } else {
+      console.log(`MessageContext: Found transaction ${transactionId} for ${messageType} with chat ID ${chatId}`);
+    }
+    
+    return transactionId;
+  }, []);
+
   // Function to update a request status
   const updateRequestStatus = useCallback(async (messageId, newStatus) => {
     if (!isAuthenticated || !userRef.current) {
@@ -418,6 +468,54 @@ export const MessageProvider = ({ children }) => {
         const requestMessage = messagesRef.current.find(msg => msg.id === messageId);
         if (requestMessage) {
           showRequestStatusNotification(requestMessage, newStatus);
+             // Identify which transaction this message relates to
+        let transactionId = null;
+        
+        transactionId = getTransactionID(requestMessage.messageType, requestMessage.chatId);
+        
+        // If we found a related transaction, dispatch an event to update it
+          if (transactionId) {
+            const action = newStatus === 'accepted' ? 'accept' : 'decline';
+            console.log(`MessageContext: Dispatch transaction update event: ${transactionId} - ${action}`);
+            
+            // Extract all possible message details to include in the event
+            const messageDetails = {
+              messageId: requestMessage.id,
+              chatId: requestMessage.chatId,
+              senderId: requestMessage.senderId,
+              receiverId: requestMessage.receiverId,
+              bookId: requestMessage.bookId,
+              price: requestMessage.price,
+              text: requestMessage.text,
+              swapOfferId: requestMessage.swapOfferId,
+              transactionType: requestMessage.messageType === 'swap_offer' ? 'swap' : 'purchase'
+            };
+            
+            // Find book details from the chat ID if available
+            const chatParts = requestMessage.chatId.split('_');
+            if (chatParts.length >= 3) {
+              const bookIdFromChat = chatParts[2];
+              if (bookIdFromChat && !isNaN(parseInt(bookIdFromChat))) {
+                messageDetails.bookIdFromChat = parseInt(bookIdFromChat);
+              }
+            }
+            
+            // Create and dispatch custom event with enhanced details
+            const transactionEvent = new CustomEvent('transaction-update', {
+              detail: {
+                transactionId,
+                action,
+                ...messageDetails,
+                timestamp: new Date().toISOString()
+              },
+              bubbles: true
+            });
+            document.dispatchEvent(transactionEvent);
+            
+            console.log(`MessageContext: Event dispatched with full details for transaction ${transactionId}`);
+          } else {
+            console.error(`MessageContext: No transaction mapping found for message ${messageId}. Event not dispatched.`);
+          }
         }
         
         return true;
@@ -428,7 +526,7 @@ export const MessageProvider = ({ children }) => {
       setError(`Failed to update request to ${newStatus}`);
       return false;
     }
-  }, [isAuthenticated, activeConversation, fetchConversations]);
+  }, [isAuthenticated, activeConversation, fetchConversations, getTransactionID]);
 
   // Function to start a swap offer
   const startSwapOffer = useCallback(async ({ chatId, offerBookIds, messageToOwner }) => {
@@ -541,7 +639,8 @@ export const MessageProvider = ({ children }) => {
     startConversation,
     createPurchaseRequest,
     updateRequestStatus,
-    fetchUnreadCount
+    fetchUnreadCount,
+    getTransactionID // Export the transaction ID mapping helper
   };
 
   return (
