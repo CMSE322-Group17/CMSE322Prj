@@ -563,7 +563,54 @@ const BooksPage = () => {
           };
         });
         
-        setBooks(processedBooks);
+        // Add hardcoded swap books from Dashboard
+        const hardcodedSwapBooks = [
+          {
+            id: 'swap-6',
+            title: "Linear Algebra",
+            author: "Gilbert Strang",
+            description: "A foundational text in linear algebra.",
+            rating: "4.5",
+            voters: 42,
+            condition: "Good",
+            exchange: true,
+            subject: "Mathematics",
+            course: "",
+            actualSellerId: 1,
+            sellerName: "emad",
+            cover: 'seed-images/LA.jpg',
+            price: null,
+            categoryId: 93,
+            inStock: 1,
+            isNew: false,
+            bookType: "For Swap"
+          },
+          {
+            id: 'swap-7',
+            title: "Data Structures and Algorithms",
+            author: "Robert Lafore",
+            description: "A comprehensive guide to data structures and algorithms.",
+            rating: "4.7",
+            voters: 58,
+            condition: "Very Good",
+            exchange: true,
+            subject: "Computer Science",
+            course: "",
+            actualSellerId: 1,
+            sellerName: "emad",
+            cover: 'seed-images/DSA.jpg',
+            price: null,
+            categoryId: 93,
+            inStock: 1,
+            isNew: false,
+            bookType: "For Swap"
+          }
+        ];
+        
+        // Combine API books with hardcoded swap books
+        const allBooks = [...processedBooks, ...hardcodedSwapBooks];
+        
+        setBooks(allBooks);
       } catch (err) {
         console.error("Error fetching data:", err);
         setError("Failed to load books. Please try again later.");

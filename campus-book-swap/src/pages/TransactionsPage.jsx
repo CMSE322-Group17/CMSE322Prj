@@ -62,6 +62,147 @@ const hardcodedTransactions = {
       ],
       notes: 'Ali has requested to swap your Python for Data Science book.',
       actions: ['accept', 'decline']
+    },
+    // New transactions for the enhanced swap system with specific book selections
+    {
+      id: 'pending-swap-nima-linear-algebra',
+      type: 'swap-request',
+      requestId: 'swapOffer_nima_linear_algebra',
+      messageId: 30,
+      chatId: '1_2_101',
+      date: '2024-05-25T10:30:00Z',
+      status: 'pending',
+      fromUser: {
+        id: 1,
+        username: 'emad'
+      },
+      toUser: {
+        id: 2,
+        username: 'nima',
+        profileLink: '/nima-profile'
+      },
+      requestedBook: {
+        id: 303,
+        title: 'Linear Algebra',
+        author: 'Gilbert Strang',
+        condition: 'Good'
+      },
+      offeredBooks: [
+        {
+          id: 7,
+          title: 'Data Structures and Algorithms',
+          author: 'Robert Lafore',
+          condition: 'Very Good'
+        }
+      ],
+      notes: 'You requested Nima\'s Linear Algebra book in exchange for your Data Structures and Algorithms book.',
+      actions: ['cancel'],
+      direction: 'outgoing'
+    },
+    {
+      id: 'pending-swap-nima-calculus',
+      type: 'swap-request',
+      requestId: 'swapOffer_nima_calculus',
+      messageId: 31,
+      chatId: '1_2_101',
+      date: '2024-05-25T11:15:00Z',
+      status: 'pending',
+      fromUser: {
+        id: 1,
+        username: 'emad'
+      },
+      toUser: {
+        id: 2,
+        username: 'nima',
+        profileLink: '/nima-profile'
+      },
+      requestedBook: {
+        id: 404,
+        title: 'Calculus I',
+        author: 'James Stewart',
+        condition: 'Like New'
+      },
+      offeredBooks: [
+        {
+          id: 6,
+          title: 'Linear Algebra',
+          author: 'Gilbert Strang',
+          condition: 'Good'
+        }
+      ],
+      notes: 'You requested Nima\'s Calculus I book in exchange for your Linear Algebra book.',
+      actions: ['cancel'],
+      direction: 'outgoing'
+    },
+    {
+      id: 'pending-swap-ali-dsa',
+      type: 'swap-request',
+      requestId: 'swapOffer_ali_dsa',
+      messageId: 32,
+      chatId: '1_3_202',
+      date: '2024-05-25T12:00:00Z',
+      status: 'pending',
+      fromUser: {
+        id: 1,
+        username: 'emad'
+      },
+      toUser: {
+        id: 3,
+        username: 'ali',
+        profileLink: '/ali-profile'
+      },
+      requestedBook: {
+        id: 501,
+        title: 'Data Structures and Algorithms',
+        author: 'Robert Lafore',
+        condition: 'Good'
+      },
+      offeredBooks: [
+        {
+          id: 6,
+          title: 'Linear Algebra',
+          author: 'Gilbert Strang',
+          condition: 'Good'
+        }
+      ],
+      notes: 'You requested Ali\'s Data Structures and Algorithms book in exchange for your Linear Algebra book.',
+      actions: ['cancel'],
+      direction: 'outgoing'
+    },
+    {
+      id: 'pending-swap-ali-ml',
+      type: 'swap-request',
+      requestId: 'swapOffer_ali_ml',
+      messageId: 33,
+      chatId: '1_3_202',
+      date: '2024-05-25T13:30:00Z',
+      status: 'pending',
+      fromUser: {
+        id: 1,
+        username: 'emad'
+      },
+      toUser: {
+        id: 3,
+        username: 'ali',
+        profileLink: '/ali-profile'
+      },
+      requestedBook: {
+        id: 502,
+        title: 'Introduction to Machine Learning',
+        author: 'Ethem Alpaydin',
+        condition: 'Like New'
+      },
+      offeredBooks: [
+        {
+          id: 7,
+          title: 'Data Structures and Algorithms',
+          author: 'Robert Lafore',
+          condition: 'Very Good'
+        }
+      ],
+      notes: 'You requested Ali\'s Introduction to Machine Learning book in exchange for your Data Structures and Algorithms book.',
+      actions: ['cancel'],
+      direction: 'outgoing'
     }
   ],
 
@@ -188,6 +329,79 @@ const hardcodedTransactions = {
       meetupLocation: 'Engineering Building',
       meetupDate: '2024-05-27T11:30:00Z',
       notes: 'Meeting Alex on Monday for the book swap'
+    },
+    // New scheduled swaps from the enhanced swap system
+    {
+      id: 'scheduled-swap-nima-accepted',
+      type: 'swap',
+      swapId: 'SWAP-2024-103',
+      chatId: '1_2_101',
+      date: '2024-05-25T09:00:00Z',
+      status: 'scheduled',
+      scheduledFor: '2024-05-26T14:00:00Z',
+      participants: [
+        {
+          id: 1,
+          username: 'emad',
+          providedBook: {
+            id: 6,
+            title: 'Linear Algebra',
+            author: 'Gilbert Strang',
+            condition: 'Good'
+          }
+        },
+        {
+          id: 2,
+          username: 'nima',
+          profileLink: '/nima-profile',
+          providedBook: {
+            id: 404,
+            title: 'Calculus I',
+            author: 'James Stewart',
+            condition: 'Like New'
+          }
+        }
+      ],
+      meetupLocation: 'Campus Library',
+      meetupDate: '2024-05-26T14:00:00Z',
+      notes: 'Swap accepted by Nima! Meeting tomorrow at the library.',
+      originalRequestId: 'swapOffer_nima_calculus_accepted'
+    },
+    {
+      id: 'scheduled-swap-ali-accepted',
+      type: 'swap',
+      swapId: 'SWAP-2024-104',
+      chatId: '1_3_202',
+      date: '2024-05-25T08:30:00Z',
+      status: 'scheduled',
+      scheduledFor: '2024-05-26T16:00:00Z',
+      participants: [
+        {
+          id: 1,
+          username: 'emad',
+          providedBook: {
+            id: 7,
+            title: 'Data Structures and Algorithms',
+            author: 'Robert Lafore',
+            condition: 'Very Good'
+          }
+        },
+        {
+          id: 3,
+          username: 'ali',
+          profileLink: '/ali-profile',
+          providedBook: {
+            id: 502,
+            title: 'Introduction to Machine Learning',
+            author: 'Ethem Alpaydin',
+            condition: 'Like New'
+          }
+        }
+      ],
+      meetupLocation: 'Student Center',
+      meetupDate: '2024-05-26T16:00:00Z',
+      notes: 'Swap accepted by Ali! Meeting tomorrow at the Student Center.',
+      originalRequestId: 'swapOffer_ali_ml_accepted'
     }
   ],
   
@@ -264,16 +478,18 @@ const TransactionsPage = () => {
           messageDetails: details // Store full message details for reference
         };
 
-        // In a real app, you would call an API to update the transaction status
-        console.log(`Transaction ${transactionId} accepted and moved to scheduled`);      // If this is a swap transaction, handle the specific swap details
-      if (transaction.type === 'swap-request') {
-        console.log(`Processing swap transaction: ${transaction.requestedBook.title} <-> ${transaction.offeredBooks[0].title}`);
-      } else if (transaction.type === 'purchase') {
-        console.log(`Processing purchase transaction: ${transaction.book.title} for $${transaction.amount}`);
-      }
+        // If this is a swap transaction, handle the specific swap details
+        if (transaction.type === 'swap-request') {
+          console.log(`Processing swap transaction: ${transaction.requestedBook.title} <-> ${transaction.offeredBooks[0].title}`);
+        } else if (transaction.type === 'purchase') {
+          console.log(`Processing purchase transaction: ${transaction.book.title} for $${transaction.amount}`);
+        }
 
-      // Show notification for the transaction status change
-      showTransactionStatusNotification(updatedTransaction, 'accept');
+        // Show notification for the transaction status change
+        showTransactionStatusNotification(updatedTransaction, 'accept');
+
+        // In a real app, you would call an API to update the transaction status
+        console.log(`Transaction ${transactionId} accepted and moved to scheduled`);
 
         return {
           ...currentTransactions,
@@ -293,11 +509,31 @@ const TransactionsPage = () => {
           messageDetails: details // Store full message details for reference
         };
 
+        // Show notification for the transaction status change
+        showTransactionStatusNotification(updatedTransaction, 'decline');
+
         // In a real app, you would call an API to update the transaction status
         console.log(`Transaction ${transactionId} declined and moved to cancelled`);
 
-        // Show notification for the transaction status change
-        showTransactionStatusNotification(updatedTransaction, 'decline');
+        return {
+          ...currentTransactions,
+          pending: currentTransactions.pending.filter(t => t.id !== transactionId),
+          cancelled: [...currentTransactions.cancelled, updatedTransaction]
+        };
+      }
+      else if (action === 'cancel') {
+        // Handle cancellation of outgoing swap requests
+        const updatedTransaction = {
+          ...transaction,
+          status: 'cancelled',
+          cancelReason: 'Cancelled by requester',
+          cancelDate: new Date().toISOString(),
+          lastUpdated: details.timestamp || new Date().toISOString(),
+          updatedBy: transaction.fromUser.id, // The person who cancelled the request
+          messageDetails: details
+        };
+
+        console.log(`Transaction ${transactionId} cancelled by user`);
 
         return {
           ...currentTransactions,
@@ -362,6 +598,11 @@ const TransactionsPage = () => {
   // Handle decline transaction - uses the same handler as the event listener
   const handleDeclineTransaction = (transactionId) => {
     handleTransactionAction(transactionId, 'decline');
+  };
+
+  // Handle cancel transaction - for outgoing swap requests
+  const handleCancelTransaction = (transactionId) => {
+    handleTransactionAction(transactionId, 'cancel');
   };
 
   // Function to format dates consistently
@@ -448,7 +689,7 @@ const TransactionsPage = () => {
               </div>
             ) : (
               <div className="space-y-4">
-                {hardcodedTransactions.pending.map(transaction => (
+                {transactions.pending.map(transaction => (
                   <div key={transaction.id} className="border border-gray-200 rounded-lg p-4">
                     <div className="flex justify-between mb-2">
                       <div>
@@ -515,18 +756,30 @@ const TransactionsPage = () => {
                     </div>
                     
                     <div className="flex justify-end space-x-2">
-                      <button 
-                        onClick={() => handleDeclineTransaction(transaction.id)}
-                        className="px-4 py-2 bg-gray-100 text-gray-700 rounded hover:bg-gray-200"
-                      >
-                        Decline
-                      </button>
-                      <button 
-                        onClick={() => handleAcceptTransaction(transaction.id)}
-                        className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
-                      >
-                        Accept
-                      </button>
+                      {transaction.actions && transaction.actions.includes('decline') && (
+                        <button 
+                          onClick={() => handleDeclineTransaction(transaction.id)}
+                          className="px-4 py-2 bg-gray-100 text-gray-700 rounded hover:bg-gray-200"
+                        >
+                          Decline
+                        </button>
+                      )}
+                      {transaction.actions && transaction.actions.includes('accept') && (
+                        <button 
+                          onClick={() => handleAcceptTransaction(transaction.id)}
+                          className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+                        >
+                          Accept
+                        </button>
+                      )}
+                      {transaction.actions && transaction.actions.includes('cancel') && (
+                        <button 
+                          onClick={() => handleCancelTransaction(transaction.id)}
+                          className="px-4 py-2 bg-red-100 text-red-700 rounded hover:bg-red-200"
+                        >
+                          Cancel
+                        </button>
+                      )}
                     </div>
                   </div>
                 ))}
@@ -539,7 +792,7 @@ const TransactionsPage = () => {
         {activeTab === 'scheduled' && (
           <div>
             <h2 className="text-xl font-semibold mb-4">Upcoming Transactions</h2>
-            {hardcodedTransactions.scheduled.length === 0 ? (
+            {transactions.scheduled.length === 0 ? (
               <div className="text-center py-8 bg-gray-50 rounded-lg">
                 <svg xmlns="http://www.w3.org/2000/svg" className="h-12 w-12 text-gray-400 mx-auto mb-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
@@ -548,7 +801,7 @@ const TransactionsPage = () => {
               </div>
             ) : (
               <div className="space-y-4">
-                {hardcodedTransactions.scheduled.map(transaction => (
+                {transactions.scheduled.map(transaction => (
                   <div key={transaction.id} className="border border-gray-200 rounded-lg p-4">
                     <div className="flex justify-between mb-2">
                       <div>
@@ -632,7 +885,7 @@ const TransactionsPage = () => {
         {activeTab === 'completed' && (
           <div>
             <h2 className="text-xl font-semibold mb-4">Completed Transactions</h2>
-            {hardcodedTransactions.completed.length === 0 ? (
+            {transactions.completed.length === 0 ? (
               <div className="text-center py-8 bg-gray-50 rounded-lg">
                 <svg xmlns="http://www.w3.org/2000/svg" className="h-12 w-12 text-gray-400 mx-auto mb-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
@@ -641,7 +894,7 @@ const TransactionsPage = () => {
               </div>
             ) : (
               <div className="space-y-4">
-                {hardcodedTransactions.completed.map(transaction => (
+                {transactions.completed.map(transaction => (
                   <div key={transaction.id} className="border border-gray-200 rounded-lg p-4">
                     <div className="flex justify-between mb-2">
                       <div>
@@ -738,7 +991,7 @@ const TransactionsPage = () => {
         {activeTab === 'cancelled' && (
           <div>
             <h2 className="text-xl font-semibold mb-4">Cancelled Transactions</h2>
-            {hardcodedTransactions.cancelled.length === 0 ? (
+            {transactions.cancelled.length === 0 ? (
               <div className="text-center py-8 bg-gray-50 rounded-lg">
                 <svg xmlns="http://www.w3.org/2000/svg" className="h-12 w-12 text-gray-400 mx-auto mb-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -747,56 +1000,108 @@ const TransactionsPage = () => {
               </div>
             ) : (
               <div className="space-y-4">
-                {hardcodedTransactions.cancelled.map(transaction => (
+                {transactions.cancelled.map(transaction => (
                   <div key={transaction.id} className="border border-gray-200 rounded-lg p-4">
                     <div className="flex justify-between mb-2">
                       <div>
                         <span className="inline-block px-2 py-1 text-xs font-semibold rounded-full bg-red-100 text-red-800 mr-2">
-                          {transaction.status.charAt(0).toUpperCase() + transaction.status.slice(1)}
+                          {transaction.type === 'swap-request' ? 'Swap Request' : 'Purchase Request'} - {transaction.status.charAt(0).toUpperCase() + transaction.status.slice(1)}
                         </span>
                         <span className="text-gray-600 text-sm">
-                          {transaction.status === 'cancelled' ? 'Cancelled' : 'Declined'} on: {formatDate(transaction.cancelledOn || transaction.declinedOn)}
+                          {transaction.status === 'cancelled' ? 'Cancelled' : 'Declined'} on: {formatDate(transaction.cancelDate || transaction.cancelledOn || transaction.declinedOn || transaction.date)}
                         </span>
+                      </div>
+                      <div>
+                        {transaction.chatId && (
+                          <Link 
+                            to={`/messages?user=${transaction.type === 'purchase' ? 
+                              (transaction.buyer.id === user.id ? transaction.seller.username : transaction.buyer.username) : 
+                              (transaction.fromUser ? transaction.fromUser.username : '')}`}
+                            className="text-xs text-blue-600 hover:text-blue-800"
+                          >
+                            View Conversation
+                          </Link>
+                        )}
                       </div>
                     </div>
                     
-                    {transaction.type === 'purchase' && (
-                      <div className="mb-3">
-                        <p className="font-medium">{transaction.book.title}</p>
-                        <p className="text-sm text-gray-600">by {transaction.book.author}</p>
-                        <p className="text-sm font-medium text-gray-600">Price: ${transaction.book.price.toFixed(2)}</p>
-                        <p className="text-sm text-gray-600 mt-1">
-                          {transaction.buyer.id === user.id ? 
-                            `Seller: ${transaction.seller.username}` : 
-                            `Buyer: ${transaction.buyer.username}`}
+                    <div className="flex items-start mb-3">
+                      <div className="flex-shrink-0 w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center mr-3">
+                        {transaction.type === 'purchase' ? 
+                          (transaction.buyer.id === user.id ? 
+                            transaction.seller.username.charAt(0).toUpperCase() : 
+                            transaction.buyer.username.charAt(0).toUpperCase()) :
+                          (transaction.fromUser ? transaction.fromUser.username.charAt(0).toUpperCase() : 'U')
+                        }
+                      </div>
+                      <div>
+                        <div className="font-medium">
+                          {transaction.type === 'purchase' ? 
+                            (transaction.buyer.id === user.id ? 
+                              (transaction.seller.profileLink ? (
+                                <Link to={transaction.seller.profileLink} className="text-blue-600 hover:underline">
+                                  {transaction.seller.username}
+                                </Link>
+                              ) : transaction.seller.username) :
+                              (transaction.buyer.profileLink ? (
+                                <Link to={transaction.buyer.profileLink} className="text-blue-600 hover:underline">
+                                  {transaction.buyer.username}
+                                </Link>
+                              ) : transaction.buyer.username)
+                            ) :
+                            (transaction.fromUser ? 
+                              (transaction.fromUser.profileLink ? (
+                                <Link to={transaction.fromUser.profileLink} className="text-blue-600 hover:underline">
+                                  {transaction.fromUser.username}
+                                </Link>
+                              ) : transaction.fromUser.username) : 'Unknown User'
+                            )
+                          }
+                        </div>
+                        <p className="text-gray-600 text-sm">
+                          {transaction.type === 'purchase' ? 
+                            (transaction.buyer.id === user.id ? 'Seller' : 'Buyer') : 
+                            'Swap Partner'}
                         </p>
                       </div>
-                    )}
+                    </div>
                     
-                    {transaction.type === 'swap' && (
-                      <div className="mb-3">
-                        <div className="flex gap-4 mb-2">
-                          <div className="flex-1">
-                            <p className="text-sm font-medium">Requested:</p>
-                            <div className="bg-white p-2 rounded border border-gray-200 mt-1">
-                              <p className="font-medium">{transaction.participants[0].requestedBook.title}</p>
-                              <p className="text-sm text-gray-600">by {transaction.participants[0].requestedBook.author}</p>
-                            </div>
-                          </div>
-                          <div className="flex-1">
-                            <p className="text-sm font-medium">Offered:</p>
-                            <div className="bg-white p-2 rounded border border-gray-200 mt-1">
-                              <p className="font-medium">{transaction.participants[1].offeredBook.title}</p>
-                              <p className="text-sm text-gray-600">by {transaction.participants[1].offeredBook.author}</p>
-                            </div>
-                          </div>
+                    <div className="bg-gray-50 p-3 rounded mb-3">
+                      {transaction.type === 'purchase' && (
+                        <div>
+                          <p className="font-medium">{transaction.book.title}</p>
+                          <p className="text-sm text-gray-600">by {transaction.book.author}</p>
+                          <p className="text-sm font-medium text-gray-600">Price: ${transaction.book.price.toFixed(2)}</p>
                         </div>
-                      </div>
-                    )}
+                      )}
+                      
+                      {transaction.type === 'swap-request' && (
+                        <>
+                          <div className="flex justify-between mb-2">
+                            <span className="text-sm font-medium text-gray-700">Requesting:</span>
+                            <span className="text-sm font-medium text-gray-700">Offering:</span>
+                          </div>
+                          <div className="flex">
+                            <div className="w-1/2 pr-2">
+                              <div className="bg-white p-2 rounded border border-gray-200">
+                                <p className="font-medium">{transaction.requestedBook ? transaction.requestedBook.title : 'Unknown Book'}</p>
+                                <p className="text-sm text-gray-600">{transaction.requestedBook ? transaction.requestedBook.author : 'Unknown Author'}</p>
+                              </div>
+                            </div>
+                            <div className="w-1/2 pl-2">
+                              <div className="bg-white p-2 rounded border border-gray-200">
+                                <p className="font-medium">{transaction.offeredBooks ? transaction.offeredBooks[0]?.title : 'Unknown Book'}</p>
+                                <p className="text-sm text-gray-600">{transaction.offeredBooks ? transaction.offeredBooks[0]?.author : 'Unknown Author'}</p>
+                              </div>
+                            </div>
+                          </div>
+                        </>
+                      )}
+                    </div>
                     
                     <div className="bg-red-50 border-l-4 border-red-400 p-3">
                       <p className="text-red-700 text-sm">
-                        <span className="font-medium">Reason:</span> {transaction.cancellationReason || transaction.declineReason}
+                        <span className="font-medium">Reason:</span> {transaction.cancelReason || transaction.cancellationReason || transaction.declineReason}
                       </p>
                     </div>
                   </div>

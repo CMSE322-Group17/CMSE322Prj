@@ -309,6 +309,24 @@ const HARDCODED_MESSAGES = [
       swapOfferId: 'swapOffer456'
     },
     status: 'pending' // 'pending', 'accepted', or 'declined'
+  },
+
+  // New hardcoded active swap request from current user (emad) to nima
+  {
+    id: 20,
+    chatId: '1_2_101',
+    senderId: 1,
+    receiverId: 2,
+    text: 'SWAP_REQUEST: Linear Algebra for Intro to Algorithms',
+    createdAt: '2024-05-01T10:30:00Z',
+    isRead: true,
+    isSwapRequest: true,
+    swapDetails: {
+      requestedBookTitle: 'Intro to Algorithms',
+      offeredBookTitles: ['Linear Algebra'],
+      swapOfferId: 'swapOffer789'
+    },
+    status: 'pending'
   }
 ];
 
@@ -322,7 +340,7 @@ const ConversationItem = ({ conversation, active, onClick }) => (
     <div className="text-xs text-gray-500">{conversation.lastMessage.text}</div>
   </div>
 );
-const MessageList = ({ messages, currentUser, onSwapAction }) => (
+const MessageList = ({ messages, currentUser, onSwapAction, onCancelSwap }) => (
   <div className="flex-1 overflow-y-auto p-4">
     {messages.map(msg => (
       <div key={msg.id} className={`mb-2 ${msg.isSystemMessage ? 'text-center' : msg.senderId === currentUser.id ? 'text-right' : 'text-left'}`}>
@@ -330,7 +348,8 @@ const MessageList = ({ messages, currentUser, onSwapAction }) => (
           // Render stylish swap request message with status-dependent styling
           <div className={`inline-block p-4 rounded-lg text-left max-w-md ${
             msg.status === 'accepted' ? 'bg-green-100 text-green-800' : 
-            msg.status === 'declined' ? 'bg-red-100 text-red-800' : 
+            msg.status === 'declined' ? 'bg-red-100 text-red-800' :
+            msg.status === 'cancelled' ? 'bg-gray-100 text-gray-800' : 
             'bg-blue-100 text-blue-800'
           }`}>
             <p className="font-semibold mb-2">Swap Request:</p>
@@ -343,13 +362,19 @@ const MessageList = ({ messages, currentUser, onSwapAction }) => (
             
             {msg.status === 'accepted' && (
               <div className="bg-green-200 text-green-800 px-3 py-1 rounded text-xs inline-block">
-                Accepted
+                Accepted ✓
               </div>
             )}
             
             {msg.status === 'declined' && (
               <div className="bg-red-200 text-red-800 px-3 py-1 rounded text-xs inline-block">
-                Declined
+                Declined ✗
+              </div>
+            )}
+
+            {msg.status === 'cancelled' && (
+              <div className="bg-gray-200 text-gray-800 px-3 py-1 rounded text-xs inline-block">
+                Cancelled
               </div>
             )}
             
@@ -366,6 +391,20 @@ const MessageList = ({ messages, currentUser, onSwapAction }) => (
                   onClick={() => onSwapAction(msg.swapDetails.swapOfferId, 'declined', msg.id)}
                 >
                   Decline
+                </button>
+              </div>
+            )}
+
+            {msg.status === 'pending' && msg.senderId === currentUser.id && (
+              <div className="flex space-x-2">
+                <div className="bg-yellow-200 text-yellow-800 px-3 py-1 rounded text-xs inline-block">
+                  Waiting for response...
+                </div>
+                <button 
+                  className="px-3 py-1 bg-gray-600 text-white rounded text-xs hover:bg-gray-700"
+                  onClick={() => onCancelSwap(msg.swapDetails.swapOfferId)}
+                >
+                  Cancel
                 </button>
               </div>
             )}
@@ -397,13 +436,299 @@ const MessageList = ({ messages, currentUser, onSwapAction }) => (
     ))}
   </div>
 );
-const MessageInput = ({ onSend }) => {
+const MessageInput = ({ onSend, onSwapRequest, hasPendingSwap, otherUser }) => {
   const [text, setText] = useState('');
+  const [showSwapModal, setShowSwapModal] = useState(false);
+  const [showOtherUserBooksModal, setShowOtherUserBooksModal] = useState(false);
+  const [selectedRequestedBook, setSelectedRequestedBook] = useState(null);
+  
+  // Hardcoded books for other users
+  const otherUserBooks = {
+    'nima': [
+      {
+        id: 303,
+        title: 'Linear Algebra',
+        author: 'Gilbert Strang',
+        condition: 'Good',
+        bookType: 'For Swap',
+        cover: 'seed-images/LA.jpg',
+        subject: 'Mathematics'
+      },
+      {
+        id: 404,
+        title: 'Calculus I',
+        author: 'James Stewart',
+        condition: 'Like New',
+        bookType: 'For Sale',
+        price: 30.00,
+        cover: 'seed-images/calculus_i.jpg',
+        subject: 'Mathematics'
+      }
+    ],
+    'ali': [
+      {
+        id: 501,
+        title: 'Data Structures and Algorithms',
+        author: 'Robert Lafore',
+        condition: 'Good',
+        bookType: 'For Swap',
+        cover: 'seed-images/DSA.jpg',
+        subject: 'Computer Science'
+      },
+      {
+        id: 502,
+        title: 'Introduction to Machine Learning',
+        author: 'Ethem Alpaydin',
+        condition: 'Like New',
+        bookType: 'For Sale',
+        price: 25.00,
+        cover: 'seed-images/9780593320709.jpg',
+        subject: 'Computer Science'
+      },
+      {
+        id: 503,
+        title: 'Discrete Mathematics',
+        author: 'Kenneth Rosen',
+        condition: 'Acceptable',
+        bookType: 'For Sale',
+        price: 15.50,
+        cover: 'seed-images/9780593299067.jpg',
+        subject: 'Mathematics'
+      }
+    ]
+  };
+  
+  // Hardcoded swap books from Dashboard (books with bookType: "For Swap")
+  const swapBooks = [
+    {
+      id: 6,
+      title: "Linear Algebra",
+      author: "Gilbert Strang",
+      condition: "Good",
+      cover: 'seed-images/LA.jpg',
+      subject: "Mathematics"
+    },
+    {
+      id: 7,
+      title: "Data Structures and Algorithms",
+      author: "Robert Lafore",
+      condition: "Very Good",
+      cover: 'seed-images/DSA.jpg',
+      subject: "Computer Science"
+    }
+  ];
+
+  const handleInitiateSwap = () => {
+    if (hasPendingSwap) return;
+    
+    // Check if we have hardcoded books for this user
+    const otherUsername = otherUser?.username?.toLowerCase();
+    if (otherUsername && otherUserBooks[otherUsername]) {
+      setShowOtherUserBooksModal(true);
+    } else {
+      // Fallback to original behavior for other users
+      setShowSwapModal(true);
+    }
+  };
+
+  const handleSelectRequestedBook = (book) => {
+    setSelectedRequestedBook(book);
+    setShowOtherUserBooksModal(false);
+    setShowSwapModal(true);
+  };
+
+  const handleSwapBook = (offeredBook) => {
+    if (selectedRequestedBook) {
+      // Two-step swap with both books selected
+      onSwapRequest(offeredBook, selectedRequestedBook);
+    } else {
+      // Original single-step swap
+      onSwapRequest(offeredBook);
+    }
+    setShowSwapModal(false);
+    setSelectedRequestedBook(null);
+  };
+
+  const handleCloseModals = () => {
+    setShowSwapModal(false);
+    setShowOtherUserBooksModal(false);
+    setSelectedRequestedBook(null);
+  };
+
   return (
-    <form className="flex p-2 border-t" onSubmit={e => { e.preventDefault(); onSend(text); setText(''); }}>
-      <input className="flex-1 border rounded p-2" value={text} onChange={e => setText(e.target.value)} placeholder="Type a message..." />
-      <button className="ml-2 px-4 py-2 bg-blue-600 text-white rounded" type="submit">Send</button>
-    </form>
+    <>
+      <div className="p-2 border-t">
+        <form className="flex" onSubmit={e => { e.preventDefault(); onSend(text); setText(''); }}>
+          <input 
+            className="flex-1 border rounded p-2" 
+            value={text} 
+            onChange={e => setText(e.target.value)} 
+            placeholder="Type a message..." 
+          />
+          <button 
+            type="button"
+            onClick={handleInitiateSwap}
+            disabled={hasPendingSwap}
+            className={`ml-2 px-3 py-2 rounded flex items-center transition-colors ${
+              hasPendingSwap 
+                ? 'bg-gray-400 text-gray-600 cursor-not-allowed' 
+                : 'bg-green-600 text-white hover:bg-green-700'
+            }`}
+            title={hasPendingSwap ? 'You have a pending swap request in this chat' : 'Send a swap request'}
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
+            </svg>
+            {hasPendingSwap ? 'Swap Pending' : 'Swap'}
+          </button>
+          <button className="ml-2 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700" type="submit">
+            Send
+          </button>
+        </form>
+      </div>
+
+      {/* Swap Books Modal */}
+      {showSwapModal && !hasPendingSwap && (
+        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
+          <div className="bg-white p-6 rounded-lg shadow-lg max-w-md w-full mx-4">
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-xl font-semibold">
+                {selectedRequestedBook ? 'Select Your Book to Offer' : 'Select a Book to Swap'}
+              </h3>
+              <button 
+                onClick={handleCloseModals}
+                className="text-gray-400 hover:text-gray-600"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+            
+            {selectedRequestedBook && (
+              <div className="mb-4 p-3 bg-blue-50 rounded-lg">
+                <p className="text-sm text-blue-800">
+                  <span className="font-medium">Requesting:</span> {selectedRequestedBook.title}
+                </p>
+                <p className="text-xs text-blue-600">Now select what you want to offer in return:</p>
+              </div>
+            )}
+            
+            <div className="space-y-3">
+              {swapBooks.map(book => (
+                <div 
+                  key={book.id} 
+                  className="border rounded-lg p-3 hover:bg-gray-50 cursor-pointer transition-colors"
+                  onClick={() => handleSwapBook(book)}
+                >
+                  <div className="flex items-center space-x-3">
+                    <img 
+                      src={book.cover} 
+                      alt={book.title}
+                      className="w-12 h-16 object-cover rounded"
+                      onError={(e) => {
+                        e.target.src = 'https://via.placeholder.com/60x80?text=Book';
+                      }}
+                    />
+                    <div className="flex-1">
+                      <h4 className="font-medium text-sm">{book.title}</h4>
+                      <p className="text-xs text-gray-600">by {book.author}</p>
+                      <div className="flex items-center space-x-2 mt-1">
+                        <span className="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded">
+                          {book.condition}
+                        </span>
+                        <span className="text-xs text-gray-500">{book.subject}</span>
+                      </div>
+                    </div>
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                    </svg>
+                  </div>
+                </div>
+              ))}
+            </div>
+            
+            {swapBooks.length === 0 && (
+              <div className="text-center text-gray-500 py-8">
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-12 w-12 mx-auto mb-3 text-gray-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.746 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+                </svg>
+                <p>No books available for swap</p>
+                <p className="text-sm mt-1">Add books to your "For Swap" collection in your dashboard</p>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* Other User's Books Modal */}
+      {showOtherUserBooksModal && !hasPendingSwap && (
+        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
+          <div className="bg-white p-6 rounded-lg shadow-lg max-w-md w-full mx-4">
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-xl font-semibold">
+                What book do you want from {otherUser?.username}?
+              </h3>
+              <button 
+                onClick={handleCloseModals}
+                className="text-gray-400 hover:text-gray-600"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+            
+            <div className="space-y-3">
+              {otherUserBooks[otherUser?.username?.toLowerCase()]?.map(book => (
+                <div 
+                  key={book.id} 
+                  className="border rounded-lg p-3 hover:bg-gray-50 cursor-pointer transition-colors"
+                  onClick={() => handleSelectRequestedBook(book)}
+                >
+                  <div className="flex items-center space-x-3">
+                    <img 
+                      src={book.cover} 
+                      alt={book.title}
+                      className="w-12 h-16 object-cover rounded"
+                      onError={(e) => {
+                        e.target.src = 'https://via.placeholder.com/60x80?text=Book';
+                      }}
+                    />
+                    <div className="flex-1">
+                      <h4 className="font-medium text-sm">{book.title}</h4>
+                      <p className="text-xs text-gray-600">by {book.author}</p>
+                      <div className="flex items-center space-x-2 mt-1">
+                        <span className="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded">
+                          {book.condition}
+                        </span>
+                        <span className="text-xs text-gray-500">{book.subject}</span>
+                        {book.bookType === 'For Sale' && book.price && (
+                          <span className="text-xs text-green-600 font-medium">${book.price.toFixed(2)}</span>
+                        )}
+                        {book.bookType === 'For Swap' && (
+                          <span className="text-xs text-blue-600 font-medium">Available for Swap</span>
+                        )}
+                      </div>
+                    </div>
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                    </svg>
+                  </div>
+                </div>
+              )) || (
+                <div className="text-center text-gray-500 py-8">
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-12 w-12 mx-auto mb-3 text-gray-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.746 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+                  </svg>
+                  <p>No books available from {otherUser?.username}</p>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+    </>
   );
 };
 const ChatHeader = ({ book, otherUser }) => {
@@ -714,6 +1039,114 @@ const Messages = () => {
     }, 500); // Simulate typing delay
   };
 
+  // Handle swap request from the swap modal
+  const handleSwapRequest = (offeredBook, requestedBook = null) => {
+    if (!selectedChat || !user?.id) return;
+
+    const swapOfferId = `swap_${Date.now()}`;
+    
+    // Use the new two-book format if requestedBook is provided, otherwise fallback to old format
+    const requestedBookTitle = requestedBook ? requestedBook.title : selectedChat.bookTitle;
+    const requestedBookAuthor = requestedBook ? requestedBook.author : (activeChatDetails?.book?.author || 'Unknown Author');
+
+    // Create swap request message with proper format for rendering
+    const swapMessage = {
+      id: Date.now(),
+      chatId: selectedChat.chatId,
+      senderId: user.id,
+      receiverId: selectedChat.otherUser.id,
+      text: `SWAP_REQUEST: ${offeredBook.title} for ${requestedBookTitle}`,
+      createdAt: new Date().toISOString(),
+      isRead: false,
+      isSwapRequest: true, // Use the same property as hardcoded messages
+      swapDetails: {
+        swapOfferId: swapOfferId,
+        requestedBookTitle: requestedBookTitle,
+        offeredBookTitles: [offeredBook.title],
+        offeredBook: offeredBook,
+        requestedBook: {
+          title: requestedBookTitle,
+          author: requestedBookAuthor
+        }
+      },
+      status: 'pending'
+    };
+
+    setMessages(prev => [...prev, swapMessage]);
+
+    // Simulate a response from the other user after a delay
+    setTimeout(() => {
+      const responseMessage = {
+        id: Date.now() + 1,
+        chatId: selectedChat.chatId,
+        senderId: selectedChat.otherUser.id,
+        receiverId: user.id,
+        text: "Let me think about this swap offer...",
+        createdAt: new Date().toISOString(),
+        isRead: false
+      };
+      setMessages(prev => [...prev, responseMessage]);
+    }, 2000);
+
+    // Auto-accept after 5 seconds
+    setTimeout(() => {
+      // Check if the swap is still pending before auto-accepting
+      setMessages(prevMessages => {
+        const swapMsg = prevMessages.find(msg => msg.swapDetails?.swapOfferId === swapOfferId);
+        if (swapMsg && swapMsg.status === 'pending') {
+          // Update the swap message to accepted
+          const updatedMessages = prevMessages.map(msg => 
+            msg.swapDetails?.swapOfferId === swapOfferId 
+              ? { ...msg, status: 'accepted' } 
+              : msg
+          );
+
+          // Add auto-acceptance message
+          const autoAcceptMessage = {
+            id: Date.now() + 10,
+            chatId: selectedChat.chatId,
+            senderId: selectedChat.otherUser.id,
+            receiverId: user.id,
+            text: "Great! I accept your swap offer. Let's proceed with the exchange.",
+            createdAt: new Date().toISOString(),
+            isRead: false
+          };
+
+          // Trigger location prompt after auto-acceptance
+          setTimeout(() => {
+            setShowLocationPrompt(true);
+            setPendingSwapId(swapOfferId);
+          }, 1000);
+
+          return [...updatedMessages, autoAcceptMessage];
+        }
+        return prevMessages;
+      });
+    }, 5000); // 5 seconds
+  };
+
+  // Handle canceling a swap request
+  const handleCancelSwap = (swapOfferId) => {
+    setMessages(prev => prev.map(msg => 
+      msg.swapDetails?.swapOfferId === swapOfferId 
+        ? { ...msg, status: 'cancelled' } 
+        : msg
+    ));
+
+    // Add cancellation message
+    const cancelMessage = {
+      id: Date.now(),
+      chatId: selectedChat.chatId,
+      senderId: user.id,
+      receiverId: selectedChat.otherUser.id,
+      text: "I've cancelled the swap request.",
+      createdAt: new Date().toISOString(),
+      isRead: false
+    };
+
+    setMessages(prev => [...prev, cancelMessage]);
+  };
+
   // Effect to select chat based on URL parameter on initial load
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
@@ -814,8 +1247,18 @@ const Messages = () => {
                 messages={messages} 
                 currentUser={user}
                 onSwapAction={handleSwapAction}
+                onCancelSwap={handleCancelSwap}
               />
-              <MessageInput onSend={handleSendMessage} />
+              <MessageInput 
+                onSend={handleSendMessage} 
+                onSwapRequest={handleSwapRequest}
+                otherUser={activeChatDetails?.otherUser}
+                hasPendingSwap={messages.some(msg => 
+                  msg.isSwapRequest && 
+                  msg.status === 'pending' && 
+                  msg.senderId === user.id
+                )}
+              />
             </div>
           ) : (
             <div className="bg-white rounded-lg shadow-md p-8 text-center h-[calc(100vh-250px)] flex flex-col items-center justify-center">
