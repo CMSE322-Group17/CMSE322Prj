@@ -227,9 +227,11 @@ const hardcodedTransactions = {
       },
       book: {
         id: 202,
-        title: 'Discrete Math',
-        author: 'Kenneth Rosen',
-        price: 40.00
+        title: 'The Sentence',
+        author: 'Louise Erdrich',
+        price: 13.99,
+        rating: 5.0,
+        voters: 48
       },
       meetupLocation: 'Campus Cafe',
       meetupDate: '2024-05-21T15:00:00Z',

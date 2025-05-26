@@ -154,14 +154,14 @@ const SignUp = () => {
         </p>
       </div>
       
-      <div className="mt-4 p-3 bg-yellow-50 text-yellow-800 rounded text-sm">
+      {/* <div className="mt-4 p-3 bg-yellow-50 text-yellow-800 rounded text-sm">
         <p><strong>Troubleshooting:</strong> If you're seeing 404 errors, check:</p>
         <ul className="list-disc pl-5 mt-1">
           <li>VITE_API_URL in your .env file (should be complete base URL)</li>
           <li>Strapi version (URL pattern might differ)</li>
           <li>Strapi permissions (check Public role permissions)</li>
         </ul>
-      </div>
+      </div> */}
     </div>
   );
 };
