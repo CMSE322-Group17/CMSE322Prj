@@ -1,4 +1,5 @@
 # 📚 CampusBookSwap
+## CMSE322 Project
 
 [![React](https://img.shields.io/badge/React-19.1.0-61DAFB?logo=react&logoColor=white)](https://reactjs.org/)
 [![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-4.0.17-38B2AC?logo=tailwind-css&logoColor=white)](https://tailwindcss.com/)
@@ -109,12 +110,6 @@ This will generate a `dist` folder with all the production-ready files.
 3. Message owners to propose exchanges
 4. Arrange swap details through messaging
 
-### Book Borrowing
-
-1. List books available to borrow
-2. Specify borrowing duration and terms
-3. Request to borrow books from other users
-4. Track borrowed/lent books
 
 ## 🔌 Backend Integration
 
@@ -125,6 +120,7 @@ This application is designed to work with a Strapi backend. Make sure you have a
 - Users
 - Messages
 - CartItems
+- Wishlist
 
 ## 🤝 Contributing
 
