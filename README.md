@@ -8,11 +8,11 @@
 [![Strapi](https://img.shields.io/badge/Strapi-4.15.0-2F2E8B?logo=strapi&logoColor=white)](https://strapi.io/)
 [![Firebase](https://img.shields.io/badge/Firebase-Hosting-FFCA28?logo=firebase&logoColor=white)](https://firebase.google.com/)
 
-A modern, responsive web application that serves as a marketplace for students to buy, sell, borrow, and swap textbooks and other books.
+A modern, responsive web application that serves as a marketplace for students to buy, sell and swap textbooks and other books.
 
 ## 🚀 Features
 
-- **Multiple Transaction Types**: Support for selling, swapping, and borrowing books
+- **Multiple Transaction Types**: Support for selling, swapping
 - **User Authentication**: Secure sign-up and login flows
 - **Book Management**: Add, edit, and remove book listings
 - **Real-time Messaging**: Built-in chat system for communication between buyers and sellers
