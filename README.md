@@ -12,7 +12,7 @@ A modern, responsive web application that serves as a marketplace for students t
 
 ## 🚀 Features
 
-- **Multiple Transaction Types**: Support for selling, swapping, and borrowing books
+- **Multiple Transaction Types**: Support for selling, swapping
 - **User Authentication**: Secure sign-up and login flows
 - **Book Management**: Add, edit, and remove book listings
 - **Real-time Messaging**: Built-in chat system for communication between buyers and sellers
